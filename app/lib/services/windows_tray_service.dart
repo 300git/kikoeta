@@ -25,6 +25,8 @@ class WindowsTrayService with TrayListener, WindowListener {
     if (_initialized || !Platform.isWindows) return;
     _initialized = true;
     await windowManager.ensureInitialized();
+    // Use the Flutter caption rendered by the app instead of the native title bar.
+    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     // 拦截原生关闭事件，交由 onWindowClose 根据用户设置隐藏或退出。
     await windowManager.setPreventClose(true);
     windowManager.addListener(this);

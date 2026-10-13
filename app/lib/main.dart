@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'data.dart';
 import 'pages/favorites_page.dart';
@@ -544,6 +545,57 @@ class _KikoetaAppState extends State<KikoetaApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: appMessengerKey,
       navigatorKey: appNavigatorKey,
+      builder: (context, child) {
+        if (!Platform.isWindows) return child ?? const SizedBox.shrink();
+
+        final theme = Theme.of(context);
+        final titleBarColor = Color.lerp(
+          theme.scaffoldBackgroundColor,
+          theme.colorScheme.surface,
+          0.5,
+        )!;
+        // 标题栏与内容之间的分割线：浅色下用极淡的深色发丝线，深色下用极淡的白色。
+        // 颜色必须是「不透明」的：这一行下面没有任何不透明绘制，半透明色会被合成到
+        // 未绘制的黑底上，最终仍是一条纯黑线。所以先和窗口底色混合成实色。
+        final titleBarDividerColor = Color.alphaBlend(
+          theme.brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: .08)
+              : Colors.black.withValues(alpha: .08),
+          theme.scaffoldBackgroundColor,
+        );
+        return VirtualWindowFrame(
+          child: Column(
+            children: [
+              SizedBox(
+                height: kWindowCaptionHeight,
+                child: WindowCaption(
+                  brightness: theme.brightness,
+                  backgroundColor: titleBarColor,
+                  title: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset('assets/logo.png', width: 18, height: 18),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Kikoeta',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(
+                // 必须给出宽度：无子节点的 ColoredBox 在松约束下会塌缩成 0 宽，
+                // 那一行就没有任何绘制，露出窗口底色（黑线）就是这个原因。
+                width: double.infinity,
+                height: 1,
+                child: ColoredBox(color: titleBarDividerColor),
+              ),
+              Expanded(child: child ?? const SizedBox.shrink()),
+            ],
+          ),
+        );
+      },
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       themeMode: _themeMode,
