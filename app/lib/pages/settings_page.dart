@@ -14,6 +14,7 @@ import '../services/desktop_lyrics_overlay.dart';
 import '../services/lyrics_library_broadcast_service.dart';
 import '../services/lyrics_library_service.dart';
 import '../services/player_service.dart';
+import '../services/theme_reveal.dart';
 import '../services/update_service.dart';
 import '../src/rust/api/translate.dart';
 import '../sheets.dart';
@@ -852,6 +853,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 ]),
                 rootVisible: false,
                 rootCardRadius: BorderRadius.zero,
+                // 下一张卡（其他）是圆角收尾卡，它自己的上边框负责这条线
+                bottomDivider: false,
               ),
               _section(
                 'other',
@@ -937,18 +940,15 @@ class _SettingsPageState extends State<SettingsPage> {
                           segments: const [
                             ButtonSegment(
                               value: ThemeMode.system,
-                              label: Text(
-                                '跟随系统',
-                                style: TextStyle(fontSize: 12),
-                              ),
+                              label: Text('跟随系统'),
                             ),
                             ButtonSegment(
                               value: ThemeMode.light,
-                              label: Text('浅色', style: TextStyle(fontSize: 12)),
+                              label: Text('浅色'),
                             ),
                             ButtonSegment(
                               value: ThemeMode.dark,
-                              label: Text('深色', style: TextStyle(fontSize: 12)),
+                              label: Text('深色'),
                             ),
                           ],
                           selected: {app.themeMode},
@@ -964,22 +964,37 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ? p.accent
                                   : p.muted,
                             ),
-                            // 边框粗细与设置页其他选项一致（p.line 1px）
-                            side: WidgetStatePropertyAll(
-                              BorderSide(color: p.line, width: 1),
-                            ),
-                            textStyle: WidgetStatePropertyAll(
-                              const TextStyle(fontSize: 11.5),
-                            ),
-                            padding: WidgetStatePropertyAll(
-                              const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
+                            // 选中段加一圈同色细边：浅色调下 12% 底色对比很弱，
+                            // 只靠底色不容易一眼看出当前选的是哪一段
+                            side: WidgetStateProperty.resolveWith(
+                              (states) => BorderSide(
+                                color: states.contains(WidgetState.selected)
+                                    ? p.accent.withValues(alpha: .6)
+                                    : p.line,
+                                width: 1,
                               ),
+                            ),
+                            // 视觉高度收窄到与设置页其它内联控件（如 _selectPill）齐平；
+                            // 点击热区仍由 MaterialTapTargetSize.padded 保证 48
+                            minimumSize: const WidgetStatePropertyAll(
+                              Size(0, 36),
+                            ),
+                            // 字号只在这里定义：段内 Text 不再各写一个 fontSize，
+                            // 否则 11.5 与 12 互相覆盖，且字重拿不到 w600
+                            textStyle: const WidgetStatePropertyAll(
+                              TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            padding: const WidgetStatePropertyAll(
+                              EdgeInsets.symmetric(horizontal: 10),
                             ),
                             visualDensity: VisualDensity.compact,
                           ),
-                          onSelectionChanged: (s) => app.setThemeMode(s.first),
+                          // 设置页切换主题：圆形揭示从窗口中心扩散
+                          onSelectionChanged: (s) =>
+                              ThemeReveal.instance.fromCenter(s.first),
                         ),
                       ],
                     ),
@@ -1115,6 +1130,7 @@ class _SettingsPageState extends State<SettingsPage> {
     bool rootEntry = true,
     BorderRadius? rootCardRadius,
     EdgeInsets? rootCardMargin,
+    bool bottomDivider = true,
   }) {
     if (_sectionKey != null) {
       return _sectionKey == key
@@ -1144,7 +1160,9 @@ class _SettingsPageState extends State<SettingsPage> {
           builder: (_) => SettingsPage(app: app, sectionKey: key),
         ),
       ),
-      showDivider: !hasBottomRadius,
+      // 有圆角的卡片由它自己的边框负责上/下那条分隔线：
+      // _row 再画一条会差 1px，两条线叠成 2px 的粗线
+      showDivider: bottomDivider && !hasBottomRadius && !hasTopRadius,
     );
     if (rootCardRadius == null) return row;
     return Container(
@@ -1152,15 +1170,20 @@ class _SettingsPageState extends State<SettingsPage> {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: p.surface,
-        border: Border(
-          left: BorderSide(color: p.line),
-          right: BorderSide(color: p.line),
-          top: hasTopRadius ? BorderSide(color: p.line) : BorderSide.none,
-          bottom: hasBottomRadius ? BorderSide(color: p.line) : BorderSide.none,
-        ),
+        // 有圆角时必须用「均匀」边框：Flutter 的非均匀 Border（只画部分边）会忽略
+        // borderRadius，release 下按直角把边画到圆角之外（圆角处多出一小段方角，
+        // 就是鼠标划过时看到的那块异常阴影），debug 下更是直接断言失败。
+        // 均匀边框沿圆角路径绘制，圆角才正确。
+        border: hasTopRadius || hasBottomRadius
+            ? Border.all(color: p.line)
+            : Border(
+                left: BorderSide(color: p.line),
+                right: BorderSide(color: p.line),
+              ),
         borderRadius: rootCardRadius,
       ),
-      child: row,
+      // 同 _group：让卡片自带墨水层，悬停高亮才受这张卡的圆角裁剪
+      child: Material(type: MaterialType.transparency, child: row),
     );
   }
 
@@ -1195,7 +1218,13 @@ class _SettingsPageState extends State<SettingsPage> {
       borderRadius: BorderRadius.circular(16),
       border: Border.all(color: p.line),
     ),
-    child: Column(children: children),
+    // 卡片内的悬停高亮 / 水波纹由最近的 Material 绘制。卡片自带一层透明 Material，
+    // 墨水才会被这张卡自己的圆角裁掉；否则会画到页面级 Material 上（在卡片裁剪之外），
+    // 鼠标划过时圆角缺口处就会漏出一块方形灰影。
+    child: Material(
+      type: MaterialType.transparency,
+      child: Column(children: children),
+    ),
   );
 
   Widget _row({
@@ -1808,6 +1837,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }) {
     return PopupMenuButton<String>(
       tooltip: tooltip,
+      // 悬停高亮跟随 child 的圆角（8），否则从圆角缺口漏出方形灰影
+      borderRadius: BorderRadius.circular(8),
       onSelected: onSelected,
       offset: const Offset(0, 38),
       constraints: const BoxConstraints(minWidth: 148),
@@ -1882,6 +1913,8 @@ class _SettingsPageState extends State<SettingsPage> {
   ) {
     return PopupMenuButton<String>(
       onSelected: onSelected,
+      // _selectPill 的 child 是胶囊形（999），悬停高亮同样要跟着圆角走
+      borderRadius: BorderRadius.circular(999),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: p.surface,
       itemBuilder: items,

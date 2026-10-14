@@ -1539,17 +1539,27 @@ class _WorkPageState extends State<WorkPage> {
                 sliver: visibleTree != null && visibleTree.isNotEmpty
                     ? MediaTreeSliver(
                         rows: _visibleRows,
-                        header: _smartTarget == null ? null : _allFilesRow(),
+                        header: _smartTarget == null
+                            ? null
+                            : Material(
+                                type: MaterialType.transparency,
+                                child: _allFilesRow(),
+                              ),
                         decoration: BoxDecoration(
                           color: p.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: p.line),
                         ),
-                        rowBuilder: (context, row) => _nodeRow(
-                          row.node,
-                          row.depth,
-                          row.siblings,
-                          isLast: identical(row, _visibleRows.last),
+                        // 每行自带一层透明 Material：悬停高亮画在本行内，
+                        // 不会漏到卡片圆角的缺口上（页面级 Material 在卡片裁剪之外）
+                        rowBuilder: (context, row) => Material(
+                          type: MaterialType.transparency,
+                          child: _nodeRow(
+                            row.node,
+                            row.depth,
+                            row.siblings,
+                            isLast: identical(row, _visibleRows.last),
+                          ),
                         ),
                       )
                     : SliverToBoxAdapter(child: _treePlaceholder()),

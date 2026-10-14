@@ -358,6 +358,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget _reviewFilterButton() {
     return PopupMenuButton<String>(
       tooltip: '进度筛选',
+      // 悬停高亮跟随 child（MenuItem）的圆角，否则从圆角缺口漏出方形灰影
+      borderRadius: BorderRadius.circular(11),
       initialValue: _reviewFilter ?? '',
       onSelected: (value) {
         final filter = value.isEmpty ? null : value;
@@ -401,6 +403,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget _reviewSortDropdown() {
     return PopupMenuButton<String>(
       tooltip: '排序方式',
+      // 悬停高亮跟随 child（MenuItem）的圆角，否则从圆角缺口漏出方形灰影
+      borderRadius: BorderRadius.circular(11),
       initialValue: _reviewSort,
       onSelected: (value) {
         if (_reviewSort == value) return;

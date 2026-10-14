@@ -1300,93 +1300,93 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '搜索历史',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: p.muted,
-                    ),
-                  ),
-                ),
-                if (app.history.isNotEmpty)
-                  GestureDetector(
-                    onTap: () => app.clearHistory(),
-                    child: Text(
-                      '清空',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: p.accent,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (app.history.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 26),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                  Row(
                     children: [
-                      Icon(
-                        Icons.search,
-                        size: 36,
-                        color: p.dim.withValues(alpha: .6),
+                      Expanded(
+                        child: Text(
+                          '搜索历史',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: p.muted,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '暂无搜索历史',
-                        style: TextStyle(fontSize: 13, color: p.dim),
-                      ),
+                      if (app.history.isNotEmpty)
+                        GestureDetector(
+                          onTap: () => app.clearHistory(),
+                          child: Text(
+                            '清空',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: p.accent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
-                ),
-              )
-            else
-              Wrap(
-                spacing: 9,
-                runSpacing: 9,
-                children: app.history.map((value) {
-                  return GestureDetector(
-                    onTap: () {
-                      _ctrl.text = value;
-                      _submit(value);
-                    },
-                    onLongPress: () {
-                      app.removeHistory(value);
-                      ScaffoldMessenger.of(context)
-                        ..clearSnackBars()
-                        ..showSnackBar(
-                          SnackBar(
-                            content: Text('已删除「$value」'),
-                            duration: const Duration(milliseconds: 1600),
+                  const SizedBox(height: 8),
+                  if (app.history.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 26),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.search,
+                              size: 36,
+                              color: p.dim.withValues(alpha: .6),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              '暂无搜索历史',
+                              style: TextStyle(fontSize: 13, color: p.dim),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 9,
+                      runSpacing: 9,
+                      children: app.history.map((value) {
+                        return GestureDetector(
+                          onTap: () {
+                            _ctrl.text = value;
+                            _submit(value);
+                          },
+                          onLongPress: () {
+                            app.removeHistory(value);
+                            ScaffoldMessenger.of(context)
+                              ..clearSnackBars()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text('已删除「$value」'),
+                                  duration: const Duration(milliseconds: 1600),
+                                ),
+                              );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 13,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: p.surface,
+                              border: Border.all(color: p.line),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              value,
+                              style: TextStyle(fontSize: 12, color: p.muted),
+                            ),
                           ),
                         );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: p.surface,
-                        border: Border.all(color: p.line),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        value,
-                        style: TextStyle(fontSize: 12, color: p.muted),
-                      ),
+                      }).toList(),
                     ),
-                  );
-                }).toList(),
-              ),
                 ],
               ),
       ),
@@ -1400,12 +1400,13 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
         final active = app.hasAgeFilter || app.subOnly;
         return PopupMenuButton<int>(
           tooltip: '筛选',
+          // PopupMenuButton 内部自己包了 InkWell，不给 borderRadius 时悬停高亮是直角，
+          // 会从按钮圆角缺口漏出一块方形灰影；与 child 的圆角保持一致
+          borderRadius: BorderRadius.circular(15),
           onSelected: (v) {
             if (v == 20) {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => AdvancedFilterPage(app: app),
-                ),
+                MaterialPageRoute(builder: (_) => AdvancedFilterPage(app: app)),
               );
               return;
             }

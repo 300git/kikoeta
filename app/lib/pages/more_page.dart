@@ -168,9 +168,7 @@ class _MorePageState extends State<MorePage> {
                 '歌词库',
                 null,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const LyricsLibraryPage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const LyricsLibraryPage()),
                 ),
               ),
               _row(
@@ -204,12 +202,18 @@ class _MorePageState extends State<MorePage> {
         ? AppColors.dark
         : AppColors.light;
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: p.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: p.line),
       ),
-      child: Column(children: rows),
+      // 卡片内的悬停高亮由最近的 Material 绘制；卡片自带墨水层才能被自己的圆角裁剪，
+      // 否则画到页面级 Material 上，鼠标划过时圆角缺口处会漏出方形灰影
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(children: rows),
+      ),
     );
   }
 

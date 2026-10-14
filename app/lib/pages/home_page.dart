@@ -6,6 +6,7 @@ import '../data.dart';
 import '../routes.dart';
 import '../services/api_service.dart';
 import '../services/lyrics_library_service.dart';
+import '../services/theme_reveal.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../sheets.dart';
@@ -305,16 +306,20 @@ class _HomePageState extends State<HomePage> {
             color: app.sfwMode ? p.accent : p.muted,
           ),
         ),
-        IconButton(
-          onPressed: () => Theme.of(context).brightness == Brightness.dark
-              ? _setTheme(Brightness.light)
-              : _setTheme(Brightness.dark),
-          icon: Icon(
-            Theme.of(context).brightness == Brightness.dark
-                ? Icons.dark_mode_outlined
-                : Icons.light_mode_outlined,
-            size: 20,
-            color: p.muted,
+        Builder(
+          // 深浅色按钮：圆形揭示从按钮中心扩散；Builder 的 context 即按钮本身
+          builder: (buttonContext) => IconButton(
+            onPressed: () =>
+                Theme.of(buttonContext).brightness == Brightness.dark
+                ? _setTheme(buttonContext, Brightness.light)
+                : _setTheme(buttonContext, Brightness.dark),
+            icon: Icon(
+              Theme.of(buttonContext).brightness == Brightness.dark
+                  ? Icons.dark_mode_outlined
+                  : Icons.light_mode_outlined,
+              size: 20,
+              color: p.muted,
+            ),
           ),
         ),
         Pill(
@@ -326,8 +331,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _setTheme(Brightness b) {
-    app.setThemeMode(b == Brightness.dark ? ThemeMode.dark : ThemeMode.light);
+  /// 从按钮中心向四周扩散到整个窗口
+  void _setTheme(BuildContext buttonContext, Brightness b) {
+    ThemeReveal.instance.fromWidget(
+      buttonContext,
+      b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
+    );
   }
 
   void _clearSearchState() {
@@ -410,6 +419,8 @@ class _HomePageState extends State<HomePage> {
   Widget _sortDropdown() {
     return PopupMenuButton<String>(
       tooltip: '排序方式',
+      // 悬停高亮跟随 child（MenuItem）的圆角，否则从圆角缺口漏出方形灰影
+      borderRadius: BorderRadius.circular(11),
       onSelected: (v) {
         app.setSort(v);
       },
@@ -651,9 +662,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Work> get _visibleSearchResults {
-    var res = _searchResults
-        .where((w) => !app.isBlacklistedWork(w))
-        .toList();
+    var res = _searchResults.where((w) => !app.isBlacklistedWork(w)).toList();
     if (app.hasAgeFilter) {
       res = res.where((w) => app.ageFilters.contains(w.age.index)).toList();
     }

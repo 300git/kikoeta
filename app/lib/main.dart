@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:path_provider/path_provider.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
@@ -30,6 +33,7 @@ import 'services/update_service.dart';
 import 'services/download_service.dart';
 import 'services/lyrics_library_broadcast_service.dart';
 import 'services/api_service.dart';
+import 'services/theme_reveal.dart';
 import 'src/rust/api/kikoeru_api.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -484,10 +488,28 @@ class KikoetaApp extends StatefulWidget {
 /// 仅监听 MaterialApp 自身依赖的状态（主题模式 / 登录态 / UI 缩放）。
 /// 其余状态变化由各页面自行监听并局部重建，
 /// 避免每次 notify()（音量拖动、播放/暂停、收藏等）都重建整棵应用树导致掉帧。
-class _KikoetaAppState extends State<KikoetaApp> with WidgetsBindingObserver {
+class _KikoetaAppState extends State<KikoetaApp>
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+  /// 圆形揭示时长：覆盖整个窗口的扩散，接近 Android 圆形揭示的观感
+  static const Duration _revealDuration = Duration(milliseconds: 450);
+
   late ThemeMode _themeMode;
   late bool _loginRequired;
   late int _uiScalePercent;
+
+  /// 根节点：抓「切换前外观」的截图用
+  final GlobalKey _rootKey = GlobalKey();
+  late final AnimationController _revealAnim = AnimationController(
+    vsync: this,
+    duration: _revealDuration,
+  );
+  late final CurvedAnimation _revealCurve = CurvedAnimation(
+    parent: _revealAnim,
+    curve: Curves.fastOutSlowIn,
+  );
+  ui.Image? _revealImage;
+  Offset _revealOrigin = Offset.zero;
+  int _revealSeq = 0;
 
   @override
   void initState() {
@@ -497,12 +519,17 @@ class _KikoetaAppState extends State<KikoetaApp> with WidgetsBindingObserver {
     _loginRequired = appState.loginRequired;
     _uiScalePercent = appState.uiScalePercent;
     appState.addListener(_onChanged);
+    _revealAnim.addStatusListener(_onRevealStatus);
+    ThemeReveal.instance.bind(_switchThemeWithReveal);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     appState.removeListener(_onChanged);
+    _revealImage?.dispose();
+    _revealCurve.dispose();
+    _revealAnim.dispose();
     super.dispose();
   }
 
@@ -518,6 +545,105 @@ class _KikoetaAppState extends State<KikoetaApp> with WidgetsBindingObserver {
       );
     }
   }
+
+  /// 跟随系统时，系统深浅色的变化同样从窗口中心扩散
+  @override
+  void didChangePlatformBrightness() {
+    if (appState.themeMode == ThemeMode.system) {
+      _switchThemeWithReveal(ThemeMode.system, null);
+    }
+  }
+
+  /// 切换主题并播放圆形揭示动画。
+  ///
+  /// 顺序是关键：先抓「切换前」的截图，再让真实界面重建一次换成新主题，
+  /// 最后把截图按不断扩大的圆裁掉。因此每帧只多一次贴图绘制，
+  /// 没有第二棵控件树、也没有新旧外观同时插值的浑浊感。
+  Future<void> _switchThemeWithReveal(
+    ThemeMode mode,
+    Offset? globalOrigin,
+  ) async {
+    final seq = ++_revealSeq;
+    // 目标亮度与当前渲染亮度相同（例如深色切到「跟随系统」而系统本就是深色）时无需动画
+    if (_targetBrightness(mode) == _renderedBrightness) {
+      appState.setThemeMode(mode);
+      return;
+    }
+    if (_revealImage != null) {
+      // 上一次揭示还没播完：先撤掉贴图并等这一帧落地，避免把它拍进新截图
+      _revealAnim.stop();
+      _endReveal();
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || seq != _revealSeq) return;
+    }
+
+    final image = await _captureRoot();
+    if (!mounted || seq != _revealSeq) {
+      image?.dispose(); // 期间又切了一次，交给最后一次
+      return;
+    }
+
+    final box = _rootKey.currentContext?.findRenderObject() as RenderBox?;
+    final origin = box == null || !box.hasSize
+        ? Offset.zero
+        : globalOrigin == null
+        ? box.size.center(Offset.zero) // 设置页 / 跟随系统：窗口中心
+        : box.globalToLocal(globalOrigin); // 首页按钮：按钮中心
+
+    setState(() {
+      _revealImage?.dispose();
+      _revealImage = image;
+      _revealOrigin = origin;
+      _revealAnim.value = 0;
+    });
+    appState.setThemeMode(mode); // 真实界面只在这里重建一次
+    if (image == null) return; // 截图失败：直接切换，不播放动画
+    _revealAnim.forward();
+  }
+
+  /// 抓取根节点当前外观（切换前的样子），失败返回 null
+  Future<ui.Image?> _captureRoot() async {
+    final boundary =
+        _rootKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null || boundary.size.isEmpty) return null;
+    try {
+      // 上限 2.0：再高只是徒增一次读回的内存与耗时；
+      // 乘 UI 缩放让贴图与屏幕像素一一对应，避免缩放后发虚
+      final ratio = math.min(
+        MediaQuery.devicePixelRatioOf(context) * _uiScalePercent / 100,
+        2.0,
+      );
+      return await boundary.toImage(pixelRatio: ratio);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _onRevealStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) _endReveal();
+  }
+
+  void _endReveal() {
+    final image = _revealImage;
+    if (image == null) return;
+    setState(() => _revealImage = null);
+    image.dispose();
+  }
+
+  /// 该模式下应显示的亮度
+  Brightness _targetBrightness(ThemeMode mode) => switch (mode) {
+    ThemeMode.light => Brightness.light,
+    ThemeMode.dark => Brightness.dark,
+    ThemeMode.system =>
+      WidgetsBinding.instance.platformDispatcher.platformBrightness,
+  };
+
+  /// 当前这一帧实际渲染的亮度（跟随系统时以 MaterialApp 读到的平台亮度为准）
+  Brightness get _renderedBrightness => switch (_themeMode) {
+    ThemeMode.light => Brightness.light,
+    ThemeMode.dark => Brightness.dark,
+    ThemeMode.system => MediaQuery.platformBrightnessOf(context),
+  };
 
   void _onChanged() {
     if (_themeMode == appState.themeMode &&
@@ -546,60 +672,36 @@ class _KikoetaAppState extends State<KikoetaApp> with WidgetsBindingObserver {
       scaffoldMessengerKey: appMessengerKey,
       navigatorKey: appNavigatorKey,
       builder: (context, child) {
-        if (!Platform.isWindows) return child ?? const SizedBox.shrink();
-
-        final theme = Theme.of(context);
-        final titleBarColor = Color.lerp(
-          theme.scaffoldBackgroundColor,
-          theme.colorScheme.surface,
-          0.5,
-        )!;
-        // 标题栏与内容之间的分割线：浅色下用极淡的深色发丝线，深色下用极淡的白色。
-        // 颜色必须是「不透明」的：这一行下面没有任何不透明绘制，半透明色会被合成到
-        // 未绘制的黑底上，最终仍是一条纯黑线。所以先和窗口底色混合成实色。
-        final titleBarDividerColor = Color.alphaBlend(
-          theme.brightness == Brightness.dark
-              ? Colors.white.withValues(alpha: .08)
-              : Colors.black.withValues(alpha: .08),
-          theme.scaffoldBackgroundColor,
-        );
-        return VirtualWindowFrame(
-          child: Column(
+        // 整个窗口（含 Windows 自定义标题栏）都在根 RepaintBoundary 里：
+        // 主题切换的圆形揭示既要抓它的截图，也要盖住它
+        return RepaintBoundary(
+          key: _rootKey,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              SizedBox(
-                height: kWindowCaptionHeight,
-                child: WindowCaption(
-                  brightness: theme.brightness,
-                  backgroundColor: titleBarColor,
-                  title: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset('assets/logo.png', width: 18, height: 18),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Kikoeta',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+              if (Platform.isWindows)
+                _windowsFrame(context, child)
+              else
+                child ?? const SizedBox.shrink(),
+              if (_revealImage != null)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: ThemeRevealPainter(
+                        image: _revealImage!,
+                        origin: _revealOrigin,
+                        progress: _revealCurve,
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                // 必须给出宽度：无子节点的 ColoredBox 在松约束下会塌缩成 0 宽，
-                // 那一行就没有任何绘制，露出窗口底色（黑线）就是这个原因。
-                width: double.infinity,
-                height: 1,
-                child: ColoredBox(color: titleBarDividerColor),
-              ),
-              // 页面区必须裁剪：Windows 下 MaterialPageRoute 用的是 Zoom 转场，
-              // 退场页会被放大到 1.05，不裁剪就会溢出盖住上面自定义标题栏的下沿
-              Expanded(
-                child: ClipRect(child: child ?? const SizedBox.shrink()),
-              ),
             ],
           ),
         );
       },
+      // 主题切换交给圆形揭示动画，这里必须瞬时生效：否则被圆露出的区域
+      // 会同步做 200ms 颜色插值，圆的边界上会看到新旧混色
+      themeAnimationDuration: Duration.zero,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       themeMode: _themeMode,
@@ -613,6 +715,59 @@ class _KikoetaAppState extends State<KikoetaApp> with WidgetsBindingObserver {
         '/player': (_) => PlayerPage(app: appState),
         '/settings': (_) => SettingsPage(app: appState),
       },
+    );
+  }
+
+  /// Windows 窗口装饰：自定义标题栏 + 分割线 + 页面区
+  Widget _windowsFrame(BuildContext context, Widget? child) {
+    final theme = Theme.of(context);
+    final titleBarColor = Color.lerp(
+      theme.scaffoldBackgroundColor,
+      theme.colorScheme.surface,
+      0.5,
+    )!;
+    // 标题栏与内容之间的分割线：浅色下用极淡的深色发丝线，深色下用极淡的白色。
+    // 颜色必须是「不透明」的：这一行下面没有任何不透明绘制，半透明色会被合成到
+    // 未绘制的黑底上，最终仍是一条纯黑线。所以先和窗口底色混合成实色。
+    final titleBarDividerColor = Color.alphaBlend(
+      theme.brightness == Brightness.dark
+          ? Colors.white.withValues(alpha: .08)
+          : Colors.black.withValues(alpha: .08),
+      theme.scaffoldBackgroundColor,
+    );
+    return VirtualWindowFrame(
+      child: Column(
+        children: [
+          SizedBox(
+            height: kWindowCaptionHeight,
+            child: WindowCaption(
+              brightness: theme.brightness,
+              backgroundColor: titleBarColor,
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset('assets/logo.png', width: 18, height: 18),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Kikoeta',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            // 必须给出宽度：无子节点的 ColoredBox 在松约束下会塌缩成 0 宽，
+            // 那一行就没有任何绘制，露出窗口底色（黑线）就是这个原因。
+            width: double.infinity,
+            height: 1,
+            child: ColoredBox(color: titleBarDividerColor),
+          ),
+          // 页面区必须裁剪：Windows 下 MaterialPageRoute 用的是 Zoom 转场，
+          // 退场页会被放大到 1.05，不裁剪就会溢出盖住上面自定义标题栏的下沿
+          Expanded(child: ClipRect(child: child ?? const SizedBox.shrink())),
+        ],
+      ),
     );
   }
 }
