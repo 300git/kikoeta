@@ -591,7 +591,11 @@ class _KikoetaAppState extends State<KikoetaApp> with WidgetsBindingObserver {
                 height: 1,
                 child: ColoredBox(color: titleBarDividerColor),
               ),
-              Expanded(child: child ?? const SizedBox.shrink()),
+              // 页面区必须裁剪：Windows 下 MaterialPageRoute 用的是 Zoom 转场，
+              // 退场页会被放大到 1.05，不裁剪就会溢出盖住上面自定义标题栏的下沿
+              Expanded(
+                child: ClipRect(child: child ?? const SizedBox.shrink()),
+              ),
             ],
           ),
         );
