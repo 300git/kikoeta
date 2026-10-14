@@ -662,7 +662,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Work> get _visibleSearchResults {
-    var res = _searchResults.where((w) => !app.isBlacklistedWork(w)).toList();
+    var res = _searchResults
+        .where((w) => !app.isBlacklistedWork(w))
+        .toList();
     if (app.hasAgeFilter) {
       res = res.where((w) => app.ageFilters.contains(w.age.index)).toList();
     }
