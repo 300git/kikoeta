@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -696,9 +699,9 @@ class _WorkPageState extends State<WorkPage> {
     }
   }
 
-  void _openFile(MediaNode n) {
+  void _openFile(MediaNode n, List<MediaNode> siblings) {
     if (_isImage(n)) {
-      _showImage(n.url);
+      _previewImages(n, siblings);
     } else if (_isText(n)) {
       _showTextViewer(n);
     } else if (_isVideo(n)) {
@@ -708,44 +711,26 @@ class _WorkPageState extends State<WorkPage> {
     }
   }
 
-  void _showImage(String? url) {
-    if (url == null) {
+  /// 图片预览：只收集同一路径（同一层）下的图片，左右滑动或点两侧按钮切换
+  void _previewImages(MediaNode current, List<MediaNode> siblings) {
+    final images = [
+      for (final node in siblings)
+        if (!node.isDir && _isImage(node) && (node.url?.isNotEmpty ?? false))
+          node,
+    ];
+    final start = images.indexWhere((node) => identical(node, current));
+    if (start < 0) {
       _toast('文件流需登录后可用');
       return;
     }
-    showDialog(
+    _openPreview([for (final node in images) node.url!], start);
+  }
+
+  void _openPreview(List<String> urls, int index) {
+    showDialog<void>(
       context: context,
       barrierColor: Colors.black,
-      builder: (ctx) => GestureDetector(
-        onTap: () => Navigator.pop(ctx),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image(
-                image: ResizeImage.resizeIfNeeded(
-                  // 按屏幕宽度解码，上限 1600px：避免超大图片全尺寸解码（内存/卡顿）
-                  (MediaQuery.sizeOf(ctx).width *
-                          MediaQuery.devicePixelRatioOf(ctx))
-                      .round()
-                      .clamp(128, 1600),
-                  null,
-                  RustImageProvider(url),
-                ),
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
-              ),
-            ),
-            Positioned(
-              top: 16,
-              right: 16,
-              child: IconButton(
-                onPressed: () => Navigator.pop(ctx),
-                icon: const Icon(Icons.close, color: Colors.white, size: 28),
-              ),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => _ImagePreviewDialog(urls: urls, initialIndex: index),
     );
   }
 
@@ -1153,7 +1138,7 @@ class _WorkPageState extends State<WorkPage> {
           if (_isAudio(n)) {
             _playFiles(siblings, selected: n);
           } else {
-            _openFile(n);
+            _openFile(n, siblings);
           }
         }
       },
@@ -1662,7 +1647,12 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   void _showCover() {
-    _showImage(work.coverUrl);
+    final url = work.coverUrl;
+    if (url == null || url.isEmpty) {
+      _toast('文件流需登录后可用');
+      return;
+    }
+    _openPreview([url], 0);
   }
 
   /// 跳回首页并搜索
@@ -2101,4 +2091,557 @@ class _DirStat {
     required this.byExt,
     required this.se,
   });
+}
+
+/// 预览图的缩放/平移状态。放进 ValueNotifier：手势期间只通知 Transform 重建，
+/// 不触发整页 setState（Flutter 官方 InteractiveViewer 内部就是这套做法）。
+class _ViewState {
+  const _ViewState(this.scale, this.offset);
+  const _ViewState.initial() : scale = 1, offset = Offset.zero;
+
+  final double scale;
+  final Offset offset;
+}
+
+/// 全屏图片预览：左右滑动或屏幕两侧按钮切换同一路径下的图片，
+/// 桌面滚轮缩放、移动端双指缩放；两侧按钮与页码在无操作 1s 后渐隐，
+/// 缩放不会唤回已隐藏的 UI，只有单击才会恢复。
+class _ImagePreviewDialog extends StatefulWidget {
+  const _ImagePreviewDialog({required this.urls, required this.initialIndex});
+
+  final List<String> urls;
+  final int initialIndex;
+
+  @override
+  State<_ImagePreviewDialog> createState() => _ImagePreviewDialogState();
+}
+
+class _ImagePreviewDialogState extends State<_ImagePreviewDialog>
+    with SingleTickerProviderStateMixin {
+  static const double _maxScale = 6;
+  static const Duration _idleHideDelay = Duration(seconds: 1);
+  static const Duration _fadeDuration = Duration(milliseconds: 220);
+  static const Duration _turnDuration = Duration(milliseconds: 220);
+  static const double _turnRatio = 0.2;
+
+  late int _index = widget.initialIndex.clamp(
+    0,
+    math.max(0, widget.urls.length - 1),
+  );
+
+  /// 图片宽高比：把缩放/平移限制在图片实际显示范围内，避免拖出大片空白
+  final Map<String, double> _ratios = {};
+  final Set<String> _ratioPending = {};
+
+  /// 缩放/平移与拖拽位移走 ValueNotifier：手势每帧只重建 Transform 本身，
+  /// 图片、按钮、页码都不参与重建
+  final ValueNotifier<_ViewState> _view = ValueNotifier(
+    const _ViewState.initial(),
+  );
+  final ValueNotifier<double> _drag = ValueNotifier(0);
+
+  double get _scale => _view.value.scale;
+  Offset get _offset => _view.value.offset;
+
+  int _turnDir = 0; // 正在动画切换的方向（-1/0/1）
+  bool _pinched = false; // 本次手势是否已进入双指缩放
+
+  double _startScale = 1;
+  Offset _startOffset = Offset.zero;
+  Offset _startFocal = Offset.zero;
+  double _startDrag = 0;
+
+  Size _viewport = Size.zero;
+
+  bool _chrome = true;
+  Timer? _idleTimer;
+
+  int _pointers = 0;
+  bool _multiPointer = false;
+
+  late final AnimationController _turnAnim = AnimationController(
+    vsync: this,
+    duration: _turnDuration,
+  );
+  late final CurvedAnimation _turnCurve = CurvedAnimation(
+    parent: _turnAnim,
+    curve: Curves.easeOutCubic,
+  );
+  Tween<double> _dragTween = Tween<double>(begin: 0, end: 0);
+
+  String get _current => widget.urls[_index];
+
+  @override
+  void initState() {
+    super.initState();
+    _turnAnim.addListener(_onTurnTick);
+    _turnAnim.addStatusListener(_onTurnStatus);
+    _idleTimer = Timer(_idleHideDelay, _hideChrome);
+    // 预取放在首帧之后，此时 MediaQuery 与图片缓存都已就绪
+    WidgetsBinding.instance.addPostFrameCallback((_) => _warm());
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    _view.dispose();
+    _drag.dispose();
+    _turnCurve.dispose();
+    _turnAnim.dispose();
+    super.dispose();
+  }
+
+  // ── 图片加载 ───────────────────────────────────────────────
+
+  ImageProvider _provider(String url) {
+    final mq = MediaQuery.of(context);
+    // 可缩放查看需要比封面更高的解码分辨率，上限 2048px：
+    // 同时预取相邻图片，避免三张全屏图占满图片缓存
+    final width = (mq.size.width * mq.devicePixelRatio).round().clamp(
+      160,
+      2048,
+    );
+    return ResizeImage.resizeIfNeeded(width, null, RustImageProvider(url));
+  }
+
+  /// 记录宽高比，异步完成后刷新一次
+  void _trackRatio(String url) {
+    if (_ratios.containsKey(url) || !_ratioPending.add(url)) return;
+    final stream = _provider(
+      url,
+    ).resolve(createLocalImageConfiguration(context));
+    late ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (info, _) {
+        stream.removeListener(listener);
+        _ratioPending.remove(url);
+        if (!mounted || info.image.height <= 0) return;
+        setState(() => _ratios[url] = info.image.width / info.image.height);
+      },
+      onError: (_, _) {
+        stream.removeListener(listener);
+        _ratioPending.remove(url);
+      },
+    );
+    stream.addListener(listener);
+  }
+
+  /// 记录当前图片比例并预取相邻图片，滑动切换时不必等加载
+  void _warm() {
+    if (!mounted) return;
+    _trackRatio(_current);
+    for (final i in [_index - 1, _index + 1]) {
+      if (i < 0 || i >= widget.urls.length) continue;
+      _trackRatio(widget.urls[i]);
+      precacheImage(_provider(widget.urls[i]), context, onError: (_, _) {});
+    }
+  }
+
+  // ── 渐隐控制 ───────────────────────────────────────────────
+
+  void _hideChrome() {
+    if (mounted && _chrome) setState(() => _chrome = false);
+  }
+
+  /// 有操作时重新计时；已隐藏的 UI 不会被唤回
+  void _activity() {
+    if (!_chrome) return;
+    _idleTimer?.cancel();
+    _idleTimer = Timer(_idleHideDelay, _hideChrome);
+  }
+
+  /// 鼠标在窗口内移动：控件保持显示（已隐藏则唤回）并重新计时
+  void _keepChrome() {
+    if (!_chrome) setState(() => _chrome = true);
+    _idleTimer?.cancel();
+    _idleTimer = Timer(_idleHideDelay, _hideChrome);
+  }
+
+  void _toggleChrome() {
+    _idleTimer?.cancel();
+    if (_chrome) {
+      setState(() => _chrome = false);
+      return;
+    }
+    setState(() => _chrome = true);
+    _idleTimer = Timer(_idleHideDelay, _hideChrome);
+  }
+
+  void _handleTap() {
+    // 双指缩放的收尾不算单击，不唤回 UI
+    if (_multiPointer) return;
+    _toggleChrome();
+  }
+
+  // ── 指针 ──────────────────────────────────────────────────
+
+  void _onPointerDown(PointerDownEvent _) {
+    _pointers++;
+    if (_pointers == 1) _multiPointer = false;
+    if (_pointers > 1) _multiPointer = true;
+  }
+
+  void _onPointerEnd(PointerEvent _) {
+    if (_pointers > 0) _pointers--;
+  }
+
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || event.scrollDelta.dy == 0) return;
+    // 滚轮只用于缩放：注册到信号解析器，避免被祖先滚动容器抢走
+    GestureBinding.instance.pointerSignalResolver.register(event, (resolved) {
+      final scroll = resolved as PointerScrollEvent;
+      _zoomAt(math.exp(-scroll.scrollDelta.dy / 260), scroll.localPosition);
+    });
+  }
+
+  // ── 缩放 / 平移 / 翻页 ─────────────────────────────────────
+
+  Offset get _center => Offset(_viewport.width / 2, _viewport.height / 2);
+
+  static double _clampD(double value, double min, double max) =>
+      value < min ? min : (value > max ? max : value);
+
+  /// BoxFit.contain 下图片在视口内的实际显示尺寸
+  Size _fitted(Size viewport, double? ratio) {
+    if (ratio == null || ratio <= 0 || viewport.isEmpty) return viewport;
+    final height = viewport.width / ratio;
+    return height <= viewport.height
+        ? Size(viewport.width, height)
+        : Size(viewport.height * ratio, viewport.height);
+  }
+
+  Offset _clampOffset(Offset value, double scale) {
+    if (_viewport.isEmpty) return value;
+    final content = _fitted(_viewport, _ratios[_current]);
+    final maxX = math.max(0.0, (content.width * scale - _viewport.width) / 2);
+    final maxY = math.max(0.0, (content.height * scale - _viewport.height) / 2);
+    return Offset(
+      _clampD(value.dx, -maxX, maxX),
+      _clampD(value.dy, -maxY, maxY),
+    );
+  }
+
+  void _zoomAt(double factor, Offset focal) {
+    final current = _view.value;
+    final next = _clampD(current.scale * factor, 1, _maxScale);
+    if ((next - current.scale).abs() < 0.001) return;
+    final u = focal - _center;
+    final moved = u - (u - current.offset) * (next / current.scale);
+    _view.value = _ViewState(next, _clampOffset(moved, next));
+    _activity();
+  }
+
+  void _resetZoom() {
+    _view.value = const _ViewState.initial();
+  }
+
+  void _onScaleStart(ScaleStartDetails details) {
+    _turnAnim.stop();
+    _turnDir = 0;
+    _pinched = false;
+    _startScale = _scale;
+    _startOffset = _offset;
+    _startFocal = details.localFocalPoint;
+    _startDrag = _drag.value;
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails details) {
+    if (details.pointerCount > 1) {
+      _pinched = true;
+      final next = _clampD(_startScale * details.scale, 1, _maxScale);
+      final u = details.localFocalPoint - _center;
+      final moved = u - (u - _startOffset) * (next / _startScale);
+      _drag.value = 0; // 双指介入时放弃未完成的翻页位移
+      _view.value = _ViewState(next, _clampOffset(moved, next));
+      return; // 双指缩放不唤回已隐藏的 UI
+    }
+    if (_scale > 1.001) {
+      // 已放大：单指平移图片
+      final delta = details.focalPointDelta;
+      if (delta == Offset.zero) return;
+      _view.value = _ViewState(_scale, _clampOffset(_offset + delta, _scale));
+      return;
+    }
+    if (_pinched) return; // 缩放后抬起一根手指，不当作翻页拖拽
+    final dx = details.localFocalPoint.dx - _startFocal.dx;
+    _drag.value = _clampD(_startDrag + dx, -_viewport.width, _viewport.width);
+  }
+
+  void _onScaleEnd(ScaleEndDetails details) {
+    _pinched = false;
+    if (_drag.value == 0 || _scale > 1.001) return;
+    _settleTurn(details.velocity.pixelsPerSecond.dx);
+  }
+
+  /// 松手后收尾：越过阈值就翻页，否则弹回
+  void _settleTurn(double velocity) {
+    final width = _viewport.width;
+    if (width <= 0) return;
+    final ratio = _drag.value / width;
+    var dir = 0;
+    if (ratio <= -_turnRatio || (ratio < -0.02 && velocity < -500)) {
+      dir = 1;
+    } else if (ratio >= _turnRatio || (ratio > 0.02 && velocity > 500)) {
+      dir = -1;
+    }
+    if (dir != 0 && _index + dir >= 0 && _index + dir < widget.urls.length) {
+      _turnDir = dir;
+      _dragTween = Tween<double>(begin: _drag.value, end: -dir * width);
+    } else {
+      _turnDir = 0;
+      _dragTween = Tween<double>(begin: _drag.value, end: 0);
+    }
+    _turnAnim.forward(from: 0);
+  }
+
+  void _onTurnTick() {
+    if (!mounted) return;
+    _drag.value = _dragTween.transform(_turnCurve.value);
+  }
+
+  void _onTurnStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed || !mounted) return;
+    final dir = _turnDir;
+    _turnDir = 0;
+    if (dir == 0) return;
+    _drag.value = 0;
+    _resetZoom();
+    setState(() => _index += dir);
+    _activity();
+    _warm();
+  }
+
+  void _turn(int dir) {
+    final next = _index + dir;
+    if (next < 0 || next >= widget.urls.length) return;
+    _drag.value = 0;
+    _resetZoom();
+    setState(() => _index = next);
+    _activity();
+    _warm();
+  }
+
+  // ── 构建 ──────────────────────────────────────────────────
+
+  /// 两侧按钮与页码共用同一套渐隐
+  Widget _chromeBox(Widget child) => IgnorePointer(
+    ignoring: !_chrome,
+    child: AnimatedOpacity(
+      opacity: _chrome ? 1 : 0,
+      duration: _fadeDuration,
+      child: child,
+    ),
+  );
+
+  Widget _sideButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) => DecoratedBox(
+    decoration: const BoxDecoration(
+      color: Colors.black45,
+      shape: BoxShape.circle,
+    ),
+    child: IconButton(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      icon: Icon(icon, size: 30, color: Colors.white),
+    ),
+  );
+
+  /// 单张图片：按实际显示尺寸铺开。作为 ValueListenableBuilder 的 child 传入，
+  /// 手势期间只更新外层 Transform，它自己不会被重建
+  Widget _imageBox(String url) {
+    final size = _fitted(_viewport, _ratios[url]);
+    return Center(
+      child: SizedBox(
+        width: size.width,
+        height: size.height,
+        child: Image(
+          image: _provider(url),
+          fit: BoxFit.contain,
+          frameBuilder: (_, child, frame, _) => frame == null
+              ? const Center(
+                  child: SizedBox(
+                    width: 26,
+                    height: 26,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white24,
+                    ),
+                  ),
+                )
+              : child,
+          errorBuilder: (_, _, _) => const Center(
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: Colors.white38,
+              size: 40,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 相邻图片常驻在视口外侧，拖拽时只更新各自的 Transform
+  Widget _sideLayer(String url, double sign, double width) => Positioned.fill(
+    child: ValueListenableBuilder<double>(
+      valueListenable: _drag,
+      builder: (context, drag, child) => Transform.translate(
+        offset: Offset(drag + sign * width, 0),
+        child: child,
+      ),
+      child: _imageBox(url),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final total = widget.urls.length;
+    return MouseRegion(
+      // 鼠标在窗口内移动就不隐藏控件；移出窗口或鼠标静止 1s 后隐藏
+      onHover: (_) => _keepChrome(),
+      onExit: (_) => _hideChrome(),
+      child: Material(
+        color: Colors.black,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Listener(
+                onPointerDown: _onPointerDown,
+                onPointerUp: _onPointerEnd,
+                onPointerCancel: _onPointerEnd,
+                onPointerSignal: _onPointerSignal,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _handleTap,
+                  onScaleStart: _onScaleStart,
+                  onScaleUpdate: _onScaleUpdate,
+                  onScaleEnd: _onScaleEnd,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      _viewport = Size(
+                        constraints.maxWidth,
+                        constraints.maxHeight,
+                      );
+                      return ClipRect(
+                        child: Stack(
+                          children: [
+                            // 相邻图片常驻视口外侧：拖拽时零 widget 构建，
+                            // 只有它们的 Transform 跟着动
+                            if (_index > 0)
+                              _sideLayer(
+                                widget.urls[_index - 1],
+                                -1,
+                                _viewport.width,
+                              ),
+                            if (_index + 1 < total)
+                              _sideLayer(
+                                widget.urls[_index + 1],
+                                1,
+                                _viewport.width,
+                              ),
+                            Positioned.fill(
+                              child: ValueListenableBuilder<double>(
+                                valueListenable: _drag,
+                                builder: (context, drag, child) =>
+                                    Transform.translate(
+                                      offset: Offset(drag, 0),
+                                      child: child,
+                                    ),
+                                // 缩放/平移只重建这两层 Transform，图片用 child 透传
+                                child: ValueListenableBuilder<_ViewState>(
+                                  valueListenable: _view,
+                                  builder: (context, view, child) =>
+                                      Transform.translate(
+                                        offset: view.offset,
+                                        child: Transform.scale(
+                                          scale: view.scale,
+                                          child: child,
+                                        ),
+                                      ),
+                                  child: _imageBox(_current),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: '关闭',
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+              ),
+            ),
+            if (_index > 0)
+              Positioned(
+                left: 4,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: _chromeBox(
+                    _sideButton(
+                      icon: Icons.chevron_left,
+                      tooltip: '上一张',
+                      onPressed: () => _turn(-1),
+                    ),
+                  ),
+                ),
+              ),
+            if (_index + 1 < total)
+              Positioned(
+                right: 4,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: _chromeBox(
+                    _sideButton(
+                      icon: Icons.chevron_right,
+                      tooltip: '下一张',
+                      onPressed: () => _turn(1),
+                    ),
+                  ),
+                ),
+              ),
+            if (total > 1)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 24,
+                child: Center(
+                  child: _chromeBox(
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${_index + 1}/$total',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
