@@ -60,6 +60,11 @@
   歌词快捷设置
 </p>
 
+<p align="center">
+  <img src="docs/image/主题切换动画.gif" alt="深浅色主题切换动画" width="600"><br>
+  深浅色主题切换动画
+</p>
+
 ## 功能
 
 ### 找到想听的作品
