@@ -3,14 +3,16 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'data.dart';
 import 'pages/advanced_filter_page.dart';
 import 'services/app_paths.dart';
+import 'services/cover_cache.dart';
 import 'services/lyrics_library_service.dart';
 import 'services/player_service.dart';
-import 'src/rust/api/kikoeru_api.dart';
+import 'smooth_scroll.dart';
 import 'theme.dart';
 
 final List<List<Color>> coverGrads = [
@@ -23,6 +25,16 @@ final List<List<Color>> coverGrads = [
   [const Color(0xFF1E3A8A), const Color(0xFF2563EB)],
   [const Color(0xFF0284C7), const Color(0xFF38BDF8)],
 ];
+
+/// 卡片封面的解码宽度：显示宽度 × DPR，按 64px 档取整，限制在 [160, 560]。
+///
+/// 上限 560 即源图宽度（asmr.one 封面固定 560×420），再高没有额外信息；
+/// 按 64px 量化是为了避免拖动窗口时每个像素宽度都生成新的解码缓存条目。
+int coverDecodeWidth(double displayWidth, double devicePixelRatio) {
+  final raw = displayWidth * devicePixelRatio;
+  final stepped = (raw / 64).ceil() * 64;
+  return stepped.clamp(160, 560);
+}
 
 class CoverArt extends StatefulWidget {
   final Work work;
@@ -78,6 +90,24 @@ class _CoverArtState extends State<CoverArt> {
     });
   }
 
+  /// 渐变占位：无封面 / 加载中 / 加载失败时显示。
+  ///
+  /// [opacity] 直接乘进颜色 alpha，而不是套 `Opacity`——`Opacity` 会给每张
+  /// 卡片建立一张等大的离屏图层，滚动时同时淡入的多张卡会带来大量合成开销。
+  Widget _gradientPlaceholder(List<Color> colors, {double opacity = 1}) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            for (final c in colors) c.withValues(alpha: c.a * opacity),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final g = coverGrads[work.grad % coverGrads.length];
@@ -88,36 +118,55 @@ class _CoverArtState extends State<CoverArt> {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: g,
-        ),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
+          // 没有封面地址时渐变占位常驻；有封面时占位交给图片自己管理（见下）
+          if (coverImage == null) _gradientPlaceholder(g),
           if (coverImage != null)
             Positioned.fill(
               child: LayoutBuilder(
-                builder: (_, _) {
-                  final image = coverImage;
-                  return TweenAnimationBuilder<double>(
-                    key: ValueKey('${work.coverUrl}:$_attempt'),
-                    tween: Tween(begin: 0, end: 1),
-                    duration: const Duration(milliseconds: 320),
-                    curve: Curves.easeOut,
-                    builder: (ctx, v, child) =>
-                        Opacity(opacity: v, child: child),
-                    child: Image(
-                      image: image,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, error, _) {
-                        unawaited(image.evict());
-                        _retryAfterDelay(error);
-                        return const SizedBox.shrink();
-                      },
+                builder: (_, c) {
+                  // 按屏上实际尺寸解码（此前按源图 560×420 全尺寸解码）：
+                  // 解码像素与内存按 (显示宽度×DPR / 源图宽度)² 下降。
+                  final image = ResizeImage.resizeIfNeeded(
+                    coverDecodeWidth(
+                      c.maxWidth,
+                      MediaQuery.of(context).devicePixelRatio,
                     ),
+                    null,
+                    coverImage,
+                  );
+                  return Image(
+                    image: image,
+                    fit: BoxFit.cover,
+                    frameBuilder: (ctx, child, frame, _) {
+                      // 占位不垫在封面底下，而是盖在封面之上淡出：
+                      // 垫在底下时，贴边像素只有部分覆盖率，蓝色会在四周比中间
+                      // 更浓，勾出一圈彩色细线；盖在上面淡出时贴边的蓝色只会
+                      // 比中间更淡，四周就不会出现蓝边。淡出结束后占位不再绘制。
+                      return TweenAnimationBuilder<double>(
+                        key: ValueKey('${work.coverUrl}:$_attempt'),
+                        tween: Tween(begin: 0, end: frame == null ? 0 : 1),
+                        duration: const Duration(milliseconds: 320),
+                        curve: Curves.easeOut,
+                        child: child,
+                        builder: (ctx, v, imageChild) => Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ?imageChild,
+                            if (v < 1)
+                              _gradientPlaceholder(g, opacity: 1 - v),
+                          ],
+                        ),
+                      );
+                    },
+                    errorBuilder: (_, error, _) {
+                      unawaited(image.evict());
+                      _retryAfterDelay(error);
+                      return _gradientPlaceholder(g);
+                    },
                   );
                 },
               ),
@@ -152,13 +201,29 @@ class _CoverArtState extends State<CoverArt> {
   }
 }
 
-/// 无依赖的脉冲动画（骨架屏呼吸效果）
+/// 脉冲范围：向子树提供呼吸动画的值，由占位块各自按此改变自身颜色。
+///
+/// 以前是拿 `FadeTransition` 包住整个骨架网格，那会让每帧多一次覆盖整块
+/// 网格的离屏合成；现在只让纯色占位块重绘，不产生 saveLayer。
 class Pulse extends StatefulWidget {
   final Widget child;
   const Pulse({super.key, required this.child});
 
+  /// 最近的脉冲动画（没有 Pulse 祖先时为 null）
+  static Animation<double>? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_PulseScope>()?.animation;
+
   @override
   State<Pulse> createState() => _PulseState();
+}
+
+class _PulseScope extends InheritedWidget {
+  final Animation<double> animation;
+  const _PulseScope({required this.animation, required super.child});
+
+  @override
+  bool updateShouldNotify(_PulseScope oldWidget) =>
+      oldWidget.animation != animation;
 }
 
 class _PulseState extends State<Pulse> with SingleTickerProviderStateMixin {
@@ -179,7 +244,7 @@ class _PulseState extends State<Pulse> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) =>
-      FadeTransition(opacity: _a, child: widget.child);
+      _PulseScope(animation: _a, child: widget.child);
 }
 
 /// 骨架占位块
@@ -199,11 +264,26 @@ class SkeletonBox extends StatelessWidget {
     final p = Theme.of(context).brightness == Brightness.dark
         ? AppColors.dark
         : AppColors.light;
+    final pulse = Pulse.of(context);
+    if (pulse == null) return _box(p.surface3);
+    return AnimatedBuilder(
+      animation: pulse,
+      builder: (context, _) => _box(
+        Color.lerp(
+          p.surface3.withValues(alpha: p.surface3.a * .45),
+          p.surface3,
+          pulse.value,
+        )!,
+      ),
+    );
+  }
+
+  Widget _box(Color color) {
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: p.surface3,
+        color: color,
         borderRadius: BorderRadius.circular(radius),
       ),
     );
@@ -231,7 +311,8 @@ class RustImageProvider extends ImageProvider<RustImageProvider> {
     RustImageProvider key,
     ImageDecoderCallback decode,
   ) async {
-    final bytes = await apiGetBytes(url: key.url);
+    // 磁盘缓存优先，命中则完全不产生网络请求（进程重启后依然生效）。
+    final bytes = await CoverCache.fetchWithCache(key.url);
     // 使用传入的 decode 回调（而非直接解码），使 ResizeImage 的按尺寸解码能真正生效：
     // 封面按实际显示尺寸解码，避免全尺寸解码造成的内存与栅格压力。
     final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
@@ -565,7 +646,8 @@ class Pill extends StatelessWidget {
 /// 按可用宽度自适应列数的网格（竖屏约 2 列，横屏/宽窗自动增加）。
 /// 行式懒加载：仅构建可视行，滚出视口的卡片会被回收，
 /// 每张卡片包一层 RepaintBoundary 隔离重绘。
-class ResponsiveGrid extends StatelessWidget {
+/// 鼠标滚轮由 [SmoothWheelDriver] 接管为逐帧缓动（见 smooth_scroll.dart）。
+class ResponsiveGrid extends StatefulWidget {
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
   final EdgeInsetsGeometry padding;
@@ -583,33 +665,65 @@ class ResponsiveGrid extends StatelessWidget {
   });
 
   @override
+  State<ResponsiveGrid> createState() => _ResponsiveGridState();
+}
+
+class _ResponsiveGridState extends State<ResponsiveGrid>
+    with SingleTickerProviderStateMixin {
+  final ScrollController _controller = ScrollController();
+  late final SmoothWheelDriver _wheel = SmoothWheelDriver(
+    vsync: this,
+    controller: _controller,
+  );
+
+  @override
+  void dispose() {
+    _wheel.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onPointerSignal(PointerSignalEvent event) {
+    _wheel.handle(event);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (ctx, c) {
-        final cols = (c.maxWidth / maxTileWidth).floor().clamp(2, 8);
+        final cols = (c.maxWidth / widget.maxTileWidth).floor().clamp(2, 8);
         const gap = 13.0;
         final tile = (c.maxWidth - gap * (cols - 1)) / cols;
-        final rows = (itemCount + cols - 1) ~/ cols;
+        final rows = (widget.itemCount + cols - 1) ~/ cols;
         return ListView.builder(
-          padding: padding,
-          physics: physics,
+          controller: _controller,
+          padding: widget.padding,
+          physics: widget.physics,
           itemCount: rows,
           itemBuilder: (ctx, r) {
             final start = r * cols;
-            final end = start + cols > itemCount ? itemCount : start + cols;
-            return Padding(
-              padding: EdgeInsets.only(top: r == 0 ? 0 : gap),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (var i = start; i < end; i++) ...[
-                    if (i > start) const SizedBox(width: gap),
-                    SizedBox(
-                      width: tile,
-                      child: RepaintBoundary(child: itemBuilder(ctx, i)),
-                    ),
+            final end = start + cols > widget.itemCount
+                ? widget.itemCount
+                : start + cols;
+            // Listener 必须放在滚动内容这一层：命中路径由内向外派发，
+            // 先注册 pointer signal 的一方生效，才能抢在内建 Scrollable 之前。
+            return Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerSignal: _onPointerSignal,
+              child: Padding(
+                padding: EdgeInsets.only(top: r == 0 ? 0 : gap),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = start; i < end; i++) ...[
+                      if (i > start) const SizedBox(width: gap),
+                      SizedBox(
+                        width: tile,
+                        child: RepaintBoundary(child: widget.itemBuilder(ctx, i)),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             );
           },
