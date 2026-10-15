@@ -8,6 +8,58 @@ import '../widgets.dart';
 
 const _reviewsEntryId = '__REVIEWS__';
 
+/// 静默比对用的作品指纹：覆盖卡片显示与收藏判定会用到的字段。
+String favoritesWorkSignature(Work w) => [
+  w.rj,
+  w.title,
+  w.circle,
+  w.va,
+  w.age.name,
+  w.dur,
+  w.releaseDate,
+  w.tags.join(','),
+  w.grayTags.join(','),
+  w.coverUrl ?? '',
+  w.hasSubtitle ? '1' : '0',
+  w.apiId?.toString() ?? '',
+  w.hasReview?.toString() ?? '',
+].join('\u0001');
+
+/// 进入收藏页时，判断后台重新拉取到的第一页是否与当前展示的数据存在差异。
+///
+/// - [current]：当前页面持有的列表（可能只加载了前几页）。
+/// - [knownTotal]：当前列表对应的服务端总数（未知为 -1）。
+/// - [fresh]：后台静默拉取到的第一页。
+///
+/// 收藏增删会改变服务端总数，因此总数不一致即视为有差异；总数未知时退化为
+/// 逐项指纹比较已加载部分，并在服务端已到末页时比较长度。
+bool favoritesListChanged(
+  List<Work> current,
+  int knownTotal,
+  WorksPage fresh,
+) {
+  final list = fresh.works;
+  if (fresh.totalCount >= 0 &&
+      knownTotal >= 0 &&
+      fresh.totalCount != knownTotal) {
+    return true;
+  }
+  final n = list.length < current.length ? list.length : current.length;
+  for (var i = 0; i < n; i++) {
+    if (favoritesWorkSignature(list[i]) !=
+        favoritesWorkSignature(current[i])) {
+      return true;
+    }
+  }
+  // 服务端这一页已是末页（总数未知），长度不同即说明收藏有增删。
+  if (!fresh.hasMore &&
+      fresh.totalCount < 0 &&
+      current.length != list.length) {
+    return true;
+  }
+  return false;
+}
+
 class FavoritesPage extends StatefulWidget {
   final AppState app;
   const FavoritesPage({super.key, required this.app});
@@ -25,6 +77,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
   bool _hasMore = true;
   int _page = 0;
   int _gen = 0;
+  int _totalCount = -1; // 当前列表对应的服务端总数（未知为 -1）
+  bool _silentRefreshing = false; // 进入页面时的后台比对是否在途
   String _reviewSort = 'updated_at';
   bool _reviewOrderAsc = false;
   String? _reviewFilter;
@@ -79,7 +133,80 @@ class _FavoritesPageState extends State<FavoritesPage> {
       }
       return;
     }
-    _loadData(reset: true);
+    if (favoriteChanged || sfwChanged) {
+      // 收藏增删/开关变化需立即与服务器对齐，保持常规加载（含加载态）。
+      _loadData(reset: true);
+      return;
+    }
+    // 仅「切入收藏页」：后台拉取并比对，无差异继续用旧数据。
+    _refreshOnEntry();
+  }
+
+  /// 进入收藏页时的静默刷新：后台拉取第一页并与现有数据比对。
+  ///
+  /// 比对期间保持显示旧数据（不进入加载态、不清空列表）；只有确认有差异时
+  /// 才替换列表并重建页面。请求失败时同样保留旧数据，不打断浏览。
+  Future<void> _refreshOnEntry() async {
+    if (app.sfwMode || _silentRefreshing) return;
+    if (_loading) return; // 已有请求在途，其结果会自行更新列表
+    if (_works.isEmpty) {
+      // 没有旧数据可展示（首次进入/上次加载失败）：走常规加载。
+      await _loadData(reset: true);
+      return;
+    }
+    _silentRefreshing = true;
+    // 请求期间条件变化（切歌单、改排序/筛选、分页）则丢弃本次结果。
+    final gen = _gen;
+    final reviewsMode = _reviewsMode;
+    final playlist = _playlist;
+    final sort = _reviewSort;
+    final asc = _reviewOrderAsc;
+    final filter = _reviewFilter;
+    try {
+      final WorksPage fresh;
+      if (reviewsMode) {
+        fresh = await ApiService.fetchMyReviews(
+          app,
+          page: 1,
+          perPage: 20,
+          order: sort,
+          sort: asc ? 'asc' : 'desc',
+          filter: filter,
+        );
+      } else {
+        final pl = playlist;
+        if (pl == null) return;
+        fresh = await ApiService.fetchPlaylistWorks(
+          app,
+          pl.id,
+          page: 1,
+          perPage: 20,
+        );
+      }
+      if (!mounted || gen != _gen) return;
+      if (_reviewsMode != reviewsMode ||
+          !identical(_playlist, playlist) ||
+          _reviewSort != sort ||
+          _reviewOrderAsc != asc ||
+          _reviewFilter != filter) {
+        return;
+      }
+      if (!favoritesListChanged(_works, _totalCount, fresh)) return; // 无差异
+      setState(() {
+        _works
+          ..clear()
+          ..addAll(fresh.works);
+        _page = 1;
+        _hasMore = fresh.hasMore;
+        _totalCount = fresh.totalCount;
+        _error = false;
+      });
+      if (reviewsMode) app.syncFavorites(_works); // 有新数据才同步收藏状态
+    } catch (_) {
+      // 静默刷新失败：继续显示旧数据
+    } finally {
+      _silentRefreshing = false;
+    }
   }
 
   Future<void> _loadData({bool reset = true}) async {
@@ -128,6 +255,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         _works.addAll(list.works);
         _page = page;
         _hasMore = list.hasMore;
+        _totalCount = list.totalCount;
         _loading = false;
       });
       if (page == 1) {
@@ -169,6 +297,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         _works.addAll(list.works);
         _page = page;
         _hasMore = list.hasMore;
+        _totalCount = list.totalCount;
         _loading = false;
       });
     } catch (_) {
