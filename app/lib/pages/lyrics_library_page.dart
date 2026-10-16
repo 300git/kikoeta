@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../services/lyrics_folder_import.dart';
 import '../services/lyrics_library_service.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -324,6 +325,8 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
   Future<void> _import() async {
     if (_importing) return;
     setState(() => _importing = true);
+    // Android 上文件夹会被镜像到应用缓存目录，导入结束后需要清理。
+    String? mirroredDirectory;
     try {
       final kind = await showDialog<String>(
         context: context,
@@ -349,8 +352,21 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
           sourceNames[path] = file.name;
         }
       } else {
-        final dir = await FilePicker.getDirectoryPath(dialogTitle: '选择歌词文件夹');
-        if (dir != null) paths.add(dir);
+        final selection = await LyricsFolderImport.pickDirectory(
+          dialogTitle: '选择歌词文件夹',
+        );
+        if (!mounted) return;
+        final dir = selection.path;
+        if (dir == null) return;
+        // 只有 Android 走缓存镜像；桌面端选中的是用户自己的目录，不能删。
+        if (LyricsFolderImport.usesSaf) mirroredDirectory = dir;
+        if (selection.fileCount == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('所选文件夹里没有歌词或字幕文件')),
+          );
+          return;
+        }
+        paths.add(dir);
       }
       if (paths.isEmpty) return;
       final largeImport = await _service.isLargeImport(paths);
@@ -462,6 +478,7 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
         ).showSnackBar(SnackBar(content: Text('导入失败：$e')));
       }
     } finally {
+      await LyricsFolderImport.releaseDirectory(mirroredDirectory);
       if (mounted) {
         setState(() => _importing = false);
       }

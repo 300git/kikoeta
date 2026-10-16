@@ -16,6 +16,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var overlay: LyricsOverlay? = null
+    private var lyricsFolderImport: LyricsFolderImport? = null
     private var audioControlChannel: MethodChannel? = null
     private var earPauseReceiver: BroadcastReceiver? = null
     private var ignoreAudioFocus = false
@@ -44,10 +45,18 @@ class MainActivity : FlutterActivity() {
         super.onDestroy()
     }
 
+    /** SAF 文件夹选择结果（歌词库文件夹导入）。 */
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (lyricsFolderImport?.onActivityResult(requestCode, resultCode, data) != true) {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         registerAudioControl(flutterEngine)
         registerMedia3(flutterEngine)
+        lyricsFolderImport = LyricsFolderImport(this).also { it.register(flutterEngine) }
         val channel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "kikoeta/lyrics_overlay",
