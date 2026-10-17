@@ -1175,11 +1175,13 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     final alignment = isWide ? Alignment.centerLeft : Alignment.center;
     final textAlign = isWide ? TextAlign.start : TextAlign.center;
     final activeStyle = TextStyle(
+      fontFamily: kAppFontFamily,
       fontSize: isWide ? 18 : 16,
       fontWeight: FontWeight.w700,
       color: p.text,
     );
     final inactiveStyle = TextStyle(
+      fontFamily: kAppFontFamily,
       fontSize: isWide ? 15 : 14.5,
       fontWeight: FontWeight.normal,
       color: p.dim,

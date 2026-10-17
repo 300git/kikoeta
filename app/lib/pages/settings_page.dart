@@ -983,6 +983,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             // 否则 11.5 与 12 互相覆盖，且字重拿不到 w600
                             textStyle: const WidgetStatePropertyAll(
                               TextStyle(
+                                fontFamily: kAppFontFamily,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),

@@ -750,7 +750,10 @@ class _KikoetaAppState extends State<KikoetaApp>
                   const SizedBox(width: 8),
                   const Text(
                     'Kikoeta',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontFamily: kAppFontFamily,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -910,11 +913,13 @@ class _ShellState extends State<Shell> {
                         selectedIconTheme: IconThemeData(color: p.accent),
                         unselectedIconTheme: IconThemeData(color: p.dim),
                         selectedLabelTextStyle: TextStyle(
+                          fontFamily: kAppFontFamily,
                           color: p.accent,
                           fontWeight: FontWeight.w700,
                           fontSize: 12,
                         ),
                         unselectedLabelTextStyle: TextStyle(
+                          fontFamily: kAppFontFamily,
                           color: p.dim,
                           fontSize: 12,
                         ),

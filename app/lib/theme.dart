@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// 应用内置字体族（与 pubspec.yaml 的 `fonts:` 声明一致）。
+/// 组件主题里显式给出的 TextStyle 不会自动继承 [ThemeData.fontFamily]，
+/// 这些地方必须自己带上字族，否则会回退到系统字体。
+const String kAppFontFamily = 'SarasaUI';
+
 /// 与 HTML demo 一致的蓝色系配色
 class AppColors {
   AppColors._();
@@ -116,7 +121,7 @@ ThemeData buildTheme(Brightness brightness) {
     brightness: brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: p.bg,
-    fontFamily: 'SarasaUI',
+    fontFamily: kAppFontFamily,
     appBarTheme: AppBarTheme(
       backgroundColor: p.bg,
       foregroundColor: p.text,
@@ -141,7 +146,11 @@ ThemeData buildTheme(Brightness brightness) {
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: p.toast,
-      contentTextStyle: TextStyle(fontSize: 12.5, color: p.text),
+      contentTextStyle: TextStyle(
+        fontFamily: kAppFontFamily,
+        fontSize: 12.5,
+        color: p.text,
+      ),
       actionTextColor: p.accent,
       disabledActionTextColor: p.dim,
       elevation: 8,
@@ -157,7 +166,11 @@ ThemeData buildTheme(Brightness brightness) {
       color: p.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 16,
-      textStyle: TextStyle(color: p.muted, fontSize: 13),
+      textStyle: TextStyle(
+        fontFamily: kAppFontFamily,
+        color: p.muted,
+        fontSize: 13,
+      ),
     ),
   );
 }

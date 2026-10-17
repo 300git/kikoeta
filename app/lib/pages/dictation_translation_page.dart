@@ -614,6 +614,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
             selectedForegroundColor: p.accent,
             side: BorderSide(color: p.line),
             textStyle: const TextStyle(
+              fontFamily: kAppFontFamily,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -765,8 +766,16 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
                   size: 20,
                   color: p.accent,
                 ),
-                titleTextStyle: TextStyle(color: p.text, fontSize: 13),
-                subtitleTextStyle: TextStyle(color: p.dim, fontSize: 11.5),
+                titleTextStyle: TextStyle(
+                  fontFamily: kAppFontFamily,
+                  color: p.text,
+                  fontSize: 13,
+                ),
+                subtitleTextStyle: TextStyle(
+                  fontFamily: kAppFontFamily,
+                  color: p.dim,
+                  fontSize: 11.5,
+                ),
                 title: Text(
                   track.title,
                   maxLines: 1,
@@ -789,6 +798,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
               backgroundColor: _session.running ? p.red : p.accent,
               minimumSize: const Size.fromHeight(44),
               textStyle: const TextStyle(
+                fontFamily: kAppFontFamily,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),

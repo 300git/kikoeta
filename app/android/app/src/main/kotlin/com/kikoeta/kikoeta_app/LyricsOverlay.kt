@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PixelFormat
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.os.Build
 import android.provider.Settings
 import android.text.TextUtils
@@ -50,6 +51,17 @@ class LyricsOverlay(
     private var color = Color.WHITE
     private var outlineColor = Color.BLACK
     private var outlineWidth = 1f
+
+    // 与 Flutter 界面保持一致：歌词同样使用内置 Sarasa UI SC，
+    // 资源缺失时回退系统字体（不阻断悬浮窗显示）。
+    private val lyricsTypeface: Typeface? by lazy {
+        runCatching {
+            Typeface.createFromAsset(
+                context.assets,
+                "flutter_assets/assets/fonts/sarasa-ui-sc-regular.ttf",
+            )
+        }.getOrNull()
+    }
 
     // 当前窗口坐标（CENTER_HORIZONTAL 下 x 为相对水平中心的偏移）
     private var winX = 0
@@ -122,6 +134,7 @@ class LyricsOverlay(
         )
 
         val tv = TextView(context)
+        lyricsTypeface?.let { tv.typeface = it }
         tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, fontSize)
         tv.setTextColor(color)
         tv.setShadowLayer(outlineWidth.toFloat(), 0f, 0f, outlineColor)
