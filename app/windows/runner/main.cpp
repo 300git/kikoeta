@@ -43,6 +43,28 @@ void ActivateWindow(HWND window) {
   SetForegroundWindow(window);
 }
 
+void CenterWindowOnPrimaryMonitor(HWND window) {
+  const HMONITOR monitor =
+      MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY);
+  MONITORINFO monitor_info{};
+  monitor_info.cbSize = sizeof(monitor_info);
+  RECT window_rect{};
+  if (monitor == nullptr || !GetMonitorInfoW(monitor, &monitor_info) ||
+      !GetWindowRect(window, &window_rect)) {
+    return;
+  }
+
+  const int width = window_rect.right - window_rect.left;
+  const int height = window_rect.bottom - window_rect.top;
+  const RECT& work_area = monitor_info.rcWork;
+  const int x =
+      work_area.left + ((work_area.right - work_area.left) - width) / 2;
+  const int y =
+      work_area.top + ((work_area.bottom - work_area.top) - height) / 2;
+  SetWindowPos(window, nullptr, x, y, 0, 0,
+               SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
 // The mutex is owned by the kernel for the lifetime of the primary process.
 // Releasing our handle between retries allows us to take over after a process
 // that is still shutting down has fully exited.
@@ -122,6 +144,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::CoUninitialize();
     return EXIT_FAILURE;
   }
+  CenterWindowOnPrimaryMonitor(window.GetHandle());
   window.SetQuitOnClose(true);
 
   ::MSG msg;
