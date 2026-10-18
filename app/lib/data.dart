@@ -46,6 +46,18 @@ class Work {
   final bool? hasReview;
   final List<LanguageEdition> languageEditions;
 
+  /// 平均评分（0~5，来自作品详情/列表的 rate_average_2dp）。
+  final double rating;
+
+  /// 当前账号的评分（0~5）；null 表示未评分。
+  final double? userRating;
+
+  /// 当前账号的播放标记：marked/listening/listened/replay/postponed。
+  final String? progress;
+
+  /// 当前账号的评论正文。
+  final String? reviewText;
+
   const Work({
     required this.rj,
     required this.title,
@@ -62,6 +74,10 @@ class Work {
     this.apiId,
     this.hasReview,
     this.languageEditions = const [],
+    this.rating = 0,
+    this.userRating,
+    this.progress,
+    this.reviewText,
   });
 }
 
@@ -743,6 +759,41 @@ class AppState extends ChangeNotifier {
     if (list == null || index < 0 || index >= list.length) return;
     list.removeAt(index);
     if (list.isEmpty) playlists.remove(name);
+    _persistPlaylists();
+    notifyListeners();
+  }
+
+  /// 调整歌单内条目的播放顺序（拖动作品标题后调用）。
+  ///
+  /// [newIndex] 使用 ReorderableListView 的 `onReorderItem` 语义，已经
+  /// 按“移除原条目后”的坐标调整过，这里只做范围校验。
+  void reorderPlaylist(String name, int oldIndex, int newIndex) {
+    final list = playlists[name];
+    if (list == null) return;
+    if (oldIndex < 0 || oldIndex >= list.length) return;
+    if (newIndex < 0 || newIndex >= list.length) return;
+    if (oldIndex == newIndex) return;
+    final entry = list.removeAt(oldIndex);
+    list.insert(newIndex, entry);
+    _persistPlaylists();
+    notifyListeners();
+  }
+
+  /// 调整某个作品内音频的播放顺序（拖动媒体行后调用）。
+  void reorderPlaylistTrack(
+    String name,
+    int entryIndex,
+    int oldIndex,
+    int newIndex,
+  ) {
+    final list = playlists[name];
+    if (list == null || entryIndex < 0 || entryIndex >= list.length) return;
+    final tracks = list[entryIndex].tracks;
+    if (oldIndex < 0 || oldIndex >= tracks.length) return;
+    if (newIndex < 0 || newIndex >= tracks.length) return;
+    if (oldIndex == newIndex) return;
+    final track = tracks.removeAt(oldIndex);
+    tracks.insert(newIndex, track);
     _persistPlaylists();
     notifyListeners();
   }

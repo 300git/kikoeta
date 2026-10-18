@@ -235,14 +235,131 @@ class ApiService {
     return parseWorks(json, base: base, perPage: 1).works.firstOrNull;
   }
 
-  /// 读取单部作品详情，以取得首页列表未携带的多语言版本信息。
+  /// 读取单部作品详情（`?v=2`，含当前账号的评分/标记/评论），
+  /// 以取得首页列表未携带的多语言版本与评价信息。
   static Future<Work> fetchWork(AppState app, int id) async {
-    final json = await apiGetWork(base: resolveBase(app), rj: id.toString());
+    final json = await apiGetWorkV2(base: resolveBase(app), rj: id.toString());
     final decoded = jsonDecode(json);
     if (decoded is! Map) {
       throw const FormatException('作品详情格式无效');
     }
     return _mapWork(Map<String, dynamic>.from(decoded), 0, resolveBase(app));
+  }
+
+  /// 快速打分 / 保存评价与标记（PUT /api/review）。
+  ///
+  /// 只提交本次明确修改的字段，未传的字段保持服务端原值。
+  static Future<void> submitReview(
+    AppState app,
+    Work work, {
+    double? rating,
+    String? reviewText,
+    String? progress,
+  }) async {
+    final id = work.apiId;
+    if (id == null) throw Exception('该作品缺少编号，无法评价');
+    await apiSubmitReview(
+      base: resolveBase(app),
+      workId: BigInt.from(id),
+      rating: rating,
+      reviewText: reviewText,
+      progress: progress,
+    );
+  }
+
+  /// 取消打分：把当前账号的评分置空（PUT /api/review，rating=null）。
+  static Future<void> clearReviewRating(AppState app, Work work) async {
+    final id = work.apiId;
+    if (id == null) throw Exception('该作品缺少编号，无法取消评分');
+    await apiClearReviewRating(base: resolveBase(app), workId: BigInt.from(id));
+  }
+
+  /// 取消播放标记：把 progress 置空（PUT /api/review，progress=null），
+  /// 评分和评论保持不变。
+  static Future<void> clearReviewProgress(AppState app, Work work) async {
+    final id = work.apiId;
+    if (id == null) throw Exception('该作品缺少编号，无法取消标记');
+    await apiClearReviewProgress(
+      base: resolveBase(app),
+      workId: BigInt.from(id),
+    );
+  }
+
+  /// 删除该作品的评价与标记（DELETE /api/review）。
+  static Future<void> deleteReview(AppState app, Work work) async {
+    final id = work.apiId;
+    if (id == null) throw Exception('该作品缺少编号，无法删除标记');
+    await apiDeleteFavoriteReview(
+      base: resolveBase(app),
+      workId: BigInt.from(id),
+    );
+  }
+
+  /// asmr.one 相似作品（作品详情页文件列表下方）。
+  ///
+  /// 接口与站点一致：`itemId` 是作品数字 id，`keyword` 传空表示不做关键词
+  /// 过滤；服务端默认每页 20 条，通过 `page` 继续加载剩余结果。
+  /// 该接口仅 one 站提供，自建站直接返回空列表。
+  static Future<WorksPage> fetchSimilarWorks(
+    AppState app,
+    Work work, {
+    int page = 1,
+  }) async {
+    final id = work.apiId;
+    if (id == null || app.customServer) {
+      return const WorksPage(
+        works: [],
+        page: 1,
+        pageSize: 20,
+        totalCount: 0,
+        hasMore: false,
+      );
+    }
+    final base = resolveBase(app);
+    final json = await apiGetRecommenderNeighbors(
+      base: base,
+      itemId: '$id',
+      keyword: '',
+      page: page,
+    );
+    final parsed = parseWorks(json, base: base);
+    return WorksPage(
+      works: filterSimilarWorks(
+        parsed.works,
+        current: work,
+        sfwMode: app.sfwMode,
+        isBlacklisted: app.isBlacklistedWork,
+      ),
+      page: parsed.page,
+      pageSize: parsed.pageSize,
+      totalCount: parsed.totalCount,
+      hasMore: parsed.hasMore,
+    );
+  }
+
+  /// 相似作品展示口径：去掉当前作品自身和黑名单作品；SFW 模式下只保留
+  /// 全年龄作品，与首页列表保持一致。
+  @visibleForTesting
+  static List<Work> filterSimilarWorks(
+    List<Work> works, {
+    required Work current,
+    required bool sfwMode,
+    required bool Function(Work work) isBlacklisted,
+  }) {
+    return works
+        .where(
+          (w) =>
+              w.rj != current.rj &&
+              !isBlacklisted(w) &&
+              !(sfwMode && w.age != Age.all),
+        )
+        .toList();
+  }
+
+  /// 从 RJ 号还原作品数字 id（`RJ01653004` → 1653004）。
+  static int? apiIdFromRj(String rj) {
+    final digits = rj.replaceFirst(RegExp(r'^RJ0*', caseSensitive: false), '');
+    return int.tryParse(digits);
   }
 
   /// 首页/搜索排序参数：所有分类均按用户选择传递给服务器。
@@ -312,6 +429,17 @@ class ApiService {
     return apiHealth(base: base);
   }
 
+  /// one 站已弃用但仍保留的系统歌单：接口返回的内部名映射为中文显示名。
+  static String? _systemPlaylistDisplayName(String value) {
+    switch (value.trim().toUpperCase()) {
+      case '__SYS_PLAYLIST_LIKED':
+        return '喜欢';
+      case '__SYS_PLAYLIST_MARKED':
+        return '标记';
+    }
+    return null;
+  }
+
   /// 歌单列表（需登录）
   static Future<List<PlaylistInfo>> fetchPlaylists(AppState app) async {
     final json = await apiGetPlaylists(base: resolveBase(app));
@@ -321,11 +449,14 @@ class ApiService {
         .map((e) {
           final m = e as Map<String, dynamic>;
           final id = m['id']?.toString() ?? '';
-          final name = m['name'] as String? ?? '未命名歌单';
+          final rawName = m['name'] as String? ?? '';
+          final systemName =
+              _systemPlaylistDisplayName(rawName) ??
+              _systemPlaylistDisplayName(id);
           final type = m['type']?.toString().toLowerCase() ?? '';
           return PlaylistInfo(
             id: id,
-            name: name,
+            name: systemName ?? (rawName.isEmpty ? '未命名歌单' : rawName),
             worksCount: (m['works_count'] as num?)?.toInt() ?? 0,
             coverUrl: m['mainCoverUrl'] as String?,
             isSystemLiked:
@@ -333,7 +464,7 @@ class ApiService {
                 m['isSystem'] == true ||
                 m['is_system'] == true ||
                 type == 'liked' ||
-                id == '__SYS_PLAYLIST_LIKED',
+                systemName == '喜欢',
           );
         })
         .where((p) => p.id.isNotEmpty)
@@ -1317,6 +1448,12 @@ class ApiService {
       apiId: apiId,
       hasReview: hasReview,
       languageEditions: languageEditions,
+      rating: (m['rate_average_2dp'] as num?)?.toDouble() ?? 0,
+      userRating: (m['userRating'] as num?)?.toDouble(),
+      progress: (m['progress'] as String?)?.trim().isEmpty == true
+          ? null
+          : m['progress'] as String?,
+      reviewText: m['review_text'] as String?,
     );
   }
 

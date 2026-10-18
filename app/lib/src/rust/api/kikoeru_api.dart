@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `append_custom_params`, `append_filter_params`, `auth_header`, `base_of`, `http_client`, `http_delete`, `http_get`, `http_post_json`, `http_put_json`, `origin_of`, `urlencoding`
+// These functions are ignored because they are not marked as `pub`: `append_custom_params`, `append_filter_params`, `auth_header`, `base_of`, `clear_progress_body`, `clear_rating_body`, `http_client`, `http_delete`, `http_get`, `http_post_json`, `http_put_json`, `neighbors_body`, `origin_of`, `recommender_body`, `review_body`, `urlencoding`
 
 /// 作品列表：GET /api/works?page=&per_page=&order=&sort=&subtitle=&seed=
 Future<String> apiGetWorks({
@@ -27,11 +27,14 @@ Future<String> apiGetWorks({
   seed: seed,
 );
 
-/// 随心听：GET /api/works?order=betterRandom
+/// asmr.one 随心听：固定请求服务端的单作品随机接口。
+///
+/// 该接口与普通作品列表、热门和推荐页面完全独立，不能附带分页、
+/// 筛选或 seed 等列表参数。
 Future<String> apiGetRandomWork({required String base}) =>
     RustLib.instance.api.crateApiKikoeruApiApiGetRandomWork(base: base);
 
-/// asmr.one 热门作品：POST /api/recommender/popular
+/// asmr.one 热门页：POST /api/recommender/popular。
 Future<String> apiGetRecommenderPopular({
   required String base,
   required String keyword,
@@ -44,7 +47,7 @@ Future<String> apiGetRecommenderPopular({
   subtitle: subtitle,
 );
 
-/// asmr.one 推荐作品：POST /api/recommender/recommend-for-user
+/// asmr.one 推荐页：POST /api/recommender/recommend-for-user。
 Future<String> apiGetRecommenderRecommend({
   required String base,
   required String recommenderUuid,
@@ -57,6 +60,23 @@ Future<String> apiGetRecommenderRecommend({
   keyword: keyword,
   page: page,
   subtitle: subtitle,
+);
+
+/// asmr.one 相似作品：POST /api/recommender/item-neighbors。
+///
+/// 请求体与站点一致：`itemId` 是作品数字 id，`keyword` 用于叠加高级筛选；
+/// 站点默认每页 20 条，这里显式传页码以便继续加载剩余结果。
+/// 该接口只属于 one 站，自建站不支持。
+Future<String> apiGetRecommenderNeighbors({
+  required String base,
+  required String itemId,
+  required String keyword,
+  required int page,
+}) => RustLib.instance.api.crateApiKikoeruApiApiGetRecommenderNeighbors(
+  base: base,
+  itemId: itemId,
+  keyword: keyword,
+  page: page,
 );
 
 /// 搜索：GET /api/search/{query}?page=&per_page=&order=&sort=&subtitle=
@@ -123,6 +143,10 @@ Future<String> apiSearchCustom({
 /// 作品详情：GET /api/work/{rj}
 Future<String> apiGetWork({required String base, required String rj}) =>
     RustLib.instance.api.crateApiKikoeruApiApiGetWork(base: base, rj: rj);
+
+/// 作品详情（含当前账号的评分/标记/评论）：GET /api/work/{rj}?v=2
+Future<String> apiGetWorkV2({required String base, required String rj}) =>
+    RustLib.instance.api.crateApiKikoeruApiApiGetWorkV2(base: base, rj: rj);
 
 /// 曲目列表：GET /api/tracks/{rj}
 Future<String> apiGetTracks({required String base, required String rj}) =>
@@ -198,6 +222,42 @@ Future<String> apiCreateFavoriteReview({
 }) => RustLib.instance.api.crateApiKikoeruApiApiCreateFavoriteReview(
   base: base,
   userName: userName,
+  workId: workId,
+);
+
+/// 提交评价与标记：PUT /api/review
+///
+/// 只发送调用方明确提供的字段——快速打分只传 rating，进度与评论保持
+/// 服务端原值；对话框确认时再一并提交进度和评论正文。
+Future<String> apiSubmitReview({
+  required String base,
+  required BigInt workId,
+  double? rating,
+  String? reviewText,
+  String? progress,
+}) => RustLib.instance.api.crateApiKikoeruApiApiSubmitReview(
+  base: base,
+  workId: workId,
+  rating: rating,
+  reviewText: reviewText,
+  progress: progress,
+);
+
+/// 取消打分：PUT /api/review，把 rating 显式置为 null，其余字段保持不变。
+Future<String> apiClearReviewRating({
+  required String base,
+  required BigInt workId,
+}) => RustLib.instance.api.crateApiKikoeruApiApiClearReviewRating(
+  base: base,
+  workId: workId,
+);
+
+/// 取消播放标记：PUT /api/review，把 progress 显式置为 null，评分与评论保持不变。
+Future<String> apiClearReviewProgress({
+  required String base,
+  required BigInt workId,
+}) => RustLib.instance.api.crateApiKikoeruApiApiClearReviewProgress(
+  base: base,
   workId: workId,
 );
 

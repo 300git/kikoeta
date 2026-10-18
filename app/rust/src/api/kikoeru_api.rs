@@ -184,6 +184,35 @@ pub async fn api_get_recommender_recommend(
     http_post_json(&client, &url, auth.as_deref(), body).await
 }
 
+/// asmr.one 相似作品：POST /api/recommender/item-neighbors。
+///
+/// 请求体与站点一致：`itemId` 是作品数字 id，`keyword` 用于叠加高级筛选；
+/// 站点默认每页 20 条，这里显式传页码以便继续加载剩余结果。
+/// 该接口只属于 one 站，自建站不支持。
+#[flutter_rust_bridge::frb]
+pub async fn api_get_recommender_neighbors(
+    base: String,
+    item_id: String,
+    keyword: String,
+    page: u32,
+) -> Result<String, String> {
+    let url = format!("{}/api/recommender/item-neighbors", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let body = neighbors_body(&item_id, &keyword, page);
+    http_post_json(&client, &url, auth.as_deref(), body).await
+}
+
+fn neighbors_body(item_id: &str, keyword: &str, page: u32) -> serde_json::Value {
+    serde_json::json!({
+        "keyword": keyword,
+        "itemId": item_id,
+        "localSubtitledWorks": [],
+        "withPlaylistStatus": [],
+        "page": page,
+    })
+}
+
 fn recommender_body(
     keyword: &str,
     page: u32,
@@ -336,6 +365,15 @@ fn append_custom_params(
 #[flutter_rust_bridge::frb]
 pub async fn api_get_work(base: String, rj: String) -> Result<String, String> {
     let url = format!("{}/api/work/{}", base_of(&base), rj);
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    http_get(&client, &url, auth.as_deref()).await
+}
+
+/// 作品详情（含当前账号的评分/标记/评论）：GET /api/work/{rj}?v=2
+#[flutter_rust_bridge::frb]
+pub async fn api_get_work_v2(base: String, rj: String) -> Result<String, String> {
+    let url = format!("{}/api/work/{}?v=2", base_of(&base), rj);
     let client = http_client()?;
     let auth = auth_header(&base);
     http_get(&client, &url, auth.as_deref()).await
@@ -518,6 +556,75 @@ pub async fn api_create_favorite_review(
         "work_id": work_id,
     });
     http_put_json(&client, &url, auth.as_deref(), body).await
+}
+
+/// 提交评价与标记：PUT /api/review
+///
+/// 只发送调用方明确提供的字段——快速打分只传 rating，进度与评论保持
+/// 服务端原值；对话框确认时再一并提交进度和评论正文。
+#[flutter_rust_bridge::frb]
+pub async fn api_submit_review(
+    base: String,
+    work_id: u64,
+    rating: Option<f64>,
+    review_text: Option<String>,
+    progress: Option<String>,
+) -> Result<String, String> {
+    let url = format!("{}/api/review", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let body = review_body(
+        work_id,
+        rating,
+        review_text.as_deref(),
+        progress.as_deref(),
+    );
+    http_put_json(&client, &url, auth.as_deref(), body).await
+}
+
+fn review_body(
+    work_id: u64,
+    rating: Option<f64>,
+    review_text: Option<&str>,
+    progress: Option<&str>,
+) -> serde_json::Value {
+    let mut body = serde_json::json!({ "work_id": work_id });
+    if let Some(value) = rating {
+        body["rating"] = serde_json::json!(value);
+    }
+    if let Some(value) = review_text {
+        body["review_text"] = serde_json::Value::String(value.to_string());
+    }
+    if let Some(value) = progress {
+        body["progress"] = serde_json::Value::String(value.to_string());
+    }
+    body
+}
+
+/// 取消打分：PUT /api/review，把 rating 显式置为 null，其余字段保持不变。
+#[flutter_rust_bridge::frb]
+pub async fn api_clear_review_rating(base: String, work_id: u64) -> Result<String, String> {
+    let url = format!("{}/api/review", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    http_put_json(&client, &url, auth.as_deref(), clear_rating_body(work_id)).await
+}
+
+fn clear_rating_body(work_id: u64) -> serde_json::Value {
+    serde_json::json!({ "work_id": work_id, "rating": serde_json::Value::Null })
+}
+
+/// 取消播放标记：PUT /api/review，把 progress 显式置为 null，评分与评论保持不变。
+#[flutter_rust_bridge::frb]
+pub async fn api_clear_review_progress(base: String, work_id: u64) -> Result<String, String> {
+    let url = format!("{}/api/review", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    http_put_json(&client, &url, auth.as_deref(), clear_progress_body(work_id)).await
+}
+
+fn clear_progress_body(work_id: u64) -> serde_json::Value {
+    serde_json::json!({ "work_id": work_id, "progress": serde_json::Value::Null })
 }
 
 /// 取消收藏：删除该作品的评价。
@@ -707,5 +814,41 @@ mod tests {
             let index = path.strip_prefix("/work/").unwrap();
             assert_eq!(*auth, Some(format!("Bearer session-{index}")));
         }
+    }
+
+    #[test]
+    fn item_neighbors_body_matches_the_one_site_request() {
+        let body = neighbors_body("1722779", "", 1);
+        assert_eq!(body["itemId"], "1722779");
+        assert_eq!(body["keyword"], "");
+        assert_eq!(body["page"], 1);
+        assert_eq!(body["localSubtitledWorks"], serde_json::json!([]));
+        assert_eq!(body["withPlaylistStatus"], serde_json::json!([]));
+
+        let filtered = neighbors_body("1722779", "$age:adult$", 3);
+        assert_eq!(filtered["keyword"], "$age:adult$");
+        assert_eq!(filtered["page"], 3);
+    }
+
+    #[test]
+    fn review_body_only_contains_the_fields_being_changed() {
+        let quick = review_body(1722779, Some(4.5), None, None);
+        assert_eq!(quick["work_id"], 1722779);
+        assert_eq!(quick["rating"], 4.5);
+        assert!(quick.get("review_text").is_none());
+        assert!(quick.get("progress").is_none());
+
+        let full = review_body(1722779, Some(5.0), Some("好"), Some("listened"));
+        assert_eq!(full["rating"], 5.0);
+        assert_eq!(full["review_text"], "好");
+        assert_eq!(full["progress"], "listened");
+
+        let cleared = clear_rating_body(1722779);
+        assert_eq!(cleared["work_id"], 1722779);
+        assert!(cleared["rating"].is_null());
+
+        let unmarked = clear_progress_body(1722779);
+        assert_eq!(unmarked["work_id"], 1722779);
+        assert!(unmarked["progress"].is_null());
     }
 }

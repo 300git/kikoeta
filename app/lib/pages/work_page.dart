@@ -21,6 +21,15 @@ import '../widgets.dart';
 import '../widgets/media_tree_sliver.dart';
 import 'dictation_translation_page.dart';
 
+/// 播放标记的接口值与中文标签。
+const workProgressLabels = <String, String>{
+  'marked': '想听',
+  'listening': '在听',
+  'listened': '听过',
+  'replay': '重听',
+  'postponed': '搁置',
+};
+
 class WorkPage extends StatefulWidget {
   final AppState app;
   final Work work;
@@ -34,6 +43,160 @@ class WorkPage extends StatefulWidget {
 
   @override
   State<WorkPage> createState() => _WorkPageState();
+}
+
+/// 单颗评分星：灰底上按 [fill]（0~1）比例叠一层彩色星。
+class _StarButton extends StatelessWidget {
+  final double fill;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _StarButton({
+    required this.fill,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 2),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: Stack(
+            children: [
+              Icon(Icons.star, size: 17, color: p.dim),
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: fill.clamp(0.0, 1.0),
+                  child: Icon(Icons.star, size: 17, color: color),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 评分星行：用一个动画控制器把「填充值 + 颜色」从当前状态连续过渡到
+/// 新状态（首次加载从 0 填充），避免多段动画叠加造成中途停止或跳变。
+/// 已打分时额外显示一颗黄星表示平均分。
+class _RatingStars extends StatefulWidget {
+  final double value;
+  final bool rated;
+  final String text;
+  final Color activeColor;
+  final ValueChanged<int> onRate;
+  final VoidCallback onClear;
+
+  const _RatingStars({
+    required this.value,
+    required this.rated,
+    required this.text,
+    required this.activeColor,
+    required this.onRate,
+    required this.onClear,
+  });
+
+  @override
+  State<_RatingStars> createState() => _RatingStarsState();
+}
+
+class _RatingStarsState extends State<_RatingStars>
+    with SingleTickerProviderStateMixin {
+  static const _yellow = Color(0xFFF5B301);
+  static const _curve = Curves.easeOutCubic;
+
+  late final AnimationController _controller;
+  double _fromValue = 0;
+  double _toValue = 0;
+  Color _fromColor = _yellow;
+  Color _toColor = _yellow;
+
+  Color get _targetColor => widget.rated ? widget.activeColor : _yellow;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _toValue = widget.value;
+    _toColor = _targetColor;
+    _fromColor = _toColor;
+    _controller.forward(from: 0);
+  }
+
+  @override
+  void didUpdateWidget(covariant _RatingStars oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final targetColor = _targetColor;
+    if (widget.value == _toValue && targetColor == _toColor) return;
+    final t = _curve.transform(_controller.value);
+    _fromValue = _fromValue + (_toValue - _fromValue) * t;
+    _fromColor = Color.lerp(_fromColor, _toColor, t)!;
+    _toValue = widget.value;
+    _toColor = targetColor;
+    _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final t = _curve.transform(_controller.value);
+        final value = _fromValue + (_toValue - _fromValue) * t;
+        final color = Color.lerp(_fromColor, _toColor, t)!;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < 5; i++)
+              _StarButton(
+                fill: (value - i).clamp(0.0, 1.0),
+                color: color,
+                // 已打分时再次点击自己打的那个分值 = 取消打分。
+                onTap: widget.rated && widget.value == i + 1
+                    ? widget.onClear
+                    : () => widget.onRate(i + 1),
+              ),
+            const SizedBox(width: 6),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: _curve,
+              child: widget.rated
+                  ? const Padding(
+                      padding: EdgeInsets.only(right: 3),
+                      child: Icon(Icons.star, size: 14, color: _yellow),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            Text(widget.text, style: TextStyle(fontSize: 12, color: p.muted)),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _WorkMenuEntry extends StatelessWidget {
@@ -95,6 +258,17 @@ class _WorkPageState extends State<WorkPage> {
   bool _translating = false;
   List<LanguageEdition> _languageEditions = const [];
   bool _openingLanguageEdition = false;
+  double _ratingAverage = 0;
+  double? _userRating;
+  String? _myProgress;
+  String? _myReviewText;
+  List<Work> _similarWorks = const [];
+  int _similarPage = 0;
+  int _similarTotal = 0;
+  bool _similarHasMore = true;
+  bool _similarLoading = false;
+  int _similarSeq = 0;
+  final ScrollController _pageScroll = ScrollController();
 
   @override
   void initState() {
@@ -107,13 +281,17 @@ class _WorkPageState extends State<WorkPage> {
       _applyDownloadSmartPath();
     }
     app.addListener(_onAppChanged);
+    _pageScroll.addListener(_onPageScroll);
     if (downloadItem == null) _loadTracks();
-    _loadLanguageEditions();
+    _ratingAverage = work.rating;
+    _loadWorkDetails();
+    _loadSimilarWorks();
   }
 
   @override
   void dispose() {
     app.removeListener(_onAppChanged);
+    _pageScroll.dispose();
     super.dispose();
   }
 
@@ -121,8 +299,54 @@ class _WorkPageState extends State<WorkPage> {
     if (downloadItem == null && app.loginEpoch != _seenLoginEpoch) {
       _seenLoginEpoch = app.loginEpoch;
       _loadTracks();
+      _loadSimilarWorks();
     }
     if (mounted) setState(() {});
+  }
+
+  /// 加载相似作品：`reset` 从第一页重新拉取（进入页面/刷新），
+  /// 否则追加下一页。接口每页 20 条，总数为 100。
+  Future<void> _loadSimilarWorks({bool reset = true}) async {
+    if (_similarLoading && !reset) return;
+    final id = work.apiId;
+    if (id == null || app.customServer) return;
+    final seq = ++_similarSeq;
+    final nextPage = reset ? 1 : _similarPage + 1;
+    if (reset) {
+      _similarPage = 0;
+      _similarHasMore = true;
+    }
+    setState(() => _similarLoading = true);
+    try {
+      final result = await ApiService.fetchSimilarWorks(
+        app,
+        work,
+        page: nextPage,
+      );
+      if (!mounted || seq != _similarSeq) return;
+      setState(() {
+        _similarLoading = false;
+        _similarPage = result.page;
+        _similarTotal = result.totalCount;
+        _similarHasMore = result.hasMore;
+        if (nextPage == 1) {
+          _similarWorks = result.works;
+        } else {
+          final seen = {for (final w in _similarWorks) w.rj};
+          _similarWorks = [
+            ..._similarWorks,
+            ...result.works.where((w) => seen.add(w.rj)),
+          ];
+        }
+      });
+    } catch (_) {
+      if (!mounted || seq != _similarSeq) return;
+      // 相似作品是详情页的附加内容：接口不可用（含自建站）时整段隐藏。
+      setState(() {
+        _similarLoading = false;
+        _similarHasMore = false;
+      });
+    }
   }
 
   Future<void> _loadTracks({bool forceRefresh = false}) async {
@@ -221,7 +445,7 @@ class _WorkPageState extends State<WorkPage> {
     }
   }
 
-  Future<void> _loadLanguageEditions() async {
+  Future<void> _loadWorkDetails() async {
     final id = work.apiId;
     if (id == null) return;
     try {
@@ -230,11 +454,179 @@ class _WorkPageState extends State<WorkPage> {
         app.syncFavoriteFromServer(work, details.hasReview!);
       }
       if (mounted) {
-        setState(() => _languageEditions = details.languageEditions);
+        setState(() {
+          _languageEditions = details.languageEditions;
+          _ratingAverage = details.rating;
+          _userRating = details.userRating;
+          _myProgress = details.progress;
+          _myReviewText = details.reviewText;
+        });
       }
     } catch (_) {
-      // 作品仍可正常浏览；多语言入口仅在详情接口可用时显示。
+      // 作品仍可正常浏览；评分/多语言入口仅在详情接口可用时显示。
     }
+  }
+
+  String get _ratingText =>
+      _ratingAverage <= 0 ? '--' : _ratingAverage.toStringAsFixed(1);
+
+  /// 作品评分：未打分时黄色五角星按平均分比例填充，右侧展示平均分；
+  /// 打分后变为蓝色五角星 + 一颗黄星和平均分。填充/变色由同一个
+  /// 控制器从当前状态连续过渡，不会出现中途重启或跳变。
+  Widget _ratingStars() {
+    return _RatingStars(
+      value: (_userRating ?? _ratingAverage).clamp(0.0, 5.0),
+      rated: _userRating != null,
+      text: _ratingText,
+      activeColor: p.accent,
+      onRate: (stars) => _rateWork(stars.toDouble()),
+      onClear: _clearRating,
+    );
+  }
+
+  Future<void> _rateWork(double value) async {
+    if (work.apiId == null) return;
+    final previous = _userRating;
+    setState(() => _userRating = value);
+    try {
+      await ApiService.submitReview(
+        app,
+        work,
+        rating: value,
+        reviewText: _myReviewText,
+        progress: _myProgress,
+      );
+      unawaited(_refreshRatingAverage());
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _userRating = previous);
+      _toast('评分失败：$e');
+    }
+  }
+
+  Future<void> _clearRating() async {
+    if (work.apiId == null) return;
+    final previous = _userRating;
+    setState(() => _userRating = null);
+    try {
+      await ApiService.clearReviewRating(app, work);
+      unawaited(_refreshRatingAverage());
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _userRating = previous);
+      _toast('取消评分失败：$e');
+    }
+  }
+
+  /// 只刷新平均分，避免覆盖用户刚点下的本人评分。
+  Future<void> _refreshRatingAverage() async {
+    final id = work.apiId;
+    if (id == null) return;
+    try {
+      final details = await ApiService.fetchWork(app, id);
+      if (mounted) setState(() => _ratingAverage = details.rating);
+    } catch (_) {
+      // 平均分刷新失败不影响当前展示。
+    }
+  }
+
+  /// 更新播放标记；再次选择当前标记时取消标记（progress=null）。
+  Future<void> _setProgress(String progress) async {
+    if (work.apiId == null) return;
+    final previous = _myProgress;
+    final clearing = previous == progress;
+    setState(() => _myProgress = clearing ? null : progress);
+    try {
+      if (clearing) {
+        await ApiService.clearReviewProgress(app, work);
+      } else {
+        await ApiService.submitReview(app, work, progress: progress);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _myProgress = previous);
+      _toast(clearing ? '取消标记失败：$e' : '标记失败：$e');
+    }
+  }
+
+  /// AppBar 标记按钮：未标记显示空心书签 + “标记”，已标记显示实心书签
+  /// + 对应状态文字并变蓝；点击展开五种播放标记。
+  Widget _markButton() {
+    final marked = _myProgress != null;
+    final color = marked ? p.accent : p.text;
+    return PopupMenuButton<String>(
+      tooltip: '标记',
+      onSelected: _setProgress,
+      itemBuilder: (_) => [
+        for (final entry in workProgressLabels.entries)
+          PopupMenuItem<String>(
+            value: entry.key,
+            child: Row(
+              children: [
+                Icon(
+                  _myProgress == entry.key
+                      ? Icons.bookmark
+                      : Icons.bookmark_border,
+                  size: 17,
+                  color: _myProgress == entry.key ? p.accent : p.muted,
+                ),
+                const SizedBox(width: 10),
+                Text(entry.value),
+              ],
+            ),
+          ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              marked ? Icons.bookmark : Icons.bookmark_border,
+              size: 19,
+              color: color,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              marked ? (workProgressLabels[_myProgress] ?? '标记') : '标记',
+              style: TextStyle(fontSize: 12.5, color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openReviewDialog() async {
+    if (work.apiId == null) {
+      _toast('该作品缺少编号，无法评价');
+      return;
+    }
+    final result = await showDialog<_ReviewResult>(
+      context: context,
+      builder: (_) => _ReviewDialog(
+        app: app,
+        work: work,
+        userRating: _userRating,
+        progress: _myProgress,
+        reviewText: _myReviewText,
+      ),
+    );
+    if (result == null || !mounted) return;
+    if (result.deleted) {
+      setState(() {
+        _userRating = null;
+        _myProgress = null;
+        _myReviewText = null;
+      });
+    } else {
+      setState(() {
+        _myProgress = result.progress;
+        _myReviewText = result.reviewText;
+      });
+    }
+    // 重新拉取详情，让平均分与当前账号状态和服务端保持一致。
+    unawaited(_loadWorkDetails());
   }
 
   Future<void> _openLanguageEdition(LanguageEdition edition) async {
@@ -577,7 +969,8 @@ class _WorkPageState extends State<WorkPage> {
     }
     await Future.wait([
       _loadTracks(forceRefresh: true),
-      _loadLanguageEditions(),
+      _loadWorkDetails(),
+      _loadSimilarWorks(),
     ]);
     if (mounted) _toast(_tracksFailed ? '刷新失败' : '已刷新');
   }
@@ -654,6 +1047,9 @@ class _WorkPageState extends State<WorkPage> {
         return;
       case 'refresh':
         await _refreshWork();
+        return;
+      case 'review':
+        await _openReviewDialog();
         return;
       case 'dictationTranslation':
         final tree = _tree;
@@ -1218,6 +1614,7 @@ class _WorkPageState extends State<WorkPage> {
         title: const Text('作品详情'),
         leading: const BackButton(),
         actions: [
+          _markButton(),
           PopupMenuButton<String>(
             tooltip: '更多',
             icon: const Icon(Icons.more_vert),
@@ -1243,6 +1640,13 @@ class _WorkPageState extends State<WorkPage> {
               const PopupMenuItem(
                 value: 'dictationTranslation',
                 child: _WorkMenuEntry(icon: Icons.graphic_eq, label: '听写翻译'),
+              ),
+              const PopupMenuItem(
+                value: 'review',
+                child: _WorkMenuEntry(
+                  icon: Icons.chat_bubble_outline,
+                  label: '评论',
+                ),
               ),
               const PopupMenuItem(
                 value: 'asmr',
@@ -1273,6 +1677,7 @@ class _WorkPageState extends State<WorkPage> {
       body: Stack(
         children: [
           CustomScrollView(
+            controller: _pageScroll,
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
@@ -1318,6 +1723,8 @@ class _WorkPageState extends State<WorkPage> {
                                     ),
                                   ),
                                 ),
+                              const SizedBox(height: 6),
+                              _ratingStars(),
                               const SizedBox(height: 7),
                               if (splitWorkMetadata)
                                 Column(
@@ -1564,6 +1971,7 @@ class _WorkPageState extends State<WorkPage> {
                       )
                     : SliverToBoxAdapter(child: _treePlaceholder()),
               ),
+              if (_similarWorks.isNotEmpty) ..._similarWorksSlivers(),
               SliverToBoxAdapter(
                 child: SizedBox(height: miniVisible ? 100 : 40),
               ),
@@ -1579,6 +1987,128 @@ class _WorkPageState extends State<WorkPage> {
         ],
       ),
     );
+  }
+
+  /// 相似作品：与首页作品流一致的竖向卡片网格，放在文件列表下方。
+  /// 接口总数 100、每页 20，滚到接近底部时自动加载下一页。
+  List<Widget> _similarWorksSlivers() {
+    return [
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+        sliver: SliverToBoxAdapter(
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '相似作品',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: p.muted,
+                  ),
+                ),
+              ),
+              if (_similarTotal > 0)
+                Text(
+                  '${_similarWorks.length}/$_similarTotal',
+                  style: TextStyle(fontSize: 11.5, color: p.dim),
+                ),
+            ],
+          ),
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+        // 每行卡片高度由内容决定（标题行数、标签多少不同），行高跟随该行
+        // 最高的卡片，不能用固定 aspectRatio 的 SliverGrid。
+        sliver: SliverLayoutBuilder(
+          builder: (context, constraints) {
+            const gap = 13.0;
+            final cols = (constraints.crossAxisExtent / 210)
+                .floor()
+                .clamp(2, 8)
+                .toInt();
+            final tile =
+                (constraints.crossAxisExtent - gap * (cols - 1)) / cols;
+            final rows = (_similarWorks.length + cols - 1) ~/ cols;
+            return SliverList.builder(
+              itemCount: rows,
+              itemBuilder: (context, r) {
+                final start = r * cols;
+                final end = math.min(start + cols, _similarWorks.length);
+                return Padding(
+                  padding: EdgeInsets.only(top: r == 0 ? 0 : gap),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = start; i < end; i++) ...[
+                        if (i > start) const SizedBox(width: gap),
+                        SizedBox(
+                          width: tile,
+                          child: WorkCard(
+                            work: _similarWorks[i],
+                            index: i,
+                            cardBackground: true,
+                            onTap: () => Navigator.of(
+                              context,
+                            ).push(buildWorkRoute(app, _similarWorks[i])),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: Center(
+            child: _similarLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: p.accent,
+                    ),
+                  )
+                : _similarHasMore
+                ? GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _loadSimilarWorks(reset: false),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        '加载更多相似作品',
+                        style: TextStyle(fontSize: 12, color: p.accent),
+                      ),
+                    ),
+                  )
+                : Text(
+                    '已显示全部相似作品',
+                    style: TextStyle(fontSize: 12, color: p.dim),
+                  ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  /// 页面滚到接近底部时自动加载下一批相似作品。
+  void _onPageScroll() {
+    if (!_pageScroll.hasClients) return;
+    if (!_similarHasMore || _similarLoading || _similarWorks.isEmpty) return;
+    final position = _pageScroll.position;
+    if (position.pixels >= position.maxScrollExtent - 400) {
+      _loadSimilarWorks(reset: false);
+    }
   }
 
   Widget _allFilesRow() => InkWell(
@@ -2111,6 +2641,226 @@ class _ViewState {
 
   final double scale;
   final Offset offset;
+}
+
+/// 评价与标记对话框的返回值：保存后的进度/评论，或已删除。
+class _ReviewResult {
+  final String? progress;
+  final String reviewText;
+  final bool deleted;
+
+  const _ReviewResult.saved({required this.progress, required this.reviewText})
+    : deleted = false;
+
+  const _ReviewResult.deleted()
+    : progress = null,
+      reviewText = '',
+      deleted = true;
+}
+
+/// 评价与标记：顶部居中播放状态，下方评论输入框，左下删除、右下确定。
+class _ReviewDialog extends StatefulWidget {
+  final AppState app;
+  final Work work;
+  final double? userRating;
+  final String? progress;
+  final String? reviewText;
+
+  const _ReviewDialog({
+    required this.app,
+    required this.work,
+    this.userRating,
+    this.progress,
+    this.reviewText,
+  });
+
+  @override
+  State<_ReviewDialog> createState() => _ReviewDialogState();
+}
+
+class _ReviewDialogState extends State<_ReviewDialog> {
+  late final TextEditingController _text;
+  String? _progress;
+  bool _saving = false;
+
+  Palette get p => Theme.of(context).brightness == Brightness.dark
+      ? AppColors.dark
+      : AppColors.light;
+
+  @override
+  void initState() {
+    super.initState();
+    _text = TextEditingController(text: widget.reviewText ?? '');
+    _progress = widget.progress;
+  }
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await ApiService.submitReview(
+        widget.app,
+        widget.work,
+        rating: widget.userRating,
+        reviewText: _text.text.trim(),
+        progress: _progress,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(
+        _ReviewResult.saved(progress: _progress, reviewText: _text.text.trim()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      _notify('保存失败：$e');
+    }
+  }
+
+  Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('删除标记'),
+        content: const Text('确定要删除标记吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _saving = true);
+    try {
+      await ApiService.deleteReview(widget.app, widget.work);
+      if (!mounted) return;
+      Navigator.of(context).pop(const _ReviewResult.deleted());
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      _notify('删除失败：$e');
+    }
+  }
+
+  void _notify(String message) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: p.surface,
+      surfaceTintColor: Colors.transparent,
+      title: const Text(
+        '我的评论',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+      ),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: p.surface2,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: p.line),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final entry in workProgressLabels.entries)
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => setState(() => _progress = entry.key),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 140),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _progress == entry.key
+                                ? p.accent
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            entry.value,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: _progress == entry.key
+                                  ? Colors.white
+                                  : p.muted,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _text,
+              minLines: 4,
+              maxLines: 6,
+              style: TextStyle(fontSize: 13, color: p.text),
+              decoration: InputDecoration(
+                hintText: '写评论…',
+                hintStyle: TextStyle(fontSize: 13, color: p.dim),
+                filled: true,
+                fillColor: p.surface2,
+                contentPadding: const EdgeInsets.all(12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: p.line),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: p.line),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: p.accent),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : _delete,
+          child: Text('删除标记', style: TextStyle(color: p.red)),
+        ),
+        TextButton(
+          onPressed: _saving ? null : _submit,
+          child: Text(
+            '确定',
+            style: TextStyle(color: p.accent, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// 全屏图片预览：左右滑动或屏幕两侧按钮切换同一路径下的图片，

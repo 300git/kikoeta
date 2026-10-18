@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `apply_conversion`, `cache`, `convert_s2t`, `convert_t2s`, `detect_direction`, `flush_run`, `s2t_map`, `static_char_map`, `t2s_map`
+// These functions are ignored because they are not marked as `pub`: `cache`, `change_score`, `convert_s2t`, `convert_t2s`, `detect_direction`
 
 /// 繁简转换。mode: `s2t`（简→繁）/ `t2s`（繁→简）/ `auto`（自动检测）。
 String apiConvertText({required String text, required String mode}) =>

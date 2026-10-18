@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data.dart';
 import '../routes.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 
 class PlaylistsPage extends StatelessWidget {
@@ -224,6 +225,10 @@ class PlaylistDetailPage extends StatelessWidget {
     for (final work in app.remoteWorks) {
       if (work.rj == entry.rj) return work;
     }
+    // 列表里没有该作品时，从 RJ 号还原数字 id，保证详情页仍能加载
+    // 曲目、封面和评分（否则 WorkPage 会一直停留在骨架屏）。
+    final id = ApiService.apiIdFromRj(entry.rj);
+    final base = ApiService.resolveBase(app).replaceFirst(RegExp(r'/+$'), '');
     return Work(
       rj: entry.rj,
       title: entry.title,
@@ -233,6 +238,8 @@ class PlaylistDetailPage extends StatelessWidget {
       dur: '',
       tags: const [],
       grad: 0,
+      apiId: id,
+      coverUrl: id == null ? null : '$base/api/cover/$id',
     );
   }
 
@@ -293,6 +300,12 @@ class PlaylistDetailPage extends StatelessWidget {
         final entries = hiddenBySfw
             ? const <PlaylistEntry>[]
             : app.playlists[name] ?? const [];
+        // 桌面端没有"长按"习惯，改用按下即可拖动；移动端保持长按拖动。
+        final isDesktop = const {
+          TargetPlatform.windows,
+          TargetPlatform.linux,
+          TargetPlatform.macOS,
+        }.contains(Theme.of(context).platform);
         return Scaffold(
           appBar: AppBar(title: Text(name), leading: const BackButton()),
           body: entries.isEmpty
@@ -302,108 +315,203 @@ class PlaylistDetailPage extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: p.dim),
                   ),
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-                  itemCount: entries.length,
-                  separatorBuilder: (_, _) =>
-                      Divider(height: 18, color: p.line),
-                  itemBuilder: (ctx, i) {
-                    final e = entries[i];
-                    final work = _workFor(e);
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: e.rj.isEmpty
-                                    ? null
-                                    : () => Navigator.of(
-                                        ctx,
-                                      ).push(buildWorkRoute(app, work)),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      e.rj.isEmpty ? e.title : e.rj,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                    if (e.title.isNotEmpty && e.title != e.rj)
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.drag_indicator, size: 15, color: p.dim),
+                          const SizedBox(width: 4),
+                          Text(
+                            isDesktop
+                                ? '拖动标题调整作品顺序，拖动媒体调整播放顺序'
+                                : '长按标题调整作品顺序，长按媒体调整播放顺序',
+                            style: TextStyle(fontSize: 11.5, color: p.dim),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: ReorderableListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 40),
+                        itemCount: entries.length,
+                        // 所有平台统一用长按拖动（默认在桌面端会显示拖动手柄）
+                        buildDefaultDragHandles: false,
+                        proxyDecorator: (child, index, animation) => Material(
+                          elevation: 6,
+                          color: p.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          child: child,
+                        ),
+                        onReorderItem: (oldIndex, newIndex) =>
+                            app.reorderPlaylist(name, oldIndex, newIndex),
+                        itemBuilder: (ctx, i) {
+                          final e = entries[i];
+                          final work = _workFor(e);
+                          // 只有标题行可以拖动，用来调整作品之间的顺序。
+                          final header = Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: e.rj.isEmpty
+                                      ? null
+                                      : () => Navigator.of(
+                                          ctx,
+                                        ).push(buildWorkRoute(app, work)),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
                                       Text(
-                                        e.title,
+                                        e.rj.isEmpty ? e.title : e.rj,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          color: p.dim,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
                                         ),
                                       ),
-                                  ],
+                                      if (e.title.isNotEmpty && e.title != e.rj)
+                                        Text(
+                                          e.title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            color: p.dim,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            Text(
-                              '${e.tracks.length} 个音频',
-                              style: TextStyle(fontSize: 11, color: p.dim),
-                            ),
-                            IconButton(
-                              onPressed: () => app.removeFromPlaylist(name, i),
-                              icon: Icon(
-                                Icons.delete_outline,
-                                size: 18,
-                                color: p.dim,
+                              Text(
+                                '${e.tracks.length} 个音频',
+                                style: TextStyle(fontSize: 11, color: p.dim),
                               ),
-                              visualDensity: VisualDensity.compact,
-                              tooltip: '移除作品',
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        ...e.tracks.asMap().entries.map(
-                          (item) => InkWell(
-                            onTap: () =>
-                                _playTrack(ctx, entries, e, item.value),
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.music_note_outlined,
-                                    size: 17,
-                                    color: p.accent,
-                                  ),
-                                  const SizedBox(width: 9),
-                                  Expanded(
-                                    child: Text(
-                                      item.value.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        color: p.text,
+                              const SizedBox(width: 4),
+                              Tooltip(
+                                message: '拖动调整作品顺序',
+                                child: Icon(
+                                  Icons.drag_indicator,
+                                  size: 17,
+                                  color: p.dim,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () =>
+                                    app.removeFromPlaylist(name, i),
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                  color: p.dim,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                                tooltip: '移除作品',
+                              ),
+                            ],
+                          );
+                          final headerDrag = isDesktop
+                              ? ReorderableDragStartListener(
+                                  index: i,
+                                  child: header,
+                                )
+                              : ReorderableDelayedDragStartListener(
+                                  index: i,
+                                  child: header,
+                                );
+                          return Column(
+                            key: ObjectKey(e),
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              headerDrag,
+                              const SizedBox(height: 4),
+                              // 媒体行各自可拖动，调整作品内音频的播放顺序。
+                              ReorderableListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: EdgeInsets.zero,
+                                itemCount: e.tracks.length,
+                                buildDefaultDragHandles: false,
+                                onReorderItem: (oldIndex, newIndex) =>
+                                    app.reorderPlaylistTrack(
+                                      name,
+                                      i,
+                                      oldIndex,
+                                      newIndex,
+                                    ),
+                                itemBuilder: (ctx, j) {
+                                  final track = e.tracks[j];
+                                  final row = InkWell(
+                                    onTap: () =>
+                                        _playTrack(ctx, entries, e, track),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        12,
+                                        8,
+                                        4,
+                                        8,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.music_note_outlined,
+                                            size: 17,
+                                            color: p.accent,
+                                          ),
+                                          const SizedBox(width: 9),
+                                          Expanded(
+                                            child: Text(
+                                              track.title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 12.5,
+                                                color: p.text,
+                                              ),
+                                            ),
+                                          ),
+                                          if (track.url == null)
+                                            Icon(
+                                              Icons.cloud_off_outlined,
+                                              size: 15,
+                                              color: p.dim,
+                                            ),
+                                          const SizedBox(width: 4),
+                                          Tooltip(
+                                            message: '拖动调整播放顺序',
+                                            child: Icon(
+                                              Icons.drag_indicator,
+                                              size: 15,
+                                              color: p.dim,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                  if (item.value.url == null)
-                                    Icon(
-                                      Icons.cloud_off_outlined,
-                                      size: 15,
-                                      color: p.dim,
-                                    ),
-                                ],
+                                  );
+                                  return isDesktop
+                                      ? ReorderableDragStartListener(
+                                          key: ObjectKey(track),
+                                          index: j,
+                                          child: row,
+                                        )
+                                      : ReorderableDelayedDragStartListener(
+                                          key: ObjectKey(track),
+                                          index: j,
+                                          child: row,
+                                        );
+                                },
                               ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                              if (i != entries.length - 1)
+                                Divider(height: 18, color: p.line),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
         );
       },
