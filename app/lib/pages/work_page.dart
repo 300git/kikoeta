@@ -19,6 +19,7 @@ import '../src/rust/api/translate.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../widgets/media_tree_sliver.dart';
+import '../widgets/playlist_picker.dart';
 import 'dictation_translation_page.dart';
 
 /// 播放标记的接口值与中文标签。
@@ -629,6 +630,31 @@ class _WorkPageState extends State<WorkPage> {
     unawaited(_loadWorkDetails());
   }
 
+  /// 把当前作品添加到 one 站自建播放列表。
+  Future<void> _addToServerPlaylist() async {
+    if (work.apiId == null) {
+      _toast('该作品缺少编号，无法添加');
+      return;
+    }
+    final picked = await showPlaylistPicker(
+      context,
+      app: app,
+      showFavorites: false,
+    );
+    final pl = picked?.playlist;
+    if (pl == null || !mounted) return;
+    if (!pl.isOwned || pl.isSystem) {
+      _toast('只能添加到自建播放列表');
+      return;
+    }
+    try {
+      await ApiService.addWorksToPlaylist(app, pl.id, [work.rj]);
+      if (mounted) _toast('已添加到「${pl.name}」');
+    } catch (e) {
+      if (mounted) _toast('添加失败：$e');
+    }
+  }
+
   Future<void> _openLanguageEdition(LanguageEdition edition) async {
     if (_openingLanguageEdition) return;
     setState(() => _openingLanguageEdition = true);
@@ -1050,6 +1076,9 @@ class _WorkPageState extends State<WorkPage> {
         return;
       case 'review':
         await _openReviewDialog();
+        return;
+      case 'addToPlaylist':
+        await _addToServerPlaylist();
         return;
       case 'dictationTranslation':
         final tree = _tree;
@@ -1640,6 +1669,13 @@ class _WorkPageState extends State<WorkPage> {
               const PopupMenuItem(
                 value: 'dictationTranslation',
                 child: _WorkMenuEntry(icon: Icons.graphic_eq, label: '听写翻译'),
+              ),
+              const PopupMenuItem(
+                value: 'addToPlaylist',
+                child: _WorkMenuEntry(
+                  icon: Icons.playlist_add,
+                  label: '添加到播放列表',
+                ),
               ),
               const PopupMenuItem(
                 value: 'review',

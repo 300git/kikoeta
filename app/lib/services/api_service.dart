@@ -442,33 +442,183 @@ class ApiService {
 
   /// 歌单列表（需登录）
   static Future<List<PlaylistInfo>> fetchPlaylists(AppState app) async {
-    final json = await apiGetPlaylists(base: resolveBase(app));
+    final base = resolveBase(app);
+    final json = await apiGetPlaylists(base: base);
     final data = jsonDecode(json) as Map<String, dynamic>;
     final list = (data['playlists'] as List?) ?? const [];
     return list
-        .map((e) {
-          final m = e as Map<String, dynamic>;
-          final id = m['id']?.toString() ?? '';
-          final rawName = m['name'] as String? ?? '';
-          final systemName =
-              _systemPlaylistDisplayName(rawName) ??
-              _systemPlaylistDisplayName(id);
-          final type = m['type']?.toString().toLowerCase() ?? '';
-          return PlaylistInfo(
-            id: id,
-            name: systemName ?? (rawName.isEmpty ? '未命名歌单' : rawName),
-            worksCount: (m['works_count'] as num?)?.toInt() ?? 0,
-            coverUrl: m['mainCoverUrl'] as String?,
-            isSystemLiked:
-                m['is_sys'] == true ||
-                m['isSystem'] == true ||
-                m['is_system'] == true ||
-                type == 'liked' ||
-                systemName == '喜欢',
-          );
-        })
+        .map((e) => _mapPlaylist(e as Map<String, dynamic>, app, base))
         .where((p) => p.id.isNotEmpty)
         .toList();
+  }
+
+  /// 歌单详情（GET /api/playlist/get-playlist-metadata）。
+  static Future<PlaylistInfo> fetchPlaylistMetadata(
+    AppState app,
+    String id,
+  ) async {
+    final base = resolveBase(app);
+    final json = await apiGetPlaylistMetadata(base: base, id: id);
+    final decoded = jsonDecode(json);
+    if (decoded is! Map) throw const FormatException('歌单详情格式无效');
+    return _mapPlaylist(Map<String, dynamic>.from(decoded), app, base);
+  }
+
+  static PlaylistInfo _mapPlaylist(
+    Map<String, dynamic> m,
+    AppState app,
+    String base,
+  ) {
+    final id = m['id']?.toString() ?? '';
+    final rawName = m['name'] as String? ?? '';
+    final systemName =
+        _systemPlaylistDisplayName(rawName) ?? _systemPlaylistDisplayName(id);
+    final type = m['type']?.toString().toLowerCase() ?? '';
+    final userName = (m['user_name'] ?? m['userName'] ?? '').toString();
+    final isSystem = systemName != null;
+    final isOwned =
+        isSystem || (userName.isNotEmpty && userName == _reviewUserName(app));
+    return PlaylistInfo(
+      id: id,
+      name: systemName ?? (rawName.isEmpty ? '未命名歌单' : rawName),
+      worksCount: (m['works_count'] as num?)?.toInt() ?? 0,
+      coverUrl: _playlistCoverUrl(m['mainCoverUrl'] as String?, base),
+      isSystemLiked:
+          m['is_sys'] == true ||
+          m['isSystem'] == true ||
+          m['is_system'] == true ||
+          type == 'liked' ||
+          systemName == '喜欢',
+      description: (m['description'] as String? ?? '').trim(),
+      userName: userName,
+      privacy: (m['privacy'] as num?)?.toInt() ?? 0,
+      playbackCount: (m['playback_count'] as num?)?.toInt() ?? 0,
+      locale: m['locale'] as String? ?? '',
+      createdAt: m['created_at']?.toString() ?? '',
+      updatedAt: m['updated_at']?.toString() ?? '',
+      isSystem: isSystem,
+      isOwned: isOwned,
+    );
+  }
+
+  static String? _playlistCoverUrl(String? raw, String base) {
+    if (raw == null || raw.isEmpty || raw.contains('no-image')) return null;
+    final uri = Uri.tryParse(raw);
+    if (uri != null && uri.hasScheme) return raw;
+    return '${base.replaceFirst(RegExp(r'/+$'), '')}/'
+        '${raw.replaceFirst(RegExp(r'^/+'), '')}';
+  }
+
+  /// 0=私有，1=链接共享，2=公开。
+  static const playlistPrivacyLabels = <int, String>{
+    0: '私有',
+    1: '链接共享',
+    2: '公开',
+  };
+
+  static String playlistPrivacyLabel(int privacy) =>
+      playlistPrivacyLabels[privacy] ?? '私有';
+
+  /// 歌单分享链接（one 站）。
+  static String playlistShareLink(String id) =>
+      'https://www.asmr.one/playlist/$id';
+
+  /// 新建歌单（POST /api/playlist/create-playlist）。
+  static Future<void> createPlaylist(
+    AppState app, {
+    required String name,
+    String description = '',
+    int privacy = 0,
+  }) async {
+    await apiCreatePlaylist(
+      base: resolveBase(app),
+      name: name,
+      description: description,
+      privacy: privacy,
+    );
+  }
+
+  /// 修改歌单信息（POST /api/playlist/edit-playlist-metadata）。
+  static Future<void> editPlaylist(
+    AppState app, {
+    required String id,
+    required String name,
+    String description = '',
+    int privacy = 0,
+  }) async {
+    await apiEditPlaylistMetadata(
+      base: resolveBase(app),
+      id: id,
+      name: name,
+      privacy: privacy,
+      description: description,
+    );
+  }
+
+  /// 删除自己的歌单（POST /api/playlist/delete-playlist）。
+  static Future<void> deletePlaylist(AppState app, String id) async {
+    await apiDeletePlaylist(base: resolveBase(app), id: id);
+  }
+
+  /// 取消收藏导入的歌单（POST /api/playlist/remove-like-playlist）。
+  static Future<void> removeLikedPlaylist(AppState app, String id) async {
+    await apiRemoveLikePlaylist(base: resolveBase(app), id: id);
+  }
+
+  /// 向歌单添加作品（传入 RJ 号）。
+  static Future<void> addWorksToPlaylist(
+    AppState app,
+    String id,
+    List<String> rjs,
+  ) async {
+    await apiPlaylistAddWorks(
+      base: resolveBase(app),
+      playlistId: id,
+      workIds: rjs,
+    );
+  }
+
+  /// 从歌单移除作品（one 站接口接收作品数字 id）。
+  static Future<void> removeWorksFromPlaylist(
+    AppState app,
+    String id,
+    List<String> workIds,
+  ) async {
+    await apiPlaylistRemoveWorks(
+      base: resolveBase(app),
+      playlistId: id,
+      workIds: workIds,
+    );
+  }
+
+  /// 从分享链接或纯 ID 中解析歌单 ID。
+  ///
+  /// 支持 `https://www.asmr.one/playlist/{id}`、
+  /// `https://www.asmr.one/playlist?id={id}` 以及直接粘贴 ID。
+  static String? playlistIdFromLink(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+    final uri = Uri.tryParse(text.contains('://') ? text : 'https://$text');
+    if (uri != null) {
+      final queryId = uri.queryParameters['id']?.trim();
+      if (queryId != null && queryId.isNotEmpty) return queryId;
+      final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+      final index = segments.indexOf('playlist');
+      if (index >= 0 && index + 1 < segments.length) {
+        final id = Uri.decodeComponent(segments[index + 1]).trim();
+        if (id.isNotEmpty) return id;
+      }
+    }
+    // 不是链接时按原始 ID 处理（UUID 不含路径分隔符）。
+    if (!text.contains('/') && !text.contains('?') && !text.contains(' ')) {
+      return text;
+    }
+    return null;
+  }
+
+  /// 收藏/导入别人的歌单（POST /api/playlist/like-playlist）。
+  static Future<void> importPlaylist(AppState app, String id) async {
+    await apiLikePlaylist(base: resolveBase(app), id: id);
   }
 
   /// 歌单作品（需登录），结构与作品列表一致

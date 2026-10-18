@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `append_custom_params`, `append_filter_params`, `auth_header`, `base_of`, `clear_progress_body`, `clear_rating_body`, `http_client`, `http_delete`, `http_get`, `http_post_json`, `http_put_json`, `neighbors_body`, `origin_of`, `recommender_body`, `review_body`, `urlencoding`
+// These functions are ignored because they are not marked as `pub`: `append_custom_params`, `append_filter_params`, `auth_header`, `base_of`, `clear_progress_body`, `clear_rating_body`, `create_playlist_body`, `edit_playlist_body`, `http_client`, `http_delete`, `http_get`, `http_post_json`, `http_put_json`, `neighbors_body`, `origin_of`, `recommender_body`, `review_body`, `urlencoding`
 
 /// 作品列表：GET /api/works?page=&per_page=&order=&sort=&subtitle=&seed=
 Future<String> apiGetWorks({
@@ -178,6 +178,63 @@ Future<String> apiCheckLrc({required String base, required String rj}) =>
 /// 歌单列表：GET /api/playlist/get-playlists（需登录）
 Future<String> apiGetPlaylists({required String base}) =>
     RustLib.instance.api.crateApiKikoeruApiApiGetPlaylists(base: base);
+
+/// 新建歌单：POST /api/playlist/create-playlist（需登录）
+Future<String> apiCreatePlaylist({
+  required String base,
+  required String name,
+  required String description,
+  required int privacy,
+}) => RustLib.instance.api.crateApiKikoeruApiApiCreatePlaylist(
+  base: base,
+  name: name,
+  description: description,
+  privacy: privacy,
+);
+
+/// 收藏/导入别人的歌单：POST /api/playlist/like-playlist（需登录）
+Future<String> apiLikePlaylist({required String base, required String id}) =>
+    RustLib.instance.api.crateApiKikoeruApiApiLikePlaylist(base: base, id: id);
+
+/// 取消收藏别人的歌单：POST /api/playlist/remove-like-playlist（需登录）
+Future<String> apiRemoveLikePlaylist({
+  required String base,
+  required String id,
+}) => RustLib.instance.api.crateApiKikoeruApiApiRemoveLikePlaylist(
+  base: base,
+  id: id,
+);
+
+/// 歌单详情：GET /api/playlist/get-playlist-metadata?id=...（需登录）
+Future<String> apiGetPlaylistMetadata({
+  required String base,
+  required String id,
+}) => RustLib.instance.api.crateApiKikoeruApiApiGetPlaylistMetadata(
+  base: base,
+  id: id,
+);
+
+/// 修改歌单信息：POST /api/playlist/edit-playlist-metadata（需登录）
+Future<String> apiEditPlaylistMetadata({
+  required String base,
+  required String id,
+  required String name,
+  required int privacy,
+  required String description,
+}) => RustLib.instance.api.crateApiKikoeruApiApiEditPlaylistMetadata(
+  base: base,
+  id: id,
+  name: name,
+  privacy: privacy,
+  description: description,
+);
+
+/// 删除自己的歌单：POST /api/playlist/delete-playlist（需登录）
+Future<String> apiDeletePlaylist({required String base, required String id}) =>
+    RustLib.instance.api.crateApiKikoeruApiApiDeletePlaylist(
+      base: base,
+      id: id,
+    );
 
 /// 歌单作品：GET /api/playlist/get-playlist-works?id=...（需登录）
 Future<String> apiGetPlaylistWorks({

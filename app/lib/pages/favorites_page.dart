@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data.dart';
 import '../routes.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets.dart';
-
-const _reviewsEntryId = '__REVIEWS__';
+import '../widgets/playlist_picker.dart';
 
 /// 静默比对用的作品指纹：覆盖卡片显示与收藏判定会用到的字段。
 String favoritesWorkSignature(Work w) => [
@@ -33,11 +33,7 @@ String favoritesWorkSignature(Work w) => [
 ///
 /// 收藏增删会改变服务端总数，因此总数不一致即视为有差异；总数未知时退化为
 /// 逐项指纹比较已加载部分，并在服务端已到末页时比较长度。
-bool favoritesListChanged(
-  List<Work> current,
-  int knownTotal,
-  WorksPage fresh,
-) {
+bool favoritesListChanged(List<Work> current, int knownTotal, WorksPage fresh) {
   final list = fresh.works;
   if (fresh.totalCount >= 0 &&
       knownTotal >= 0 &&
@@ -46,15 +42,12 @@ bool favoritesListChanged(
   }
   final n = list.length < current.length ? list.length : current.length;
   for (var i = 0; i < n; i++) {
-    if (favoritesWorkSignature(list[i]) !=
-        favoritesWorkSignature(current[i])) {
+    if (favoritesWorkSignature(list[i]) != favoritesWorkSignature(current[i])) {
       return true;
     }
   }
   // 服务端这一页已是末页（总数未知），长度不同即说明收藏有增删。
-  if (!fresh.hasMore &&
-      fresh.totalCount < 0 &&
-      current.length != list.length) {
+  if (!fresh.hasMore && fresh.totalCount < 0 && current.length != list.length) {
     return true;
   }
   return false;
@@ -85,6 +78,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
   late int _seenFavVersion;
   late int _seenFavoritesEntryVersion;
   late bool _seenSfwMode;
+  bool _selecting = false;
+  final Set<String> _selected = {};
 
   AppState get app => widget.app;
   Palette get p => Theme.of(context).brightness == Brightness.dark
@@ -124,6 +119,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
         setState(() {
           _reviewsMode = true;
           _playlist = null;
+          _selecting = false;
+          _selected.clear();
           _works.clear();
           _loading = false;
           _error = false;
@@ -311,81 +308,15 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   Future<void> _openPlaylistPicker() async {
     if (app.sfwMode) return;
-    List<PlaylistInfo> list;
-    try {
-      list = await ApiService.fetchPlaylists(app);
-    } catch (_) {
-      list = const [];
-    }
-    if (!mounted) return;
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: p.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(ctx).height * 0.72,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 10),
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: p.surface3,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(18, 12, 18, 8),
-                child: Text(
-                  '选择歌单',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-                ),
-              ),
-              const Divider(height: 1),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  children: [
-                    _pickerItem(
-                      id: _reviewsEntryId,
-                      name: '收藏',
-                      subtitle: '我的评价/收藏（所有作品）',
-                      selected: _reviewsMode,
-                      icon: Icons.favorite,
-                    ),
-                    const Divider(height: 1),
-                    ...list.map((pl) {
-                      final selected = !_reviewsMode && pl.id == _playlist?.id;
-                      return _pickerItem(
-                        id: pl.id,
-                        name: pl.name,
-                        subtitle: '${pl.worksCount} 个作品',
-                        selected: selected,
-                        icon: Icons.queue_music,
-                        coverUrl: pl.coverUrl,
-                      );
-                    }),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    final picked = await showPlaylistPicker(
+      context,
+      app: app,
+      reviewsMode: _reviewsMode,
+      currentId: _playlist?.id,
     );
-    if (picked == null) return;
-    if (picked == _reviewsEntryId) {
+    if (picked == null || !mounted) return;
+    final pl = picked.playlist;
+    if (pl == null) {
       if (_reviewsMode) return;
       setState(() {
         _reviewsMode = true;
@@ -394,15 +325,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
       _loadData(reset: true);
       return;
     }
-    if (!_reviewsMode && picked == _playlist?.id) return;
-    PlaylistInfo? pl;
-    for (final x in list) {
-      if (x.id == picked) {
-        pl = x;
-        break;
-      }
+    if (!_reviewsMode && pl.id == _playlist?.id) {
+      // 同一歌单被编辑（名称/描述/权限变化）时只更新标题信息，不重载内容。
+      if (!identical(pl, _playlist)) setState(() => _playlist = pl);
+      return;
     }
-    if (pl == null) return;
     setState(() {
       _reviewsMode = false;
       _playlist = pl;
@@ -410,41 +337,330 @@ class _FavoritesPageState extends State<FavoritesPage> {
     _loadData(reset: true);
   }
 
+  void _toast(String message) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// 歌单模式下的标题栏操作；「收藏」模式保持原有控件不变。
+  List<Widget> _playlistHeaderActions() {
+    final pl = _playlist;
+    if (pl == null) return const [];
+    return [
+      if (pl.isOwned)
+        IconButton(
+          onPressed: _addWorksByRj,
+          tooltip: '按 RJ 号添加作品',
+          icon: Icon(Icons.add, size: 22, color: p.accent),
+        )
+      else
+        IconButton(
+          onPressed: _removeCurrentLikedPlaylist,
+          tooltip: '取消收藏该播放列表',
+          icon: Icon(Icons.favorite, size: 21, color: p.red),
+        ),
+      IconButton(
+        onPressed: _copyCurrentShareLink,
+        tooltip: '复制分享链接',
+        icon: Icon(Icons.link, size: 21, color: p.accent),
+      ),
+    ];
+  }
+
+  void _copyCurrentShareLink() {
+    final pl = _playlist;
+    if (pl == null) return;
+    Clipboard.setData(ClipboardData(text: ApiService.playlistShareLink(pl.id)));
+    _toast('已复制分享链接');
+  }
+
+  Future<void> _addWorksByRj() async {
+    final pl = _playlist;
+    if (pl == null) return;
+    final ctrl = TextEditingController();
+    final input = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: p.surface,
+        title: const Text('添加作品'),
+        content: SizedBox(
+          width: 420,
+          child: TextField(
+            controller: ctrl,
+            autofocus: true,
+            minLines: 4,
+            maxLines: 8,
+            style: TextStyle(fontSize: 13, color: p.text),
+            decoration: InputDecoration(
+              hintText:
+                  '输入 RJ 号，可一次填多个\n例如：RJ01367541 RJ01417842\n支持换行、空格或逗号分隔',
+              hintStyle: TextStyle(fontSize: 12.5, color: p.dim),
+              filled: true,
+              fillColor: p.surface2,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(11),
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text),
+            child: const Text('添加'),
+          ),
+        ],
+      ),
+    );
+    if (input == null || !mounted) return;
+    final rjs = RegExp(
+      r'RJ\d{5,}',
+      caseSensitive: false,
+    ).allMatches(input.toUpperCase()).map((m) => m.group(0)!).toSet().toList();
+    if (rjs.isEmpty) {
+      _toast('没有识别到 RJ 号');
+      return;
+    }
+    try {
+      await ApiService.addWorksToPlaylist(app, pl.id, rjs);
+      if (!mounted) return;
+      _toast('已添加 ${rjs.length} 个作品');
+      _loadData(reset: true);
+    } catch (e) {
+      if (mounted) _toast('添加失败：$e');
+    }
+  }
+
+  Future<void> _removeCurrentLikedPlaylist() async {
+    final pl = _playlist;
+    if (pl == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: p.surface,
+        title: const Text('取消收藏'),
+        content: const Text('确定从我的播放列表中移除该歌单吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('移除'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await ApiService.removeLikedPlaylist(app, pl.id);
+      if (!mounted) return;
+      setState(() {
+        _reviewsMode = true;
+        _playlist = null;
+        _works.clear();
+      });
+      _loadData(reset: true);
+    } catch (e) {
+      if (mounted) _toast('取消收藏失败：$e');
+    }
+  }
+
+  /// 当前列表是否支持多选管理：收藏与自建列表可用，导入的歌单不可管理。
+  bool get _canManageWorks => _reviewsMode || (_playlist?.isOwned ?? false);
+
+  void _enterSelecting(Work work) {
+    if (!_canManageWorks) return;
+    setState(() {
+      _selecting = true;
+      _selected
+        ..clear()
+        ..add(work.rj);
+    });
+  }
+
+  void _toggleSelected(Work work) {
+    setState(() {
+      if (!_selected.remove(work.rj)) _selected.add(work.rj);
+    });
+  }
+
+  void _exitSelecting() {
+    setState(() {
+      _selecting = false;
+      _selected.clear();
+    });
+  }
+
+  void _selectAll() {
+    setState(() {
+      if (_selected.length == _works.length) {
+        _selected.clear();
+      } else {
+        _selected
+          ..clear()
+          ..addAll(_works.map((w) => w.rj));
+      }
+    });
+  }
+
+  Future<void> _removeSelectedWorks() async {
+    final reviews = _reviewsMode;
+    final pl = _playlist;
+    if (_selected.isEmpty) return;
+    if (!reviews && pl == null) return;
+    final label = reviews ? '取消收藏' : '移出播放列表';
+    final count = _selected.length;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: p.surface,
+        title: Text(label),
+        content: Text('确定将 $count 个作品$label吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              label,
+              style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final works = _works
+        .where((w) => _selected.contains(w.rj))
+        .toList(growable: false);
+    try {
+      if (reviews) {
+        for (final work in works) {
+          try {
+            await ApiService.deleteReview(app, work);
+          } catch (_) {
+            // 单个删除失败时继续处理剩余作品。
+          }
+        }
+      } else {
+        final ids = works
+            .map((w) => w.apiId?.toString())
+            .whereType<String>()
+            .toList();
+        if (ids.isEmpty) {
+          _toast('无法获取作品编号');
+          return;
+        }
+        await ApiService.removeWorksFromPlaylist(app, pl!.id, ids);
+      }
+      if (!mounted) return;
+      _exitSelecting();
+      _toast('已$label ${works.length} 个作品');
+      _loadData(reset: true);
+    } catch (e) {
+      if (mounted) _toast('$label失败：$e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = _reviewsMode ? '收藏' : (_playlist?.name ?? '收藏');
+    if (_selected.isNotEmpty) {
+      _selected.retainAll(_works.map((w) => w.rj));
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
+        if (_selecting)
+          _selectionBar()
+        else ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                onPressed: _openPlaylistPicker,
-                tooltip: '切换歌单',
-                icon: Icon(Icons.queue_music, size: 22, color: p.accent),
-              ),
-            ],
+                if (!_reviewsMode && _playlist != null)
+                  ..._playlistHeaderActions(),
+                IconButton(
+                  onPressed: _openPlaylistPicker,
+                  tooltip: '切换歌单',
+                  icon: Icon(Icons.queue_music, size: 22, color: p.accent),
+                ),
+              ],
+            ),
           ),
-        ),
-        if (_reviewsMode) _reviewToolbar(),
+          if (_reviewsMode) _reviewToolbar(),
+        ],
         Expanded(child: _body()),
       ],
+    );
+  }
+
+  Widget _selectionBar() {
+    final count = _selected.length;
+    final allSelected = _works.isNotEmpty && count == _works.length;
+    final label = _reviewsMode ? '取消收藏' : '移出播放列表';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 2, 4, 0),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: _exitSelecting,
+            tooltip: '退出多选',
+            icon: Icon(Icons.arrow_back, size: 22, color: p.text),
+          ),
+          Expanded(
+            child: Text(
+              '已选 $count 项',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+          ),
+          IconButton(
+            onPressed: _works.isEmpty ? null : _selectAll,
+            tooltip: allSelected ? '取消全选' : '全选',
+            icon: Icon(
+              allSelected ? Icons.deselect : Icons.select_all,
+              size: 22,
+              color: p.muted,
+            ),
+          ),
+          IconButton(
+            onPressed: count == 0 ? null : _removeSelectedWorks,
+            tooltip: label,
+            icon: Icon(
+              Icons.delete_outline,
+              size: 22,
+              color: count == 0 ? p.dim : p.red,
+            ),
+          ),
+          IconButton(
+            onPressed: _exitSelecting,
+            tooltip: '退出多选',
+            icon: Icon(Icons.close, size: 22, color: p.muted),
+          ),
+        ],
+      ),
     );
   }
 
@@ -650,7 +866,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }
     if (_works.isEmpty) {
       return Center(
-        child: Text('还没有收藏的作品', style: TextStyle(fontSize: 13, color: p.dim)),
+        child: Text(
+          _reviewsMode ? '还没有收藏的作品' : '该播放列表还没有作品',
+          style: TextStyle(fontSize: 13, color: p.dim),
+        ),
       );
     }
     return Column(
@@ -671,12 +890,40 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 itemCount: _works.length,
                 itemBuilder: (ctx, i) {
                   final w = _works[i];
-                  return WorkCard(
-                    work: w,
-                    index: i,
-                    cardBackground: true,
-                    onTap: () =>
-                        Navigator.of(context).push(buildWorkRoute(app, w)),
+                  final selected = _selected.contains(w.rj);
+                  return GestureDetector(
+                    onLongPress: !_selecting && _canManageWorks
+                        ? () => _enterSelecting(w)
+                        : null,
+                    child: Stack(
+                      children: [
+                        WorkCard(
+                          work: w,
+                          index: i,
+                          cardBackground: true,
+                          onTap: _selecting
+                              ? () => _toggleSelected(w)
+                              : () => Navigator.of(
+                                  context,
+                                ).push(buildWorkRoute(app, w)),
+                        ),
+                        if (_selecting)
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: Material(
+                              color: Colors.black45,
+                              borderRadius: BorderRadius.circular(6),
+                              child: Checkbox(
+                                value: selected,
+                                onChanged: (_) => _toggleSelected(w),
+                                activeColor: p.accent,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -694,74 +941,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
             child: Text('已显示全部', style: TextStyle(fontSize: 12, color: p.dim)),
           ),
       ],
-    );
-  }
-
-  Widget _pickerItem({
-    required String id,
-    required String name,
-    required String subtitle,
-    required bool selected,
-    required IconData icon,
-    String? coverUrl,
-  }) {
-    return InkWell(
-      onTap: () => Navigator.pop(context, id),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: coverUrl != null
-                    ? Image(
-                        image: ResizeImage.resizeIfNeeded(
-                          128,
-                          null,
-                          RustImageProvider(coverUrl),
-                        ),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _plIcon(p),
-                      )
-                    : Container(
-                        color: p.surface2,
-                        child: Icon(icon, size: 18, color: p.accent),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(fontSize: 11, color: p.dim)),
-                ],
-              ),
-            ),
-            if (selected) Icon(Icons.check_circle, size: 18, color: p.accent),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _plIcon(Palette p) {
-    return Container(
-      color: p.surface2,
-      child: Icon(Icons.queue_music, size: 18, color: p.dim),
     );
   }
 }

@@ -162,12 +162,42 @@ class PlaylistInfo {
   final int worksCount;
   final String? coverUrl;
   final bool isSystemLiked;
+
+  /// 歌单描述（导入/分享的歌单常带说明）。
+  final String description;
+
+  /// 创建者用户名；`isOwned` 为 false 表示别人分享、当前账号收藏的歌单。
+  final String userName;
+
+  /// 0=私有，1=链接共享，2=公开。
+  final int privacy;
+
+  final int playbackCount;
+  final String locale;
+  final String createdAt;
+  final String updatedAt;
+
+  /// one 站自带的系统歌单（喜欢/标记）。
+  final bool isSystem;
+
+  /// 自建或自带歌单：可以编辑；导入的歌单只能取消收藏。
+  final bool isOwned;
+
   const PlaylistInfo({
     required this.id,
     required this.name,
     required this.worksCount,
     this.coverUrl,
     this.isSystemLiked = false,
+    this.description = '',
+    this.userName = '',
+    this.privacy = 0,
+    this.playbackCount = 0,
+    this.locale = '',
+    this.createdAt = '',
+    this.updatedAt = '',
+    this.isSystem = false,
+    this.isOwned = false,
   });
 }
 

@@ -481,12 +481,111 @@ pub async fn api_check_lrc(base: String, rj: String) -> Result<String, String> {
 #[flutter_rust_bridge::frb]
 pub async fn api_get_playlists(base: String) -> Result<String, String> {
     let url = format!(
-        "{}/api/playlist/get-playlists?page=1&per_page=100",
+        "{}/api/playlist/get-playlists?page=1&pageSize=100&filterBy=all",
         base_of(&base)
     );
     let client = http_client()?;
     let auth = auth_header(&base);
     http_get(&client, &url, auth.as_deref()).await
+}
+
+/// 新建歌单：POST /api/playlist/create-playlist（需登录）
+#[flutter_rust_bridge::frb]
+pub async fn api_create_playlist(
+    base: String,
+    name: String,
+    description: String,
+    privacy: u32,
+) -> Result<String, String> {
+    let url = format!("{}/api/playlist/create-playlist", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    http_post_json(&client, &url, auth.as_deref(), create_playlist_body(&name, &description, privacy)).await
+}
+
+fn create_playlist_body(name: &str, description: &str, privacy: u32) -> serde_json::Value {
+    serde_json::json!({
+        "name": name,
+        "privacy": privacy,
+        "locale": "zh-CN",
+        "works": [],
+        "description": description,
+    })
+}
+
+/// 收藏/导入别人的歌单：POST /api/playlist/like-playlist（需登录）
+#[flutter_rust_bridge::frb]
+pub async fn api_like_playlist(base: String, id: String) -> Result<String, String> {
+    let url = format!("{}/api/playlist/like-playlist", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let body = serde_json::json!({ "id": id });
+    http_post_json(&client, &url, auth.as_deref(), body).await
+}
+
+/// 取消收藏别人的歌单：POST /api/playlist/remove-like-playlist（需登录）
+#[flutter_rust_bridge::frb]
+pub async fn api_remove_like_playlist(base: String, id: String) -> Result<String, String> {
+    let url = format!("{}/api/playlist/remove-like-playlist", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let body = serde_json::json!({ "id": id });
+    http_post_json(&client, &url, auth.as_deref(), body).await
+}
+
+/// 歌单详情：GET /api/playlist/get-playlist-metadata?id=...（需登录）
+#[flutter_rust_bridge::frb]
+pub async fn api_get_playlist_metadata(base: String, id: String) -> Result<String, String> {
+    let url = format!(
+        "{}/api/playlist/get-playlist-metadata?id={}",
+        base_of(&base),
+        urlencoding(&id)
+    );
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    http_get(&client, &url, auth.as_deref()).await
+}
+
+/// 修改歌单信息：POST /api/playlist/edit-playlist-metadata（需登录）
+#[flutter_rust_bridge::frb]
+pub async fn api_edit_playlist_metadata(
+    base: String,
+    id: String,
+    name: String,
+    privacy: u32,
+    description: String,
+) -> Result<String, String> {
+    let url = format!("{}/api/playlist/edit-playlist-metadata", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let body = edit_playlist_body(&id, &name, privacy, &description);
+    http_post_json(&client, &url, auth.as_deref(), body).await
+}
+
+fn edit_playlist_body(
+    id: &str,
+    name: &str,
+    privacy: u32,
+    description: &str,
+) -> serde_json::Value {
+    serde_json::json!({
+        "id": id,
+        "data": {
+            "name": name,
+            "privacy": privacy,
+            "description": description,
+        },
+    })
+}
+
+/// 删除自己的歌单：POST /api/playlist/delete-playlist（需登录）
+#[flutter_rust_bridge::frb]
+pub async fn api_delete_playlist(base: String, id: String) -> Result<String, String> {
+    let url = format!("{}/api/playlist/delete-playlist", base_of(&base));
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let body = serde_json::json!({ "id": id });
+    http_post_json(&client, &url, auth.as_deref(), body).await
 }
 
 /// 歌单作品：GET /api/playlist/get-playlist-works?id=...（需登录）
@@ -498,7 +597,7 @@ pub async fn api_get_playlist_works(
     per_page: u32,
 ) -> Result<String, String> {
     let url = format!(
-        "{}/api/playlist/get-playlist-works?id={}&page={}&per_page={}",
+        "{}/api/playlist/get-playlist-works?id={}&page={}&pageSize={}",
         base_of(&base),
         urlencoding(&id),
         page,
@@ -524,6 +623,9 @@ pub async fn api_playlist_add_works(
 }
 
 /// 从歌单移除作品：POST /api/playlist/remove-works-from-playlist
+///
+/// one 站该接口要求作品数字 id（`works: [1367541]`），这里把传入的
+/// 字符串 id 尽量转成数字，解析失败时保持字符串兜底。
 #[flutter_rust_bridge::frb]
 pub async fn api_playlist_remove_works(
     base: String,
@@ -533,8 +635,19 @@ pub async fn api_playlist_remove_works(
     let url = format!("{}/api/playlist/remove-works-from-playlist", base_of(&base));
     let client = http_client()?;
     let auth = auth_header(&base);
-    let body = serde_json::json!({ "id": playlist_id, "works": work_ids });
+    let body = remove_works_body(&playlist_id, &work_ids);
     http_post_json(&client, &url, auth.as_deref(), body).await
+}
+
+fn remove_works_body(playlist_id: &str, work_ids: &[String]) -> serde_json::Value {
+    let ids: Vec<serde_json::Value> = work_ids
+        .iter()
+        .map(|id| match id.parse::<u64>() {
+            Ok(number) => serde_json::json!(number),
+            Err(_) => serde_json::Value::String(id.clone()),
+        })
+        .collect();
+    serde_json::json!({ "id": playlist_id, "works": ids })
 }
 
 /// 收藏作品：创建无评分的 listening 评价。
@@ -828,6 +941,36 @@ mod tests {
         let filtered = neighbors_body("1722779", "$age:adult$", 3);
         assert_eq!(filtered["keyword"], "$age:adult$");
         assert_eq!(filtered["page"], 3);
+    }
+
+    #[test]
+    fn create_playlist_body_matches_the_one_site_request() {
+        let body = create_playlist_body("My List", "描述", 1);
+        assert_eq!(body["name"], "My List");
+        assert_eq!(body["privacy"], 1);
+        assert_eq!(body["locale"], "zh-CN");
+        assert_eq!(body["description"], "描述");
+        assert_eq!(body["works"], serde_json::json!([]));
+    }
+
+    #[test]
+    fn remove_works_body_sends_numeric_work_ids() {
+        let body = remove_works_body(
+            "list-1",
+            &["1367541".to_string(), "RJ0001".to_string()],
+        );
+        assert_eq!(body["id"], "list-1");
+        assert_eq!(body["works"][0], 1367541);
+        assert_eq!(body["works"][1], "RJ0001");
+    }
+
+    #[test]
+    fn edit_playlist_body_wraps_metadata_in_data() {
+        let body = edit_playlist_body("list-1", "新名称", 2, "新描述");
+        assert_eq!(body["id"], "list-1");
+        assert_eq!(body["data"]["name"], "新名称");
+        assert_eq!(body["data"]["privacy"], 2);
+        assert_eq!(body["data"]["description"], "新描述");
     }
 
     #[test]
