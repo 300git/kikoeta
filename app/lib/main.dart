@@ -184,8 +184,9 @@ double _portraitWidthDp() {
 }
 
 bool _autoAdvancing = false;
+bool _playbackShortcutRunning = false;
 
-Future<bool> _openAppTrack(MediaNode track) async {
+Future<bool> _openAppTrack(MediaNode track, {bool autoplay = true}) async {
   final work = appState.currentWork;
   final local = work == null
       ? null
@@ -195,13 +196,52 @@ Future<bool> _openAppTrack(MediaNode track) async {
           node: track,
         );
   if (local != null) {
-    await AppPlayer.instance.openLocalPath(local);
+    await AppPlayer.instance.openLocalPath(local, autoplay: autoplay);
     return true;
   }
   final url = track.url;
   if (url == null || url.isEmpty) return false;
-  await AppPlayer.instance.openMediaUrl(url);
+  await AppPlayer.instance.openMediaUrl(url, autoplay: autoplay);
   return true;
+}
+
+Future<void> _toggleAppPlaybackShortcut() async {
+  if (_playbackShortcutRunning) return;
+  _playbackShortcutRunning = true;
+  try {
+    if (appState.playing) {
+      await AppPlayer.instance.pause();
+      appState.playing = false;
+    } else {
+      if (appState.queue.isEmpty) return;
+      if (!AppPlayer.instance.opened) {
+        final index = appState.trackIdx
+            .clamp(0, appState.queue.length - 1)
+            .toInt();
+        if (!await _openAppTrack(appState.queue[index], autoplay: false)) {
+          return;
+        }
+        final resume = appState.resumePosition;
+        if (resume > 0) {
+          try {
+            await AppPlayer.instance.player.seek(Duration(seconds: resume));
+          } catch (_) {}
+        }
+        await AppPlayer.instance.applyEqualizer(
+          enabled: appState.eqOn,
+          gains: appState.eqGains,
+        );
+      }
+      await AppPlayer.instance.play();
+      appState.playing = true;
+    }
+    appState.notify();
+  } catch (_) {
+    // Playback errors are reported by the player service and should not
+    // escape from a keyboard event handler.
+  } finally {
+    _playbackShortcutRunning = false;
+  }
 }
 
 Future<void> _advanceAfterCompletion() async {
@@ -496,6 +536,7 @@ class _KikoetaAppState extends State<KikoetaApp>
   late ThemeMode _themeMode;
   late bool _loginRequired;
   late int _uiScalePercent;
+  late int _playbackToggleShortcutKey;
 
   /// 根节点：抓「切换前外观」的截图用
   final GlobalKey _rootKey = GlobalKey();
@@ -518,6 +559,7 @@ class _KikoetaAppState extends State<KikoetaApp>
     _themeMode = appState.themeMode;
     _loginRequired = appState.loginRequired;
     _uiScalePercent = appState.uiScalePercent;
+    _playbackToggleShortcutKey = appState.playbackToggleShortcutKey;
     appState.addListener(_onChanged);
     _revealAnim.addStatusListener(_onRevealStatus);
     ThemeReveal.instance.bind(_switchThemeWithReveal);
@@ -648,12 +690,14 @@ class _KikoetaAppState extends State<KikoetaApp>
   void _onChanged() {
     if (_themeMode == appState.themeMode &&
         _loginRequired == appState.loginRequired &&
-        _uiScalePercent == appState.uiScalePercent) {
+        _uiScalePercent == appState.uiScalePercent &&
+        _playbackToggleShortcutKey == appState.playbackToggleShortcutKey) {
       return;
     }
     _themeMode = appState.themeMode;
     _loginRequired = appState.loginRequired;
     _uiScalePercent = appState.uiScalePercent;
+    _playbackToggleShortcutKey = appState.playbackToggleShortcutKey;
     setState(() {});
   }
 
@@ -676,26 +720,39 @@ class _KikoetaAppState extends State<KikoetaApp>
         // 主题切换的圆形揭示既要抓它的截图，也要盖住它
         return RepaintBoundary(
           key: _rootKey,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (Platform.isWindows)
-                _windowsFrame(context, child)
-              else
-                child ?? const SizedBox.shrink(),
-              if (_revealImage != null)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: CustomPaint(
-                      painter: ThemeRevealPainter(
-                        image: _revealImage!,
-                        origin: _revealOrigin,
-                        progress: _revealCurve,
+          child: CallbackShortcuts(
+            bindings: {
+              SingleActivator(
+                LogicalKeyboardKey.findKeyByKeyId(
+                      _playbackToggleShortcutKey,
+                    ) ??
+                    LogicalKeyboardKey.space,
+              ): () => unawaited(_toggleAppPlaybackShortcut()),
+            },
+            child: Focus(
+              autofocus: true,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (Platform.isWindows)
+                    _windowsFrame(context, child)
+                  else
+                    child ?? const SizedBox.shrink(),
+                  if (_revealImage != null)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: ThemeRevealPainter(
+                            image: _revealImage!,
+                            origin: _revealOrigin,
+                            progress: _revealCurve,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         );
       },
