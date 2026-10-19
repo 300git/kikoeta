@@ -2442,6 +2442,7 @@ class _WorkPageState extends State<WorkPage> {
       ('google', 'Google（免费，无需 Key）'),
       ('microsoft', 'Microsoft（免费，无需 Key）'),
       ('deepl', 'DeepL（免费版 Key）'),
+      ('index', 'Index-Translate（官方接口）'),
       ('openai', 'OpenAI 兼容（可配置）'),
     ];
     final selected = await showModalBottomSheet<String>(
@@ -2565,8 +2566,8 @@ class _WorkPageState extends State<WorkPage> {
       _toast('已取消翻译');
       return;
     }
-    if (app.engine == 'openai') {
-      final cfg = app.aiConfig;
+    if (app.engine == 'openai' || app.engine == 'index') {
+      final cfg = app.activeAiConfig;
       if ((cfg['base'] ?? '').trim().isEmpty ||
           (cfg['model'] ?? '').trim().isEmpty) {
         _toast('请先在设置中配置 API 地址与模型名');
@@ -2609,9 +2610,9 @@ class _WorkPageState extends State<WorkPage> {
           apiKey: app.deeplKey,
         ),
         _ => await apiTranslateOpenai(
-          baseUrl: app.aiConfig['base']!,
-          model: app.aiConfig['model']!,
-          apiKey: app.aiConfig['key'] ?? '',
+          baseUrl: app.activeAiConfig['base']!,
+          model: app.activeAiConfig['model']!,
+          apiKey: app.activeAiConfig['key'] ?? '',
           text: '[[KIKOETA_TARGET:${app.translationTarget}]]\n$joined',
           temperature: 0.2,
         ),

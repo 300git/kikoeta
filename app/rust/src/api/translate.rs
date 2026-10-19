@@ -58,14 +58,11 @@ pub async fn api_translate_openai(
     let mut last_err = String::new();
     let mut delay = Duration::from_secs(1);
     for attempt in 0..3 {
-        let mut req = client
+        let req = client
             .post(&url)
             .header("content-type", "application/json")
             .body(body.to_string());
-        let key = api_key.trim();
-        if !key.is_empty() {
-            req = req.header("authorization", format!("Bearer {key}"));
-        }
+        let req = apply_auth(req, &base, &api_key);
         match req.send().await {
             Ok(resp) => {
                 let status = resp.status();
@@ -115,8 +112,29 @@ fn split_translation_target(text: String) -> (String, String) {
     (target.trim().to_string(), content.to_string())
 }
 
+fn is_index_compat(base: &str) -> bool {
+    base.to_ascii_lowercase().contains("index-translate.bilibili.com")
+}
+
+fn apply_auth(req: reqwest::RequestBuilder, base: &str, api_key: &str) -> reqwest::RequestBuilder {
+    if is_index_compat(base) {
+        return req.header("user-agent", "Index-Translate-Client/1.0");
+    }
+    let key = api_key.trim();
+    if key.is_empty() {
+        req
+    } else {
+        req.header("authorization", format!("Bearer {key}"))
+    }
+}
+
 fn apply_thinking_options(body: &mut serde_json::Value, base: &str, model: &str) {
+    if is_index_compat(base) {
+        body["chat_template_kwargs"] = serde_json::json!({ "enable_thinking": false });
+        return;
+    }
     let provider = format!("{} {}", base.to_ascii_lowercase(), model.to_ascii_lowercase());
+
     if provider.contains("deepseek") {
         // DeepSeek-compatible APIs use a nested object instead of Qwen's
         // enable_thinking boolean.
@@ -628,11 +646,7 @@ async fn test_connection_with_client(
     model: &str,
     api_key: &str,
 ) -> Result<String, String> {
-    let mut req = client.get(format!("{base}/models"));
-    let key = api_key.trim();
-    if !key.is_empty() {
-        req = req.header("authorization", format!("Bearer {key}"));
-    }
+    let req = apply_auth(client.get(format!("{base}/models")), base, api_key);
     let resp = req
         .send()
         .await

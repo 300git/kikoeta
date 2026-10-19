@@ -356,6 +356,11 @@ class AppState extends ChangeNotifier {
   String translationTarget = 'zh-CN'; // zh-CN / zh-TW / en
   final List<String> openAiModels = [];
   final Map<String, String> aiConfig = {'base': '', 'model': '', 'key': ''};
+  final Map<String, String> indexConfig = {
+    'base': 'https://index-translate.bilibili.com/v1',
+    'model': 'Index-Translate-35B-A3B',
+    'key': 'index',
+  };
   String deeplKey = '';
 
   // Windows 关闭窗口后的行为
@@ -1171,6 +1176,15 @@ class AppState extends ChangeNotifier {
         aiConfig['key'] = raw['key'] as String? ?? '';
       } catch (_) {}
     }
+    final indexRaw = SettingsStore.get('index_config');
+    if (indexRaw != null && indexRaw.isNotEmpty) {
+      try {
+        final raw = jsonDecode(indexRaw) as Map<String, dynamic>;
+        indexConfig['base'] = raw['base'] as String? ?? indexConfig['base']!;
+        indexConfig['model'] = raw['model'] as String? ?? indexConfig['model']!;
+        indexConfig['key'] = raw['key'] as String? ?? indexConfig['key']!;
+      } catch (_) {}
+    }
     final dk = SettingsStore.get('deepl_key');
     if (dk != null) deeplKey = dk;
     final translationTarget = SettingsStore.get('translation_target');
@@ -1329,7 +1343,25 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Map<String, String> get activeAiConfig =>
+      engine == 'index' ? indexConfig : aiConfig;
+
+  void setIndexConfig(String base, String model, String key) {
+    indexConfig['base'] = base;
+    indexConfig['model'] = model;
+    indexConfig['key'] = key;
+    SettingsStore.set(
+      'index_config',
+      jsonEncode({'base': base, 'model': model, 'key': key}),
+    );
+    notifyListeners();
+  }
+
   void setAiConfig(String base, String model, String key) {
+    if (engine == 'index') {
+      setIndexConfig(base, model, key);
+      return;
+    }
     aiConfig['base'] = base;
     aiConfig['model'] = model;
     aiConfig['key'] = key;
@@ -1825,6 +1857,13 @@ class AppState extends ChangeNotifier {
     aiConfig
       ..clear()
       ..addAll({'base': '', 'model': '', 'key': ''});
+    indexConfig
+      ..clear()
+      ..addAll({
+        'base': 'https://index-translate.bilibili.com/v1',
+        'model': 'Index-Translate-35B-A3B',
+        'key': 'index',
+      });
     deeplKey = '';
     sleepMode = 'after';
     sleepPlayEndArmed = false;

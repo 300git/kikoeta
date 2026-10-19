@@ -69,9 +69,9 @@ class _SettingsPageState extends State<SettingsPage> {
     // 设置页大量控件直接渲染 AppState 字段（开关、分段按钮等），
     // 自行监听以在状态变化时刷新（此前依赖根级全树重建）
     app.addListener(_onAppChanged);
-    _aiBase = TextEditingController(text: app.aiConfig['base']);
-    _aiModel = TextEditingController(text: app.aiConfig['model']);
-    _aiKey = TextEditingController(text: app.aiConfig['key']);
+    _aiBase = TextEditingController(text: app.activeAiConfig['base']);
+    _aiModel = TextEditingController(text: app.activeAiConfig['model']);
+    _aiKey = TextEditingController(text: app.activeAiConfig['key']);
     _deeplKey = TextEditingController(text: app.deeplKey);
     _colorHexCtrl = TextEditingController(text: _toHex(app.lyricsColor));
     _outlineHexCtrl = TextEditingController(
@@ -219,7 +219,11 @@ class _SettingsPageState extends State<SettingsPage> {
         ..connectionTimeout = const Duration(seconds: 12);
       final request = await client.getUrl(Uri.parse('$base/models'));
       final key = _aiKey.text.trim();
-      if (key.isNotEmpty) request.headers.set('Authorization', 'Bearer $key');
+      if (base.contains('index-translate.bilibili.com')) {
+        request.headers.set('User-Agent', 'Index-Translate-Client/1.0');
+      } else if (key.isNotEmpty) {
+        request.headers.set('Authorization', 'Bearer $key');
+      }
       final response = await request.close();
       final body = await utf8.decodeStream(response);
       client.close(force: true);
@@ -430,7 +434,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ],
-                  if (app.engine == 'openai') ...[
+                  if (app.engine == 'openai' || app.engine == 'index') ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                       child: Column(
@@ -1781,11 +1785,20 @@ class _SettingsPageState extends State<SettingsPage> {
       ..showSnackBar(const SnackBar(content: Text('已重置：账号与全部本地数据已清除')));
   }
 
+  void _selectEngine(String engine) {
+    app.setEngine(engine);
+    _aiBase.text = app.activeAiConfig['base']!;
+    _aiModel.text = app.activeAiConfig['model']!;
+    _aiKey.text = app.activeAiConfig['key']!;
+    setState(() {});
+  }
+
   Widget _engineDropdown() {
     const labels = {
       'google': 'Google',
       'microsoft': 'Microsoft',
       'deepl': 'DeepL',
+      'index': 'Index-Translate',
       'openai': 'OpenAI 兼容',
     };
     return _translationDropdown(
@@ -1802,7 +1815,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ],
-      onSelected: app.setEngine,
+      onSelected: _selectEngine,
     );
   }
 
