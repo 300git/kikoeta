@@ -1233,7 +1233,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     }
   }
 
-  Widget _topBar({bool showControls = true}) {
+  Widget _topBar({bool showControls = true, bool showFileName = false}) {
     return SizedBox(
       height: kMinInteractiveDimension,
       child: Stack(
@@ -1246,10 +1246,32 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
               icon: const Icon(Icons.keyboard_arrow_down, size: 26),
             ),
           ),
-          const Text(
-            '正在播放',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-          ),
+          if (showFileName)
+            // 文件名过长时横向滚动；两侧留出返回与更多按钮的位置
+            Positioned(
+              left: 100,
+              right: 100,
+              top: 0,
+              bottom: 0,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: _MarqueeText(
+                  text: track.title.replaceAll(
+                    RegExp(r'\.(mp3|wav|flac|m4a|aac|ogg|opus)$'),
+                    '',
+                  ),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            )
+          else
+            const Text(
+              '正在播放',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
           // 桌面歌词/更多仅出现在歌词页右上（封面页通过左右滑动进入歌词页）
           if (showControls)
             Align(
@@ -1750,7 +1772,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   Widget _lyricsPanel({required bool showTopBar}) {
     return Column(
       children: [
-        if (showTopBar) _topBar(showControls: true),
+        if (showTopBar) _topBar(showControls: true, showFileName: true),
         Expanded(
           child: _lyrics.isEmpty
               ? Center(
@@ -2508,6 +2530,109 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
           duration: const Duration(milliseconds: 1600),
         ),
       );
+  }
+}
+
+/// 单行文本：宽度足够时居中静止；超出时先停顿，再匀速横向滚动到末尾，停顿后循环。
+/// 参考 pub 社区 marquee 包的做法（测量溢出量 + 停顿/滚动/停顿的循环动画）。
+/// 每次布局只做一次 TextPainter 测量；动画仅在溢出时运行，每帧只改 Transform 偏移。
+class _MarqueeText extends StatefulWidget {
+  const _MarqueeText({required this.text, required this.style});
+
+  final String text;
+  final TextStyle style;
+
+  @override
+  State<_MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<_MarqueeText>
+    with SingleTickerProviderStateMixin {
+  static const double _pxPerSecond = 30;
+  static const double _pauseMs = 1500;
+
+  late final AnimationController _ctrl = AnimationController(vsync: this);
+  Animation<double>? _offset;
+  double _overflow = 0;
+  String? _lastText;
+  TextStyle? _lastStyle;
+  double _lastWidth = -1;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _sync(double maxWidth) {
+    if (maxWidth == _lastWidth &&
+        widget.text == _lastText &&
+        widget.style == _lastStyle) {
+      return;
+    }
+    _lastWidth = maxWidth;
+    _lastText = widget.text;
+    _lastStyle = widget.style;
+    final painter = TextPainter(
+      text: TextSpan(text: widget.text, style: widget.style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final overflow = painter.width - maxWidth;
+    painter.dispose();
+    _overflow = overflow > 0 ? overflow : 0;
+    if (_overflow == 0) {
+      _ctrl.stop();
+      _ctrl.value = 0;
+      _offset = null;
+      return;
+    }
+    final scrollMs = _overflow / _pxPerSecond * 1000;
+    _ctrl.duration = Duration(milliseconds: (scrollMs + _pauseMs * 2).round());
+    _offset = TweenSequence<double>([
+      TweenSequenceItem(tween: ConstantTween(0.0), weight: _pauseMs),
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: _overflow),
+        weight: scrollMs,
+      ),
+      TweenSequenceItem(tween: ConstantTween(_overflow), weight: _pauseMs),
+    ]).animate(_ctrl);
+    _ctrl.repeat();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (ctx, c) {
+        _sync(c.maxWidth);
+        final offset = _offset;
+        // softWrap: false 时文字按自然宽度排版，超出部分由 ClipRect 裁切
+        final label = Text(
+          widget.text,
+          style: widget.style,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.visible,
+          textAlign: TextAlign.center,
+        );
+        final body = Align(
+          alignment: _overflow > 0 ? Alignment.centerLeft : Alignment.center,
+          child: label,
+        );
+        return ClipRect(
+          child: offset == null
+              ? body
+              : AnimatedBuilder(
+                  animation: offset,
+                  child: body,
+                  builder: (_, child) => Transform.translate(
+                    offset: Offset(-offset.value, 0),
+                    child: child,
+                  ),
+                ),
+        );
+      },
+    );
   }
 }
 
