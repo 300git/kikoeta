@@ -206,6 +206,65 @@ Future<bool> _openAppTrack(MediaNode track, {bool autoplay = true}) async {
   return true;
 }
 
+/// 当前获得焦点的文本框状态，没有则为 null。
+EditableTextState? _focusedEditableTextState() {
+  return FocusManager.instance.primaryFocus?.context
+      ?.findAncestorStateOfType<EditableTextState>();
+}
+
+/// 在文本框光标处插入一个空格。
+/// 走 [EditableTextState.userUpdateTextEditingValue]，inputFormatters、
+/// maxLength、撤销栈和控制器回调都会照常生效。
+void _insertSpaceAtCaret(EditableTextState state) {
+  if (state.widget.readOnly) return;
+  final value = state.textEditingValue;
+  final text = value.text;
+  final selection = value.selection;
+  final start = selection.isValid
+      ? selection.start.clamp(0, text.length).toInt()
+      : text.length;
+  final end = selection.isValid
+      ? selection.end.clamp(0, text.length).toInt()
+      : text.length;
+  state.userUpdateTextEditingValue(
+    value.copyWith(
+      text: text.replaceRange(start, end, ' '),
+      selection: TextSelection.collapsed(offset: start + 1),
+      composing: TextRange.empty,
+    ),
+    SelectionChangedCause.keyboard,
+  );
+}
+
+/// 根级按键：文本框聚焦时把 Tab 当空格输入，否则只处理播放快捷键。
+/// 返回 ignored 时按键会继续下发，不会丢字符。
+KeyEventResult _handleRootKey(int keyId, KeyEvent event) {
+  if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+    return KeyEventResult.ignored;
+  }
+  final textState = _focusedEditableTextState();
+  if (textState != null) {
+    // 框架默认把 Tab 映射成 DoNothingAndStopPropagationTextIntent（只吞不输入），
+    // 这里抢在 DefaultTextEditingShortcuts 之前把它换成插入空格。
+    // 带修饰键的 Tab（如 Shift+Tab 反向遍历焦点）保持原样。
+    if (event.logicalKey == LogicalKeyboardKey.tab &&
+        !HardwareKeyboard.instance.isShiftPressed &&
+        !HardwareKeyboard.instance.isControlPressed &&
+        !HardwareKeyboard.instance.isAltPressed) {
+      _insertSpaceAtCaret(textState);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+  // 播放快捷键只在首次按下时触发，长按不连翻
+  if (event is! KeyDownEvent) return KeyEventResult.ignored;
+  final toggle =
+      LogicalKeyboardKey.findKeyByKeyId(keyId) ?? LogicalKeyboardKey.space;
+  if (event.logicalKey != toggle) return KeyEventResult.ignored;
+  unawaited(_toggleAppPlaybackShortcut());
+  return KeyEventResult.handled;
+}
+
 Future<void> _toggleAppPlaybackShortcut() async {
   if (_playbackShortcutRunning) return;
   _playbackShortcutRunning = true;
@@ -721,38 +780,30 @@ class _KikoetaAppState extends State<KikoetaApp>
         // 主题切换的圆形揭示既要抓它的截图，也要盖住它
         return RepaintBoundary(
           key: _rootKey,
-          child: CallbackShortcuts(
-            bindings: {
-              SingleActivator(
-                LogicalKeyboardKey.findKeyByKeyId(
-                      _playbackToggleShortcutKey,
-                    ) ??
-                    LogicalKeyboardKey.space,
-              ): () => unawaited(_toggleAppPlaybackShortcut()),
-            },
-            child: Focus(
-              autofocus: true,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (Platform.isWindows)
-                    _windowsFrame(context, child)
-                  else
-                    child ?? const SizedBox.shrink(),
-                  if (_revealImage != null)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(
-                          painter: ThemeRevealPainter(
-                            image: _revealImage!,
-                            origin: _revealOrigin,
-                            progress: _revealCurve,
-                          ),
+          child: Focus(
+            autofocus: true,
+            onKeyEvent: (_, event) =>
+                _handleRootKey(_playbackToggleShortcutKey, event),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (Platform.isWindows)
+                  _windowsFrame(context, child)
+                else
+                  child ?? const SizedBox.shrink(),
+                if (_revealImage != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: ThemeRevealPainter(
+                          image: _revealImage!,
+                          origin: _revealOrigin,
+                          progress: _revealCurve,
                         ),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
         );

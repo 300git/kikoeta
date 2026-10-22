@@ -79,10 +79,17 @@ class MediaSelection {
   /// Touch the selected subtree once and update only its ancestor counts.
   void toggle(MediaNode node, Iterable<MediaNode> roots) {
     bindTree(roots is List<MediaNode> ? roots : roots.toList());
+    setSelected(node, state(node) != true, roots);
+  }
+
+  /// Apply an explicit checked state to a subtree. Drag selection reuses this
+  /// so sliding back over a row keeps the state it already got instead of
+  /// flipping it again.
+  void setSelected(MediaNode node, bool select, Iterable<MediaNode> roots) {
+    bindTree(roots is List<MediaNode> ? roots : roots.toList());
     final index = _index!;
     final row = index.byPath[node.path];
     if (row == null) return;
-    final select = state(node) != true;
     _alternateStates.clear();
     if (!identical(row.node, node)) {
       _toggleFiltered(node, select);

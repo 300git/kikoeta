@@ -254,6 +254,10 @@ class _WorkPageState extends State<WorkPage> {
   bool _tracksFailed = false;
   final MediaSelection _selection = MediaSelection();
   final Set<String> _expanded = {};
+  // 复选框滑动选中：长按某项后上下滑动，划过的行统一改成与起点相反的状态。
+  bool _dragSelectValue = true;
+  final Set<String> _dragApplied = {};
+  final Map<String, GlobalKey> _rowKeys = {};
   List<String>? _smartTarget; // 智能路径自动进入的目录（标题链），用于「查看全部文件」
   late int _seenLoginEpoch;
   bool _translating = false;
@@ -1524,6 +1528,62 @@ class _WorkPageState extends State<WorkPage> {
     return false;
   }
 
+  /// 长按复选框一侧后开始滑动选中：起手时记下要写入的状态（与起点当前
+  /// 状态相反），之后划过的行统一写成该状态，重复经过的行不会反复翻转。
+  void _beginDragSelect(MediaNode node) {
+    _dragSelectValue = _selection.state(node) != true;
+    _dragApplied.clear();
+    _applyDragSelect(node);
+    HapticFeedback.selectionClick();
+  }
+
+  void _applyDragSelect(MediaNode node) {
+    if (!_dragApplied.add(node.path)) return;
+    _selection.setSelected(node, _dragSelectValue, _tree ?? const []);
+    setState(() {});
+  }
+
+  void _endDragSelect() {
+    _dragApplied.clear();
+  }
+
+  /// 手指移到哪一行就选中哪一行：只遍历当前可见行（懒加载列表里已构建
+  /// 的部分），用行自身的 RenderBox 做命中判断。
+  void _applyDragSelectAt(Offset globalPosition) {
+    _autoScrollForDrag(globalPosition);
+    for (final row in _visibleRows) {
+      final context = _rowKeys[row.node.path]?.currentContext;
+      final box = context?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) continue;
+      final rect = box.localToGlobal(Offset.zero) & box.size;
+      if (!rect.contains(globalPosition)) continue;
+      _applyDragSelect(row.node);
+      return;
+    }
+  }
+
+  /// 拖到视口上下边缘时继续滚动，否则手指出屏后就只能选到已构建的行。
+  void _autoScrollForDrag(Offset globalPosition) {
+    if (!_pageScroll.hasClients) return;
+    final screen = MediaQuery.sizeOf(context);
+    const edge = 72.0;
+    const step = 14.0;
+    final position = _pageScroll.position;
+    double delta = 0;
+    if (globalPosition.dy > screen.height - edge) {
+      delta = step;
+    } else if (globalPosition.dy < edge + kToolbarHeight) {
+      delta = -step;
+    }
+    if (delta == 0) return;
+    final next = (position.pixels + delta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (next == position.pixels) return;
+    _pageScroll.jumpTo(next);
+  }
+
   Widget _nodeRow(
     MediaNode n,
     int depth,
@@ -1614,13 +1674,26 @@ class _WorkPageState extends State<WorkPage> {
                 ],
               ),
             ),
-            Checkbox(
-              tristate: n.isDir,
-              value: checked,
-              activeColor: p.accent,
-              visualDensity: VisualDensity.compact,
-              onChanged: (_) =>
-                  setState(() => _selection.toggle(n, _tree ?? const [])),
+            // 复选框一侧兼作滑动选中的起手区：长按进入滑动选中，拖动时按
+            // 手指命中的行写入状态；垂直拖动交给外层的页面滚动。
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onLongPressStart: (_) => _beginDragSelect(n),
+              onLongPressMoveUpdate: (details) =>
+                  _applyDragSelectAt(details.globalPosition),
+              onLongPressEnd: (_) => _endDragSelect(),
+              onLongPressCancel: _endDragSelect,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Checkbox(
+                  tristate: n.isDir,
+                  value: checked,
+                  activeColor: p.accent,
+                  visualDensity: VisualDensity.compact,
+                  onChanged: (_) =>
+                      setState(() => _selection.toggle(n, _tree ?? const [])),
+                ),
+              ),
             ),
           ],
         ),
@@ -1997,6 +2070,10 @@ class _WorkPageState extends State<WorkPage> {
                         // 不会漏到卡片圆角的缺口上（页面级 Material 在卡片裁剪之外）
                         rowBuilder: (context, row) => Material(
                           type: MaterialType.transparency,
+                          key: _rowKeys.putIfAbsent(
+                            row.node.path,
+                            GlobalKey.new,
+                          ),
                           child: _nodeRow(
                             row.node,
                             row.depth,
