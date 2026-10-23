@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import '../l10n/strings.dart';
 
 class DownloadTransferCancelled implements Exception {
   const DownloadTransferCancelled();
@@ -62,7 +63,10 @@ Future<void> downloadToFile({
           await response.listen(null).cancel();
           checkCancelled();
           if (await partial.length() != total) {
-            throw HttpException('下载分片长度发生变化', uri: uri);
+            throw HttpException(
+              appL10n.downloadTransferDownloadToFileHttpException2,
+              uri: uri,
+            );
           }
           onProgress(total, total);
           checkCancelled();
@@ -77,13 +81,21 @@ Future<void> downloadToFile({
         continue;
       }
       if (status != HttpStatus.ok && status != HttpStatus.partialContent) {
-        throw HttpException('下载失败 HTTP $status', uri: uri);
+        throw HttpException(
+          appL10n.downloadTransferDownloadToFileHttpException7(
+            (status).toString(),
+          ),
+          uri: uri,
+        );
       }
       final encoding = response.headers.value(
         HttpHeaders.contentEncodingHeader,
       );
       if (encoding != null && encoding.toLowerCase() != 'identity') {
-        throw HttpException('下载响应使用了非原始字节编码', uri: uri);
+        throw HttpException(
+          appL10n.downloadTransferDownloadToFileHttpException6,
+          uri: uri,
+        );
       }
 
       final range = status == HttpStatus.partialContent
@@ -95,7 +107,10 @@ Future<void> downloadToFile({
             range.start != existing ||
             range.end != range.total - 1 ||
             (responseLength >= 0 && responseLength != range.length)) {
-          throw HttpException('下载响应的字节范围不匹配', uri: uri);
+          throw HttpException(
+            appL10n.downloadTransferDownloadToFileHttpException4,
+            uri: uri,
+          );
         }
         if (existing > 0 &&
             (saved == null ||
@@ -130,7 +145,10 @@ Future<void> downloadToFile({
         checkCancelled();
         if (expectedLength >= 0 &&
             received - existing + chunk.length > expectedLength) {
-          throw HttpException('下载响应超过声明的文件长度', uri: uri);
+          throw HttpException(
+            appL10n.downloadTransferDownloadToFileHttpException5,
+            uri: uri,
+          );
         }
         await output.writeFrom(chunk);
         received += chunk.length;
@@ -139,7 +157,10 @@ Future<void> downloadToFile({
       }
       checkCancelled();
       if (expectedLength >= 0 && received - existing != expectedLength) {
-        throw HttpException('下载响应不完整', uri: uri);
+        throw HttpException(
+          appL10n.downloadTransferDownloadToFileHttpException,
+          uri: uri,
+        );
       }
       await output.flush();
       await output.close();
@@ -147,7 +168,10 @@ Future<void> downloadToFile({
       checkCancelled();
       if (await partial.length() != received ||
           (total > 0 && received != total)) {
-        throw HttpException('下载文件长度校验失败', uri: uri);
+        throw HttpException(
+          appL10n.downloadTransferDownloadToFileHttpException3,
+          uri: uri,
+        );
       }
       checkCancelled();
       await partial.rename(target.path);

@@ -23,6 +23,7 @@ import '../src/rust/api/textconv.dart';
 import '../sheets.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../l10n/strings.dart';
 
 class PlayerPage extends StatefulWidget {
   final AppState app;
@@ -126,14 +127,16 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
         app.playing = false;
         app.notify();
         setState(() {});
-        _toast('播放失败：${_friendlyPlayError(e)}');
+        _toast(
+          appL10n.playerPageInitStateToast2((_friendlyPlayError(e)).toString()),
+        );
       }),
     );
     _subs.add(
       AppPlayer.instance.reconnecting.listen((reconnecting) {
         if (!mounted || reconnecting == _reconnecting) return;
         setState(() => _reconnecting = reconnecting);
-        if (reconnecting) _toast('网络波动，正在自动重连…');
+        if (reconnecting) _toast(appL10n.playerPageInitStateToast);
       }),
     );
     _subs.add(
@@ -274,6 +277,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _openCurrent({bool autoplay = true}) async {
+    final l10n = context.l10n;
     final localPath = app.currentWork == null
         ? null
         : DownloadManager.instance.localPathFor(
@@ -285,7 +289,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     if (localPath == null && url == null) {
       app.playing = false;
       app.notify();
-      _toast('文件流需登录后可用');
+      _toast(l10n.playerPageOpenCurrentToast);
       return;
     }
     if (mounted) setState(() => _opening = true);
@@ -312,6 +316,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     required bool autoplay,
     int attempt = 1,
   }) async {
+    final l10n = context.l10n;
     try {
       await AppPlayer.instance.openMediaUrl(url, autoplay: autoplay);
       _syncPlayerSnapshot(rebuild: true);
@@ -319,23 +324,27 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
       AppPlayer.instance.applyEqualizer(enabled: app.eqOn, gains: app.eqGains);
     } on TimeoutException {
       if (attempt < 2) {
-        if (mounted) _toast('打开媒体超时，正在重试…');
+        if (mounted) _toast(l10n.playerPageOpenMediaToast3);
         await Future.delayed(const Duration(seconds: 1));
         await _openMedia(url, autoplay: autoplay, attempt: attempt + 1);
       } else {
         app.playing = false;
         app.notify();
-        _toast('打开媒体超时，请重试');
+        _toast(l10n.playerPageOpenMediaToast);
       }
     } catch (e) {
       if (attempt < 2) {
-        if (mounted) _toast('打开失败，正在重试…');
+        if (mounted) _toast(l10n.playerPageOpenMediaToast2);
         await Future.delayed(const Duration(seconds: 1));
         await _openMedia(url, autoplay: autoplay, attempt: attempt + 1);
       } else {
         app.playing = false;
         app.notify();
-        _toast('无法打开媒体流：${_friendlyPlayError(e.toString())}');
+        _toast(
+          l10n.playerPageOpenMediaToast4(
+            (_friendlyPlayError(e.toString())).toString(),
+          ),
+        );
       }
     }
   }
@@ -344,14 +353,16 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   String _friendlyPlayError(String e) {
     final s = e.toLowerCase();
     if (s.contains('upstream error 401') || s.contains('upstream error 403')) {
-      return '登录已失效，请重新登录后重试';
+      return context.l10n.playerPageFriendlyPlayErrorText3;
     }
-    if (s.contains('upstream error')) return '服务器返回错误，请稍后重试';
+    if (s.contains('upstream error')) {
+      return context.l10n.playerPageFriendlyPlayErrorText2;
+    }
     if (s.contains('failed to open') || s.contains('connection refused')) {
-      return '无法连接媒体流，请检查网络后重试';
+      return context.l10n.playerPageFriendlyPlayErrorText4;
     }
     if (s.contains('127.0.0.1')) {
-      return '媒体流代理异常，请重试';
+      return context.l10n.playerPageFriendlyPlayErrorText;
     }
     return e;
   }
@@ -382,7 +393,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
       app.playing = false;
       app.notify();
       setState(() {});
-      _toast('已播放完播放列表');
+      _toast(context.l10n.playerPageNextToast);
       return;
     }
     _switching = true;
@@ -461,7 +472,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     if (end == null || !DateTime.now().isAfter(end)) return;
     SleepTimer.check(app);
     if (mounted) setState(() {});
-    _toast('已停止播放，系统接口已释放');
+    _toast(context.l10n.playerPageCheckSleepToast);
   }
 
   String _fmt(int s) =>
@@ -645,7 +656,10 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
       return Scaffold(
         backgroundColor: p.bg,
         body: Center(
-          child: Text('暂无播放内容', style: TextStyle(fontSize: 14, color: p.dim)),
+          child: Text(
+            context.l10n.playerPageBuildText,
+            style: TextStyle(fontSize: 14, color: p.dim),
+          ),
         ),
       );
     }
@@ -824,7 +838,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
             top: 4,
             child: _wideChromeButton(
               visible: _wideChromeVisible,
-              tooltip: '返回',
+              tooltip: context.l10n.back,
               icon: Icons.arrow_back,
               onPressed: () => Navigator.pop(context),
             ),
@@ -834,7 +848,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
             top: 4,
             child: _wideChromeButton(
               visible: _wideChromeVisible,
-              tooltip: '更多',
+              tooltip: context.l10n.more,
               icon: Icons.more_horiz,
               onPressed: _showLyricSettings,
             ),
@@ -923,12 +937,20 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     final actions = <(IconData, String, VoidCallback)>[
       (
         Icons.article_outlined,
-        '作品详情',
+        context.l10n.workDetails,
         () => Navigator.of(context).push(buildWorkRoute(app, work)),
       ),
-      (Icons.queue_music, '播放列表', _showQueue),
-      (Icons.equalizer_outlined, '均衡器', () => showEqSheet(context, app)),
-      (Icons.timer_outlined, '定时关闭', () => showSleepSheet(context, app)),
+      (Icons.queue_music, context.l10n.playlist, _showQueue),
+      (
+        Icons.equalizer_outlined,
+        context.l10n.equalizer,
+        () => showEqSheet(context, app),
+      ),
+      (
+        Icons.timer_outlined,
+        context.l10n.sleepTimer,
+        () => showSleepSheet(context, app),
+      ),
     ];
     return Material(
       key: const ValueKey('wide-cover-menu'),
@@ -1091,7 +1113,9 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
       return Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          LyricsHub.instance.loading ? '正在加载歌词…' : '暂无歌词',
+          LyricsHub.instance.loading
+              ? context.l10n.playerPageLyricsPanelText
+              : context.l10n.playerPageWideLyricsPanelText,
           style: TextStyle(fontSize: 14, color: p.dim),
         ),
       );
@@ -1268,8 +1292,8 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
               ),
             )
           else
-            const Text(
-              '正在播放',
+            Text(
+              context.l10n.playerPageTopBarText,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
             ),
           // 桌面歌词/更多仅出现在歌词页右上（封面页通过左右滑动进入歌词页）
@@ -1281,7 +1305,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                 children: [
                   IconButton(
                     onPressed: _toggleDesktopLyrics,
-                    tooltip: '桌面歌词',
+                    tooltip: context.l10n.desktopLyrics,
                     icon: Icon(
                       app.desktopLyricsOn
                           ? Icons.lyrics
@@ -1303,10 +1327,11 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleDesktopLyrics() async {
+    final l10n = context.l10n;
     if (!app.desktopLyricsOn && Platform.isAndroid) {
       final ok = await AndroidLyricsOverlay.instance.requestPermission();
       if (!ok) {
-        if (mounted) _toast('未授予悬浮窗权限，桌面歌词无法显示');
+        if (mounted) _toast(l10n.playerPageToggleDesktopLyricsToast);
         return; // 保持关闭
       }
     }
@@ -1344,13 +1369,13 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                 final left = _seekCircle(
                   Icons.replay,
                   app.playbackSeekBackwardSeconds,
-                  '快退',
+                  context.l10n.seekBackward,
                   () => _seekRelative(-app.playbackSeekBackwardSeconds),
                 );
                 final right = _seekCircle(
                   Icons.rotate_right,
                   app.playbackSeekForwardSeconds,
-                  '快进',
+                  context.l10n.seekForward,
                   () => _seekRelative(app.playbackSeekForwardSeconds),
                 );
                 return SizedBox(
@@ -1490,16 +1515,16 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
           onPressed: _showQueue,
           icon: const Icon(Icons.queue_music, size: 20),
           color: p.dim,
-          tooltip: '播放列表',
+          tooltip: context.l10n.playlist,
         ),
       ],
     );
   }
 
   String get _playModeLabel => switch (app.playMode) {
-    1 => '循环播放',
-    2 => '单曲循环',
-    _ => '列表播放',
+    1 => context.l10n.playerPagePlayModeLabelText,
+    2 => context.l10n.playerPagePlayModeLabelText2,
+    _ => context.l10n.playerPagePlayModeLabelText3,
   };
 
   void _cyclePlayMode() {
@@ -1541,7 +1566,9 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                   Icon(Icons.queue_music, size: 18, color: p.accent),
                   const SizedBox(width: 8),
                   Text(
-                    '播放列表（${app.queue.length}）',
+                    context.l10n.playerPageShowQueueText2(
+                      (app.queue.length).toString(),
+                    ),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
@@ -1561,7 +1588,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
               child: app.queue.isEmpty
                   ? Center(
                       child: Text(
-                        '播放列表为空',
+                        context.l10n.playerPageShowQueueText,
                         style: TextStyle(fontSize: 13, color: p.dim),
                       ),
                     )
@@ -1609,7 +1636,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                                 ),
                                 if (current)
                                   Text(
-                                    '正在播放',
+                                    context.l10n.playerPageTopBarText,
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: p.accent,
@@ -1675,10 +1702,10 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
         IconButton(
           onPressed: _toggleBoost,
           tooltip: app.volumeBoostLevel == 2
-              ? '响度提升 Plus（上限 200）'
+              ? context.l10n.playerPageVolumeControlTooltip3
               : app.volumeBoostLevel == 1
-              ? '响度提升（上限 120）'
-              : '启用响度提升（上限 120）',
+              ? context.l10n.playerPageVolumeControlTooltip
+              : context.l10n.playerPageVolumeControlTooltip2,
           visualDensity: VisualDensity.compact,
           icon: Icon(
             app.volumeBoostLevel == 2 ? Icons.bolt : Icons.bolt_outlined,
@@ -1702,7 +1729,10 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   ) {
     final color = p.text.withValues(alpha: .75);
     return Tooltip(
-      message: '$label $seconds 秒',
+      message: context.l10n.playerPageSeekCircleMessage(
+        (label).toString(),
+        (seconds).toString(),
+      ),
       child: Material(
         color: p.surface2.withValues(alpha: .5),
         shape: const CircleBorder(),
@@ -1742,13 +1772,19 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
       children: [
         _util(
           Icons.article_outlined,
-          '作品详情',
+          context.l10n.workDetails,
           () => Navigator.of(context).push(buildWorkRoute(app, work)),
         ),
-        _util(Icons.equalizer_outlined, '均衡器', () => showEqSheet(context, app)),
+        _util(
+          Icons.equalizer_outlined,
+          context.l10n.equalizer,
+          () => showEqSheet(context, app),
+        ),
         _util(
           Icons.timer_outlined,
-          app.sleepEndAt != null ? '定时中' : '定时',
+          app.sleepEndAt != null
+              ? context.l10n.playerPageUtilsUtil2
+              : context.l10n.playerPageUtilsUtil,
           () => showSleepSheet(context, app),
         ),
       ],
@@ -1777,7 +1813,9 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
           child: _lyrics.isEmpty
               ? Center(
                   child: Text(
-                    LyricsHub.instance.loading ? '正在加载歌词…' : '暂无歌词',
+                    LyricsHub.instance.loading
+                        ? context.l10n.playerPageLyricsPanelText
+                        : context.l10n.playerPageWideLyricsPanelText,
                     style: TextStyle(fontSize: 13, color: p.dim),
                   ),
                 )
@@ -1843,7 +1881,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                     Icon(Icons.lyrics_outlined, size: 18, color: p.accent),
                     const SizedBox(width: 8),
                     Text(
-                      '歌词设置',
+                      context.l10n.playerPageShowLyricSettingsText3,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -1859,7 +1897,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '繁简互转',
+                  context.l10n.playerPageShowLyricSettingsText2,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -1869,18 +1907,28 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _convPill(ctx, setDlg, 'orig', '关闭'),
+                    _convPill(ctx, setDlg, 'orig', context.l10n.close),
                     const SizedBox(width: 8),
-                    _convPill(ctx, setDlg, 'tw', '简 → 繁'),
+                    _convPill(
+                      ctx,
+                      setDlg,
+                      'tw',
+                      context.l10n.simplifiedToTraditional,
+                    ),
                     const SizedBox(width: 8),
-                    _convPill(ctx, setDlg, 'zh', '繁 → 简'),
+                    _convPill(
+                      ctx,
+                      setDlg,
+                      'zh',
+                      context.l10n.traditionalToSimplified,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Text(
-                      '字幕偏移',
+                      context.l10n.playerPageShowLyricSettingsText4,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -1897,7 +1945,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                       GestureDetector(
                         onTap: () => setDlg(() => _lrcOffsetMs = 0),
                         child: Text(
-                          '归零',
+                          context.l10n.playerPageShowLyricSettingsText,
                           style: TextStyle(fontSize: 12, color: p.accent),
                         ),
                       ),
@@ -1934,15 +1982,17 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                     children: [
                       _lyricSettingTile(
                         icon: Icons.cloud_download_outlined,
-                        title: '选择在线歌词',
-                        sub: _lyricSourceName ?? '自动匹配',
+                        title: context.l10n.playerPagePickOnlineLyricText,
+                        sub: _lyricSourceName ?? context.l10n.autoMatch,
                         onTap: () => _pickOnlineLyric(ctx),
                       ),
                       Divider(height: 1, indent: 52, color: p.line),
                       _lyricSettingTile(
                         icon: Icons.folder_open_outlined,
-                        title: '选择离线歌词',
-                        sub: _lyricSourceName != null ? '本地文件' : '从本地选择歌词或字幕文件',
+                        title: context.l10n.playerPageShowLyricSettingsTitle,
+                        sub: _lyricSourceName != null
+                            ? context.l10n.lyricsLibraryPageBuildNavItem2
+                            : context.l10n.playerPageShowLyricSettingsSub2,
                         onTap: _pickOfflineLyric,
                       ),
                       Divider(height: 1, indent: 52, color: p.line),
@@ -1951,10 +2001,10 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                         Divider(height: 1, indent: 52, color: p.line),
                         _lyricSettingTile(
                           icon: Icons.library_music_outlined,
-                          title: '选择歌词库歌词',
+                          title: context.l10n.playerPageShowLyricSettingsTitle2,
                           sub: app.playWork == null
-                              ? '歌词库中没有该作品'
-                              : '仅显示当前作品的歌词文件',
+                              ? context.l10n.playerPageShowLyricSettingsSub
+                              : context.l10n.playerPageShowLyricSettingsSub3,
                           onTap: app.playWork == null
                               ? null
                               : () => _pickLibraryLyric(),
@@ -2085,12 +2135,12 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '从歌词库自动匹配歌词',
+                    context.l10n.playerPageLibraryAutoTileText,
                     style: TextStyle(fontSize: 13.5, color: p.text),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '优先匹配本地歌词，找不到时使用在线歌词',
+                    context.l10n.playerPageLibraryAutoTileText2,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 11, color: p.dim),
@@ -2125,6 +2175,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _pickOnlineLyric(BuildContext rootCtx) async {
+    final rootCtxL10n = rootCtx.l10n;
     final selection = LyricsHub.instance.captureSelection();
     if (selection == null) return;
     List<LyricCandidate> cands;
@@ -2144,7 +2195,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
       return;
     }
     if (cands.isEmpty) {
-      _toast('未找到在线歌词');
+      _toast(rootCtxL10n.playerPagePickOnlineLyricToast);
       return;
     }
     showDialog(
@@ -2169,7 +2220,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '选择在线歌词',
+                      rootCtxL10n.playerPagePickOnlineLyricText,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -2192,8 +2243,8 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                   children: [
                     _onlineLyricItem(
                       ctx,
-                      title: '自动匹配',
-                      sub: '按曲目名与中文优先自动选择',
+                      title: rootCtxL10n.autoMatch,
+                      sub: rootCtxL10n.playerPagePickOnlineLyricSub,
                       selected: _lyricSourceName == null,
                       onTap: () async {
                         await _loadOnlineLyric(ctx, selection, null);
@@ -2271,13 +2322,14 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     LyricsTrackSelection selection,
     LyricCandidate? pick,
   ) async {
+    final ctxL10n = ctx.l10n;
     final loaded = await LyricsHub.instance.loadOnlineSelection(
       selection,
       pick,
     );
     if (!mounted || !LyricsHub.instance.isSelectionCurrent(selection)) return;
     if (!loaded) {
-      _toast('该歌词无法解析');
+      _toast(ctxL10n.playerPageLoadOnlineLyricToast);
       return;
     }
     if (ctx.mounted) Navigator.pop(ctx);
@@ -2285,10 +2337,11 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _pickOfflineLyric() async {
+    final l10n = context.l10n;
     final selection = LyricsHub.instance.captureSelection();
     if (selection == null) return;
     final res = await FilePicker.pickFiles(
-      dialogTitle: '选择歌词文件',
+      dialogTitle: l10n.playerPageResDialogTitle,
       type: FileType.custom,
       allowedExtensions: ['lrc', 'txt', 'vtt', 'srt', 'ass', 'ssa'],
     );
@@ -2311,13 +2364,14 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     );
     if (!mounted || !LyricsHub.instance.isSelectionCurrent(selection)) return;
     if (!loaded) {
-      _toast('文件中没有可读取的带时间轴歌词');
+      _toast(l10n.playerPagePickOfflineLyricToast);
       return;
     }
     _maybeAutoScrollLyric();
   }
 
   Future<void> _pickLibraryLyric() async {
+    final l10n = context.l10n;
     final selection = LyricsHub.instance.captureSelection();
     if (selection == null) return;
     final files = await LyricsLibraryService.instance.matchingFiles(
@@ -2327,7 +2381,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     );
     if (!mounted || !LyricsHub.instance.isSelectionCurrent(selection)) return;
     if (files.isEmpty) {
-      _toast('歌词库中没有该作品的歌词');
+      _toast(l10n.playerPagePickLibraryLyricToast);
       return;
     }
     final selected = await showModalBottomSheet<LyricsLibraryFile>(
@@ -2361,7 +2415,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     );
     if (!mounted || !LyricsHub.instance.isSelectionCurrent(selection)) return;
     if (!loaded) {
-      _toast('该歌词无法解析');
+      _toast(l10n.playerPageLoadOnlineLyricToast);
       return;
     }
     _maybeAutoScrollLyric();

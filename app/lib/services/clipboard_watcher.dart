@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data.dart';
+import '../l10n/strings.dart';
 
 /// 剪贴板 RJ 自动检测：检测到新的 RJ 号时提示一键搜索
 class ClipboardWatcher {
@@ -49,10 +50,10 @@ class ClipboardWatcher {
     controller;
     controller = messenger.showSnackBar(
       SnackBar(
-        content: Text('检测到 $rj，点击搜索'),
+        content: Text(appL10n.clipboardWatcherCheckText((rj).toString())),
         duration: const Duration(seconds: 3),
         action: SnackBarAction(
-          label: '搜索',
+          label: appL10n.search,
           onPressed: () {
             _dismissTimer?.cancel();
             if (identical(_activeSnackBar, controller)) {

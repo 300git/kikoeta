@@ -14,6 +14,7 @@ import 'app_paths.dart';
 import 'settings_store.dart';
 import 'lyrics_library_remote_client.dart';
 import '../src/rust/api/textcodec.dart';
+import '../l10n/strings.dart';
 
 String _normalizeRelative(String value) => value
     .replaceAll('\\', '/')
@@ -404,7 +405,9 @@ class LyricsLibraryService {
     if (urls.length != _remoteUrls.length ||
         urls.toSet().length != urls.length ||
         !urls.toSet().containsAll(_remoteUrls)) {
-      throw ArgumentError('远程库列表已变化，请重新打开导入窗口');
+      throw ArgumentError(
+        appL10n.lyricsLibraryServiceSetRemoteLibraryOrderArgumentError,
+      );
     }
     _remoteUrls = List.of(urls);
     _orderedRecords = null;
@@ -415,7 +418,11 @@ class LyricsLibraryService {
   Future<void> removeRemoteLibrary(String value) async {
     await _load();
     final url = LyricsLibraryRemoteClient.normalizeBaseUrl(value).toString();
-    if (!_remoteUrls.remove(url)) throw StateError('该远程库尚未导入');
+    if (!_remoteUrls.remove(url)) {
+      throw StateError(
+        appL10n.lyricsLibraryServiceRemoveRemoteLibraryStateError,
+      );
+    }
     _records.removeWhere((record) => record.online && record.remoteUrl == url);
     _saveRemoteUrls();
     if (await lastRemoteUrl == url) {
@@ -520,7 +527,11 @@ class LyricsLibraryService {
   Future<List<LyricsLibraryRecord>> refreshRemoteLibrary(String value) async {
     await _load();
     final url = LyricsLibraryRemoteClient.normalizeBaseUrl(value).toString();
-    if (!_remoteUrls.contains(url)) throw StateError('该远程库尚未导入');
+    if (!_remoteUrls.contains(url)) {
+      throw StateError(
+        appL10n.lyricsLibraryServiceRemoveRemoteLibraryStateError,
+      );
+    }
     await _replaceRemoteIndex(url);
     return records();
   }
@@ -648,7 +659,9 @@ class LyricsLibraryService {
         hasAi = hasAi || file.isAi;
       }
       if (!(await _containsSupportedFile(stage))) {
-        throw const FormatException('远程作品没有有效歌词文件');
+        throw FormatException(
+          appL10n.lyricsLibraryServiceImportRemoteWorkFormatException,
+        );
       }
       final target = Directory(_join(base, id));
       if (await target.exists()) {
@@ -1055,13 +1068,19 @@ class LyricsLibraryService {
     ).where((r) => !r.online).map((r) => _join(base, r.relativePath)).toList();
     if (workDirs.isEmpty) workDirs.add(_join(base, id));
     if (!workDirs.any((dir) => _isWithin(target.path, dir))) {
-      throw ArgumentError('目标文件必须位于作品目录内');
+      throw ArgumentError(
+        appL10n.lyricsLibraryServiceSaveTranslatedLyricsArgumentError3,
+      );
     }
     if (!supportedExtensions.contains(_extension(clean))) {
-      throw ArgumentError('不支持的歌词格式');
+      throw ArgumentError(
+        appL10n.lyricsLibraryServiceSaveTranslatedLyricsArgumentError,
+      );
     }
     if (ApiService.parseLyrics(content).isEmpty) {
-      throw ArgumentError('文件中没有有效时间轴');
+      throw ArgumentError(
+        appL10n.lyricsLibraryServiceSaveTranslatedLyricsArgumentError2,
+      );
     }
     await target.parent.create(recursive: true);
     await target.writeAsString(content, flush: true);
@@ -1324,7 +1343,7 @@ class LyricsLibraryService {
       if (depth == 0) {
         onProgress?.call(
           LyricsImportProgress(
-            phase: '正在检查文件冲突',
+            phase: appL10n.lyricsLibraryPageScanProgressPhase,
             current: index,
             total: archive.length,
             currentPath: entry.name,
@@ -1390,7 +1409,13 @@ class LyricsLibraryService {
     final subscription = messages.listen((dynamic message) async {
       if (message is! Map) {
         if (!done.isCompleted) {
-          done.completeError(StateError('歌词导入进程异常: $message'));
+          done.completeError(
+            StateError(
+              appL10n.lyricsLibraryServiceSubscriptionStateError(
+                (message).toString(),
+              ),
+            ),
+          );
         }
         return;
       }
@@ -1463,7 +1488,7 @@ class LyricsLibraryService {
       if (depth == 0) {
         onProgress?.call(
           LyricsImportProgress(
-            phase: '正在解压',
+            phase: appL10n.lyricsLibraryServiceExtractArchivePhase,
             current: index,
             total: archive.length,
             currentPath: entry.name,
@@ -1564,7 +1589,7 @@ class LyricsLibraryService {
         await entity.copy(dst.path);
         onProgress?.call(
           LyricsImportProgress(
-            phase: '正在复制',
+            phase: appL10n.lyricsLibraryServiceCopyTreePhase,
             current: 0,
             total: 0,
             currentPath: entity.path,

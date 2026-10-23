@@ -6,6 +6,7 @@ import '../data.dart';
 import '../src/rust/api/kikoeru_api.dart';
 import '../src/rust/api/simple.dart';
 import '../src/rust/api/textcodec.dart';
+import '../l10n/strings.dart';
 
 /// 一页作品 + 服务端分页信息（用于 hasMore 判断）
 class WorksPage {
@@ -55,7 +56,11 @@ class ApiService {
   ) async {
     const allowed = {'vas', 'circles', 'tags'};
     if (!allowed.contains(kind)) {
-      throw ArgumentError.value(kind, 'kind', '不支持的高级筛选类型');
+      throw ArgumentError.value(
+        kind,
+        'kind',
+        appL10n.apiServiceFetchAdvancedFilterEntriesValue,
+      );
     }
     final base = resolveBase(app).replaceFirst(RegExp(r'/+$'), '');
     final uri = Uri.parse('$base/api/$kind/');
@@ -71,7 +76,11 @@ class ApiService {
               decoded['results'] ??
               const [])
         : const [];
-    if (raw is! List) throw const FormatException('高级筛选数据格式无效');
+    if (raw is! List) {
+      throw FormatException(
+        appL10n.apiServiceFetchAdvancedFilterEntriesFormatException,
+      );
+    }
 
     final entries = <AdvancedFilterEntry>[];
     for (final value in raw) {
@@ -241,7 +250,7 @@ class ApiService {
     final json = await apiGetWorkV2(base: resolveBase(app), rj: id.toString());
     final decoded = jsonDecode(json);
     if (decoded is! Map) {
-      throw const FormatException('作品详情格式无效');
+      throw FormatException(appL10n.apiServiceFetchWorkFormatException);
     }
     return _mapWork(Map<String, dynamic>.from(decoded), 0, resolveBase(app));
   }
@@ -257,7 +266,7 @@ class ApiService {
     String? progress,
   }) async {
     final id = work.apiId;
-    if (id == null) throw Exception('该作品缺少编号，无法评价');
+    if (id == null) throw Exception(appL10n.workPageOpenReviewDialogToast);
     await apiSubmitReview(
       base: resolveBase(app),
       workId: BigInt.from(id),
@@ -270,7 +279,9 @@ class ApiService {
   /// 取消打分：把当前账号的评分置空（PUT /api/review，rating=null）。
   static Future<void> clearReviewRating(AppState app, Work work) async {
     final id = work.apiId;
-    if (id == null) throw Exception('该作品缺少编号，无法取消评分');
+    if (id == null) {
+      throw Exception(appL10n.apiServiceClearReviewRatingException);
+    }
     await apiClearReviewRating(base: resolveBase(app), workId: BigInt.from(id));
   }
 
@@ -278,7 +289,9 @@ class ApiService {
   /// 评分和评论保持不变。
   static Future<void> clearReviewProgress(AppState app, Work work) async {
     final id = work.apiId;
-    if (id == null) throw Exception('该作品缺少编号，无法取消标记');
+    if (id == null) {
+      throw Exception(appL10n.apiServiceClearReviewProgressException);
+    }
     await apiClearReviewProgress(
       base: resolveBase(app),
       workId: BigInt.from(id),
@@ -288,7 +301,7 @@ class ApiService {
   /// 删除该作品的评价与标记（DELETE /api/review）。
   static Future<void> deleteReview(AppState app, Work work) async {
     final id = work.apiId;
-    if (id == null) throw Exception('该作品缺少编号，无法删除标记');
+    if (id == null) throw Exception(appL10n.apiServiceDeleteReviewException);
     await apiDeleteFavoriteReview(
       base: resolveBase(app),
       workId: BigInt.from(id),
@@ -433,9 +446,9 @@ class ApiService {
   static String? _systemPlaylistDisplayName(String value) {
     switch (value.trim().toUpperCase()) {
       case '__SYS_PLAYLIST_LIKED':
-        return '喜欢';
+        return appL10n.liked;
       case '__SYS_PLAYLIST_MARKED':
-        return '标记';
+        return appL10n.mark;
     }
     return null;
   }
@@ -460,7 +473,11 @@ class ApiService {
     final base = resolveBase(app);
     final json = await apiGetPlaylistMetadata(base: base, id: id);
     final decoded = jsonDecode(json);
-    if (decoded is! Map) throw const FormatException('歌单详情格式无效');
+    if (decoded is! Map) {
+      throw FormatException(
+        appL10n.apiServiceFetchPlaylistMetadataFormatException,
+      );
+    }
     return _mapPlaylist(Map<String, dynamic>.from(decoded), app, base);
   }
 
@@ -480,7 +497,9 @@ class ApiService {
         isSystem || (userName.isNotEmpty && userName == _reviewUserName(app));
     return PlaylistInfo(
       id: id,
-      name: systemName ?? (rawName.isEmpty ? '未命名歌单' : rawName),
+      name:
+          systemName ??
+          (rawName.isEmpty ? appL10n.apiServiceMapPlaylistName : rawName),
       worksCount: (m['works_count'] as num?)?.toInt() ?? 0,
       coverUrl: _playlistCoverUrl(m['mainCoverUrl'] as String?, base),
       isSystemLiked:
@@ -488,7 +507,7 @@ class ApiService {
           m['isSystem'] == true ||
           m['is_system'] == true ||
           type == 'liked' ||
-          systemName == '喜欢',
+          systemName == appL10n.liked,
       description: (m['description'] as String? ?? '').trim(),
       userName: userName,
       privacy: (m['privacy'] as num?)?.toInt() ?? 0,
@@ -510,14 +529,14 @@ class ApiService {
   }
 
   /// 0=私有，1=链接共享，2=公开。
-  static const playlistPrivacyLabels = <int, String>{
-    0: '私有',
-    1: '链接共享',
-    2: '公开',
+  static Map<int, String> get playlistPrivacyLabels => <int, String>{
+    0: appL10n.privatePlaylist,
+    1: appL10n.sharedByLink,
+    2: appL10n.publicPlaylist,
   };
 
   static String playlistPrivacyLabel(int privacy) =>
-      playlistPrivacyLabels[privacy] ?? '私有';
+      playlistPrivacyLabels[privacy] ?? appL10n.privatePlaylist;
 
   /// 歌单分享链接（one 站）。
   static String playlistShareLink(String id) =>
@@ -668,7 +687,7 @@ class ApiService {
   static Future<bool> toggleFavorite(AppState app, Work w) async {
     final id = w.apiId;
     if (id == null) {
-      throw Exception('该作品缺少编号，无法收藏');
+      throw Exception(appL10n.apiServiceToggleFavoriteException);
     }
     final fav = app.isFavorited(w);
     if (fav) {
@@ -1574,9 +1593,9 @@ class ApiService {
       rj:
           m['source_id'] as String? ??
           (apiId != null ? 'RJ$apiId' : 'RJ00000000'),
-      title: m['title'] as String? ?? '未知作品',
+      title: m['title'] as String? ?? appL10n.historyPageEntryWorkTitle,
       circle: circle,
-      va: vas.isEmpty ? 'CV. 未知' : 'CV. $vas',
+      va: vas.isEmpty ? appL10n.apiServiceMapWorkVa : 'CV. $vas',
       age: age,
       dur: _fmtDuration((m['duration'] as num?)?.toInt() ?? 0),
       releaseDate: _formatReleaseDate(

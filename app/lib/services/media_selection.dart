@@ -163,4 +163,67 @@ class MediaSelection {
     selectedProjects.clear();
     _selectedCounts = List.filled(_selectedCounts.length, 0);
   }
+
+  /// Select all leaves in the displayed tree, including collapsed descendants.
+  /// A filtered scope leaves selections outside that scope unchanged.
+  void selectAll(List<MediaNode> roots, {MediaTreeIndex? scope}) {
+    _selectScope(roots, scope: scope, invert: false);
+  }
+
+  void invert(List<MediaNode> roots, {MediaTreeIndex? scope}) {
+    _selectScope(roots, scope: scope, invert: true);
+  }
+
+  void _selectScope(
+    List<MediaNode> roots, {
+    required MediaTreeIndex? scope,
+    required bool invert,
+  }) {
+    bindTree(roots);
+    final index = _index!;
+    for (final row in (scope ?? index).rows) {
+      final original = index.byPath[row.node.path]?.node;
+      if (original == null ||
+          (original.isDir && original.children.isNotEmpty)) {
+        continue;
+      }
+      final path = original.path;
+      if (invert && paths.contains(path)) {
+        paths.remove(path);
+      } else {
+        paths.add(path);
+      }
+    }
+    _rebuildSelectedCounts();
+  }
+
+  /// Rebuild the cached counts from a previously captured [paths] snapshot.
+  /// Drag selection restores the snapshot before writing its current range, so
+  /// rows the pointer slid back out of return to their original state.
+  void restorePaths(Set<String> snapshot) {
+    _alternateStates.clear();
+    paths
+      ..clear()
+      ..addAll(snapshot);
+    _rebuildSelectedCounts();
+  }
+
+  /// One postorder pass updates counts and folder paths after a batch change.
+  void _rebuildSelectedCounts() {
+    _alternateStates.clear();
+    final index = _index;
+    if (index == null) return;
+    _selectedCounts = List.filled(index.rows.length, 0);
+    for (var i = index.rows.length - 1; i >= 0; i--) {
+      final row = index.rows[i];
+      if (!row.node.isDir || row.node.children.isEmpty) {
+        _selectedCounts[i] = paths.contains(row.node.path) ? 1 : 0;
+      } else {
+        _syncFolderPath(i);
+      }
+      final parent = row.parentIndex;
+      if (parent != null) _selectedCounts[parent] += _selectedCounts[i];
+    }
+    _rebuildProjects();
+  }
 }

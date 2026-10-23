@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../widgets/playlist_picker.dart';
+import '../l10n/strings.dart';
 
 /// 静默比对用的作品指纹：覆盖卡片显示与收藏判定会用到的字段。
 String favoritesWorkSignature(Work w) => [
@@ -351,18 +352,18 @@ class _FavoritesPageState extends State<FavoritesPage> {
       if (pl.isOwned)
         IconButton(
           onPressed: _addWorksByRj,
-          tooltip: '按 RJ 号添加作品',
+          tooltip: context.l10n.favoritesPagePlaylistHeaderActionsTooltip3,
           icon: Icon(Icons.add, size: 22, color: p.accent),
         )
       else
         IconButton(
           onPressed: _removeCurrentLikedPlaylist,
-          tooltip: '取消收藏该播放列表',
+          tooltip: context.l10n.favoritesPagePlaylistHeaderActionsTooltip2,
           icon: Icon(Icons.favorite, size: 21, color: p.red),
         ),
       IconButton(
         onPressed: _copyCurrentShareLink,
-        tooltip: '复制分享链接',
+        tooltip: context.l10n.favoritesPagePlaylistHeaderActionsTooltip,
         icon: Icon(Icons.link, size: 21, color: p.accent),
       ),
     ];
@@ -372,10 +373,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
     final pl = _playlist;
     if (pl == null) return;
     Clipboard.setData(ClipboardData(text: ApiService.playlistShareLink(pl.id)));
-    _toast('已复制分享链接');
+    _toast(context.l10n.shareLinkCopied);
   }
 
   Future<void> _addWorksByRj() async {
+    final l10n = context.l10n;
     final pl = _playlist;
     if (pl == null) return;
     final ctrl = TextEditingController();
@@ -383,7 +385,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('添加作品'),
+        title: Text(l10n.favoritesPageInputText),
         content: SizedBox(
           width: 420,
           child: TextField(
@@ -393,8 +395,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             maxLines: 8,
             style: TextStyle(fontSize: 13, color: p.text),
             decoration: InputDecoration(
-              hintText:
-                  '输入 RJ 号，可一次填多个\n例如：RJ01367541 RJ01417842\n支持换行、空格或逗号分隔',
+              hintText: l10n.favoritesPageInputHintText,
               hintStyle: TextStyle(fontSize: 12.5, color: p.dim),
               filled: true,
               fillColor: p.surface2,
@@ -407,11 +408,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text),
-            child: const Text('添加'),
+            child: Text(l10n.add),
           ),
         ],
       ),
@@ -422,36 +423,37 @@ class _FavoritesPageState extends State<FavoritesPage> {
       caseSensitive: false,
     ).allMatches(input.toUpperCase()).map((m) => m.group(0)!).toSet().toList();
     if (rjs.isEmpty) {
-      _toast('没有识别到 RJ 号');
+      _toast(l10n.favoritesPageAddWorksByRjToast2);
       return;
     }
     try {
       await ApiService.addWorksToPlaylist(app, pl.id, rjs);
       if (!mounted) return;
-      _toast('已添加 ${rjs.length} 个作品');
+      _toast(l10n.favoritesPageAddWorksByRjToast3((rjs.length).toString()));
       _loadData(reset: true);
     } catch (e) {
-      if (mounted) _toast('添加失败：$e');
+      if (mounted) _toast(l10n.favoritesPageAddWorksByRjToast((e).toString()));
     }
   }
 
   Future<void> _removeCurrentLikedPlaylist() async {
+    final l10n = context.l10n;
     final pl = _playlist;
     if (pl == null) return;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('取消收藏'),
-        content: const Text('确定从我的播放列表中移除该歌单吗？'),
+        title: Text(l10n.favoritesPageLabelLabel),
+        content: Text(l10n.favoritesPageOkText),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('移除'),
+            child: Text(l10n.remove),
           ),
         ],
       ),
@@ -467,7 +469,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
       });
       _loadData(reset: true);
     } catch (e) {
-      if (mounted) _toast('取消收藏失败：$e');
+      if (mounted) {
+        _toast(
+          l10n.favoritesPageRemoveCurrentLikedPlaylistToast((e).toString()),
+        );
+      }
     }
   }
 
@@ -510,22 +516,27 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   Future<void> _removeSelectedWorks() async {
+    final l10n = context.l10n;
     final reviews = _reviewsMode;
     final pl = _playlist;
     if (_selected.isEmpty) return;
     if (!reviews && pl == null) return;
-    final label = reviews ? '取消收藏' : '移出播放列表';
+    final label = reviews
+        ? l10n.favoritesPageLabelLabel
+        : l10n.favoritesPageLabelLabel2;
     final count = _selected.length;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
         title: Text(label),
-        content: Text('确定将 $count 个作品$label吗？'),
+        content: Text(
+          l10n.favoritesPageOkText2((count).toString(), (label).toString()),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -556,23 +567,37 @@ class _FavoritesPageState extends State<FavoritesPage> {
             .whereType<String>()
             .toList();
         if (ids.isEmpty) {
-          _toast('无法获取作品编号');
+          _toast(l10n.favoritesPageRemoveSelectedWorksToast);
           return;
         }
         await ApiService.removeWorksFromPlaylist(app, pl!.id, ids);
       }
       if (!mounted) return;
       _exitSelecting();
-      _toast('已$label ${works.length} 个作品');
+      _toast(
+        l10n.favoritesPageRemoveSelectedWorksToast3(
+          (label).toString(),
+          (works.length).toString(),
+        ),
+      );
       _loadData(reset: true);
     } catch (e) {
-      if (mounted) _toast('$label失败：$e');
+      if (mounted) {
+        _toast(
+          l10n.favoritesPageRemoveSelectedWorksToast2(
+            (label).toString(),
+            (e).toString(),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = _reviewsMode ? '收藏' : (_playlist?.name ?? '收藏');
+    final title = _reviewsMode
+        ? context.l10n.favorites
+        : (_playlist?.name ?? context.l10n.favorites);
     if (_selected.isNotEmpty) {
       _selected.retainAll(_works.map((w) => w.rj));
     }
@@ -604,7 +629,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   ..._playlistHeaderActions(),
                 IconButton(
                   onPressed: _openPlaylistPicker,
-                  tooltip: '切换歌单',
+                  tooltip: context.l10n.favoritesPageBuildTooltip,
                   icon: Icon(Icons.queue_music, size: 22, color: p.accent),
                 ),
               ],
@@ -620,25 +645,29 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget _selectionBar() {
     final count = _selected.length;
     final allSelected = _works.isNotEmpty && count == _works.length;
-    final label = _reviewsMode ? '取消收藏' : '移出播放列表';
+    final label = _reviewsMode
+        ? context.l10n.favoritesPageLabelLabel
+        : context.l10n.favoritesPageLabelLabel2;
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 2, 4, 0),
       child: Row(
         children: [
           IconButton(
             onPressed: _exitSelecting,
-            tooltip: '退出多选',
+            tooltip: context.l10n.exitSelection,
             icon: Icon(Icons.arrow_back, size: 22, color: p.text),
           ),
           Expanded(
             child: Text(
-              '已选 $count 项',
+              context.l10n.favoritesPageSelectionBarText((count).toString()),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
           ),
           IconButton(
             onPressed: _works.isEmpty ? null : _selectAll,
-            tooltip: allSelected ? '取消全选' : '全选',
+            tooltip: allSelected
+                ? context.l10n.deselectAll
+                : context.l10n.selectAll,
             icon: Icon(
               allSelected ? Icons.deselect : Icons.select_all,
               size: 22,
@@ -656,7 +685,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           ),
           IconButton(
             onPressed: _exitSelecting,
-            tooltip: '退出多选',
+            tooltip: context.l10n.exitSelection,
             icon: Icon(Icons.close, size: 22, color: p.muted),
           ),
         ],
@@ -664,22 +693,22 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 
-  static const _reviewSortLabels = {
-    'updated_at': '标记时间',
-    'userRating': '我的评价',
-    'release': '发布时间',
-    'review_count': '评论数量',
-    'dl_count': '销售数量',
-    'nsfw': '年龄分级',
+  static Map<String, String> get _reviewSortLabels => {
+    'updated_at': appL10n.favoritesPageReviewSortLabelsReviewSortLabels5,
+    'userRating': appL10n.favoritesPageReviewSortLabelsReviewSortLabels4,
+    'release': appL10n.favoritesPageReviewSortLabelsReviewSortLabels3,
+    'review_count': appL10n.favoritesPageReviewSortLabelsReviewSortLabels,
+    'dl_count': appL10n.favoritesPageReviewSortLabelsReviewSortLabels2,
+    'nsfw': appL10n.ageRating,
   };
 
-  static const _reviewFilterLabels = <String, String>{
-    '': '全部',
-    'marked': '想听',
-    'listening': '在听',
-    'listened': '听过',
-    'replay': '重听',
-    'postponed': '搁置',
+  static Map<String, String> get _reviewFilterLabels => <String, String>{
+    '': appL10n.all,
+    'marked': appL10n.wantToListen,
+    'listening': appL10n.listening,
+    'listened': appL10n.listened,
+    'replay': appL10n.replay,
+    'postponed': appL10n.postponed,
   };
 
   Widget _reviewToolbar() {
@@ -702,7 +731,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   Widget _reviewFilterButton() {
     return PopupMenuButton<String>(
-      tooltip: '进度筛选',
+      tooltip: context.l10n.favoritesPageReviewFilterButtonTooltip,
       // 悬停高亮跟随 child（MenuItem）的圆角，否则从圆角缺口漏出方形灰影
       borderRadius: BorderRadius.circular(11),
       initialValue: _reviewFilter ?? '',
@@ -747,7 +776,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   Widget _reviewSortDropdown() {
     return PopupMenuButton<String>(
-      tooltip: '排序方式',
+      tooltip: context.l10n.favoritesPageReviewSortDropdownTooltip,
       // 悬停高亮跟随 child（MenuItem）的圆角，否则从圆角缺口漏出方形灰影
       borderRadius: BorderRadius.circular(11),
       initialValue: _reviewSort,
@@ -819,7 +848,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     if (app.sfwMode) {
       return Center(
         child: Text(
-          'SFW 模式下不显示收藏内容',
+          context.l10n.favoritesPageBodyText5,
           style: TextStyle(fontSize: 13, color: p.dim),
         ),
       );
@@ -838,7 +867,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
               ),
             ),
             const SizedBox(height: 10),
-            Text('加载中…', style: TextStyle(fontSize: 13, color: p.dim)),
+            Text(
+              context.l10n.loading,
+              style: TextStyle(fontSize: 13, color: p.dim),
+            ),
           ],
         ),
       );
@@ -854,11 +886,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
               Icon(Icons.wifi_off, size: 34, color: p.dim),
               const SizedBox(height: 10),
               Text(
-                '加载失败，请确认已在设置中登录',
+                context.l10n.favoritesPageBodyText6,
                 style: TextStyle(fontSize: 13, color: p.dim),
               ),
               const SizedBox(height: 8),
-              Text('点击重试', style: TextStyle(fontSize: 11.5, color: p.accent)),
+              Text(
+                context.l10n.favoritesPageBodyText,
+                style: TextStyle(fontSize: 11.5, color: p.accent),
+              ),
             ],
           ),
         ),
@@ -867,7 +902,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
     if (_works.isEmpty) {
       return Center(
         child: Text(
-          _reviewsMode ? '还没有收藏的作品' : '该播放列表还没有作品',
+          _reviewsMode
+              ? context.l10n.favoritesPageBodyText3
+              : context.l10n.favoritesPageBodyText4,
           style: TextStyle(fontSize: 13, color: p.dim),
         ),
       );
@@ -933,12 +970,18 @@ class _FavoritesPageState extends State<FavoritesPage> {
         if (_loading)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Text('加载中…', style: TextStyle(fontSize: 12, color: p.dim)),
+            child: Text(
+              context.l10n.loading,
+              style: TextStyle(fontSize: 12, color: p.dim),
+            ),
           )
         else if (!_hasMore)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Text('已显示全部', style: TextStyle(fontSize: 12, color: p.dim)),
+            child: Text(
+              context.l10n.favoritesPageBodyText2,
+              style: TextStyle(fontSize: 12, color: p.dim),
+            ),
           ),
       ],
     );

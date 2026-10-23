@@ -5,6 +5,7 @@ import '../data.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../l10n/strings.dart';
 
 /// 歌单选择结果：`playlist == null` 表示选中了「我的收藏」。
 class PlaylistPick {
@@ -96,6 +97,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
   }
 
   Future<void> _load() async {
+    final l10n = context.l10n;
     setState(() {
       _loading = true;
       _error = null;
@@ -111,7 +113,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '无法加载播放列表';
+        _error = l10n.playlistPickerLoadSetState;
       });
     }
   }
@@ -134,10 +136,11 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
 
   void _copyLink(PlaylistInfo pl) {
     Clipboard.setData(ClipboardData(text: ApiService.playlistShareLink(pl.id)));
-    _toast('已复制分享链接');
+    _toast(context.l10n.shareLinkCopied);
   }
 
   Future<void> _showDetails(PlaylistInfo pl) async {
+    final l10n = context.l10n;
     var info = pl;
     try {
       info = await ApiService.fetchPlaylistMetadata(app, pl.id);
@@ -147,21 +150,27 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
     if (!mounted) return;
     final rows = <MapEntry<String, String>>[
       MapEntry('UUID', info.id),
-      MapEntry('名称', info.name),
-      MapEntry('描述', info.description.isEmpty ? ' ' : info.description),
-      MapEntry('创建人', info.userName),
-      MapEntry('权限', ApiService.playlistPrivacyLabel(info.privacy)),
-      MapEntry('语言', info.locale.isEmpty ? ' ' : info.locale),
-      MapEntry('播放次数', '${info.playbackCount}'),
-      MapEntry('创建时间', info.createdAt),
-      MapEntry('更新时间', info.updatedAt),
-      MapEntry('作品数量', '${info.worksCount}'),
+      MapEntry(l10n.name, info.name),
+      MapEntry(
+        l10n.description,
+        info.description.isEmpty ? ' ' : info.description,
+      ),
+      MapEntry(l10n.playlistPickerRowsMapEntry2, info.userName),
+      MapEntry(
+        l10n.playlistPickerRowsMapEntry,
+        ApiService.playlistPrivacyLabel(info.privacy),
+      ),
+      MapEntry(l10n.language, info.locale.isEmpty ? ' ' : info.locale),
+      MapEntry(l10n.playlistPickerRowsMapEntry4, '${info.playbackCount}'),
+      MapEntry(l10n.playlistPickerRowsMapEntry6, info.createdAt),
+      MapEntry(l10n.playlistPickerRowsMapEntry3, info.updatedAt),
+      MapEntry(l10n.playlistPickerRowsMapEntry5, '${info.worksCount}'),
     ];
     final copy = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('歌单详情'),
+        title: Text(l10n.playlistPickerCopyText),
         content: SizedBox(
           width: 420,
           child: SingleChildScrollView(
@@ -198,11 +207,11 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('复制链接'),
+            child: Text(l10n.playlistPickerCopyText2),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('确认'),
+            child: Text(l10n.confirmAction),
           ),
         ],
       ),
@@ -211,6 +220,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
   }
 
   Future<_PlaylistEditInput?> _showEditor(PlaylistInfo? playlist) async {
+    final l10n = context.l10n;
     final nameCtrl = TextEditingController(text: playlist?.name ?? '');
     final descCtrl = TextEditingController(text: playlist?.description ?? '');
     var privacy = playlist?.privacy ?? 0;
@@ -219,7 +229,11 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
           backgroundColor: p.surface,
-          title: Text(playlist == null ? '创建播放列表' : '编辑播放列表'),
+          title: Text(
+            playlist == null
+                ? l10n.playlistPickerShowEditorText
+                : l10n.playlistPickerPlaylistItemTooltip2,
+          ),
           content: SizedBox(
             width: 420,
             child: SingleChildScrollView(
@@ -232,7 +246,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
                     maxLength: 100,
                     style: TextStyle(fontSize: 13, color: p.text),
                     decoration: InputDecoration(
-                      labelText: '名称',
+                      labelText: l10n.name,
                       filled: true,
                       fillColor: p.surface2,
                       border: OutlineInputBorder(
@@ -248,7 +262,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
                     maxLength: 500,
                     style: TextStyle(fontSize: 13, color: p.text),
                     decoration: InputDecoration(
-                      labelText: '描述',
+                      labelText: l10n.description,
                       filled: true,
                       fillColor: p.surface2,
                       border: OutlineInputBorder(
@@ -260,7 +274,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
                   DropdownButtonFormField<int>(
                     initialValue: privacy,
                     decoration: InputDecoration(
-                      labelText: '类型',
+                      labelText: l10n.playlistPickerShowEditorLabelText,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(11),
                       ),
@@ -286,7 +300,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
                 onPressed: () =>
                     Navigator.pop(ctx, const _PlaylistEditInput.delete()),
                 child: Text(
-                  '删除',
+                  l10n.delete,
                   style: TextStyle(color: Theme.of(ctx).colorScheme.error),
                 ),
               )
@@ -297,7 +311,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('取消'),
+                  child: Text(l10n.cancel),
                 ),
                 TextButton(
                   onPressed: () {
@@ -312,7 +326,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
                       ),
                     );
                   },
-                  child: const Text('确认'),
+                  child: Text(l10n.confirmAction),
                 ),
               ],
             ),
@@ -323,6 +337,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
   }
 
   Future<void> _createPlaylist() async {
+    final l10n = context.l10n;
     if (_busy) return;
     final input = await _showEditor(null);
     if (input == null || !mounted) return;
@@ -331,7 +346,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
       final beforeIds = _list.map((e) => e.id).toSet();
       await ApiService.createPlaylist(
         app,
-        name: input.name ?? '未命名歌单',
+        name: input.name ?? l10n.apiServiceMapPlaylistName,
         description: input.description,
         privacy: input.privacy,
       );
@@ -349,18 +364,19 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
           _list = list;
           _busy = false;
         });
-        _toast('已创建，但列表中未找到该播放列表');
+        _toast(l10n.playlistPickerCreatePlaylistToast2);
         return;
       }
       Navigator.of(context).pop(PlaylistPick(created));
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      _toast('创建失败：$e');
+      _toast(l10n.playlistPickerCreatePlaylistToast((e).toString()));
     }
   }
 
   Future<void> _editPlaylist(PlaylistInfo pl) async {
+    final l10n = context.l10n;
     if (_busy) return;
     final input = await _showEditor(pl);
     if (input == null || !mounted) return;
@@ -388,26 +404,27 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      _toast('保存失败：$e');
+      _toast(l10n.workPageSubmitNotify((e).toString()));
     }
   }
 
   Future<void> _deletePlaylist(PlaylistInfo pl) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('删除播放列表'),
-        content: Text('确定删除“${pl.name}”吗？此操作无法撤销。'),
+        title: Text(l10n.playlistPickerOkText),
+        content: Text(l10n.playlistPickerOkText2((pl.name).toString())),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              '删除',
+              l10n.delete,
               style: TextStyle(color: Theme.of(ctx).colorScheme.error),
             ),
           ),
@@ -428,25 +445,26 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      _toast('删除失败：$e');
+      _toast(l10n.workPageDeleteNotify((e).toString()));
     }
   }
 
   Future<void> _removeLiked(PlaylistInfo pl) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('移除播放列表'),
-        content: Text('确定从我的播放列表中移除“${pl.name}”吗？'),
+        title: Text(l10n.playlistPickerPlaylistItemTooltip),
+        content: Text(l10n.playlistPickerOkText3((pl.name).toString())),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('移除'),
+            child: Text(l10n.remove),
           ),
         ],
       ),
@@ -465,18 +483,19 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      _toast('移除失败：$e');
+      _toast(l10n.playlistPickerRemoveLikedToast((e).toString()));
     }
   }
 
   Future<void> _importPlaylist() async {
+    final l10n = context.l10n;
     if (_busy) return;
     final ctrl = TextEditingController();
     final link = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('导入播放列表'),
+        title: Text(l10n.playlistPickerLinkText),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +505,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
               autofocus: true,
               style: TextStyle(fontSize: 13, color: p.text),
               decoration: InputDecoration(
-                labelText: '分享链接',
+                labelText: l10n.playlistPickerLinkLabelText,
                 hintText: 'https://www.asmr.one/playlist/…',
                 filled: true,
                 fillColor: p.surface2,
@@ -497,7 +516,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              '粘贴别人分享的播放列表链接，会收藏到我的播放列表。',
+              l10n.playlistPickerLinkText2,
               style: TextStyle(fontSize: 11.5, color: p.dim),
             ),
           ],
@@ -505,7 +524,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -513,7 +532,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
               if (text.isEmpty) return;
               Navigator.pop(ctx, text);
             },
-            child: const Text('导入'),
+            child: Text(l10n.importAction),
           ),
         ],
       ),
@@ -521,7 +540,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
     if (link == null || !mounted) return;
     final id = ApiService.playlistIdFromLink(link);
     if (id == null) {
-      _toast('无法识别播放列表链接');
+      _toast(l10n.playlistPickerImportPlaylistToast);
       return;
     }
     setState(() => _busy = true);
@@ -541,14 +560,14 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
           _list = list;
           _busy = false;
         });
-        _toast('已添加，但列表中暂未找到该播放列表');
+        _toast(l10n.playlistPickerImportPlaylistToast2);
         return;
       }
       Navigator.of(context).pop(PlaylistPick(imported));
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      _toast('导入失败：$e');
+      _toast(l10n.lyricsLibraryPageImportText5((e).toString()));
     }
   }
 
@@ -636,8 +655,8 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
   Widget _reviewsItem() {
     return _row(
       leading: _iconBox(Icons.favorite),
-      name: '我的收藏',
-      subtitle: '我的评价/收藏（所有作品）',
+      name: context.l10n.playlistPickerReviewsItemName,
+      subtitle: context.l10n.playlistPickerReviewsItemSubtitle,
       selected: widget.reviewsMode,
       onTap: () => Navigator.of(context).pop(const PlaylistPick(null)),
     );
@@ -645,8 +664,13 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
 
   Widget _playlistItem(PlaylistInfo pl) {
     final subtitle = pl.description.isNotEmpty
-        ? '${pl.worksCount} 个作品 · ${pl.description.replaceAll('\n', ' ')}'
-        : '${pl.worksCount} 个作品';
+        ? context.l10n.playlistPickerSubtitleSubtitle2(
+            (pl.worksCount).toString(),
+            (pl.description.replaceAll('\n', ' ')).toString(),
+          )
+        : context.l10n.playlistPickerSubtitleSubtitle(
+            (pl.worksCount).toString(),
+          );
     return _row(
       leading: _leading(coverUrl: pl.coverUrl, icon: Icons.folder_outlined),
       name: pl.name,
@@ -657,13 +681,13 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
       trailing: pl.isOwned
           ? IconButton(
               onPressed: _busy ? null : () => _editPlaylist(pl),
-              tooltip: '编辑播放列表',
+              tooltip: context.l10n.playlistPickerPlaylistItemTooltip2,
               visualDensity: VisualDensity.compact,
               icon: Icon(Icons.edit_outlined, size: 18, color: p.dim),
             )
           : IconButton(
               onPressed: _busy ? null : () => _removeLiked(pl),
-              tooltip: '移除播放列表',
+              tooltip: context.l10n.playlistPickerPlaylistItemTooltip,
               visualDensity: VisualDensity.compact,
               icon: Icon(Icons.delete_outline, size: 18, color: p.dim),
             ),
@@ -696,9 +720,9 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
               padding: const EdgeInsets.fromLTRB(16, 8, 8, 6),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      '切换播放列表',
+                      context.l10n.playlistPickerBuildText,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -708,12 +732,18 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
                   TextButton.icon(
                     onPressed: _busy ? null : _createPlaylist,
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('新建', style: TextStyle(fontSize: 12.5)),
+                    label: Text(
+                      context.l10n.create,
+                      style: TextStyle(fontSize: 12.5),
+                    ),
                   ),
                   TextButton.icon(
                     onPressed: _busy ? null : _importPlaylist,
                     icon: const Icon(Icons.link, size: 18),
-                    label: const Text('导入', style: TextStyle(fontSize: 12.5)),
+                    label: Text(
+                      context.l10n.importAction,
+                      style: TextStyle(fontSize: 12.5),
+                    ),
                   ),
                 ],
               ),
@@ -736,7 +766,10 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
                 child: Column(
                   children: [
                     Text(_error!, style: TextStyle(fontSize: 13, color: p.dim)),
-                    TextButton(onPressed: _load, child: const Text('重试')),
+                    TextButton(
+                      onPressed: _load,
+                      child: Text(context.l10n.retry),
+                    ),
                   ],
                 ),
               )

@@ -21,6 +21,7 @@ import '../sheets.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../widgets/playback_seek_seconds_control.dart';
+import '../l10n/strings.dart';
 
 class SettingsPage extends StatefulWidget {
   final AppState app;
@@ -105,9 +106,10 @@ class _SettingsPageState extends State<SettingsPage> {
       : AppColors.light;
 
   String _translationTargetLabel(String code) => switch (code) {
-    'zh-TW' => '繁中',
-    'en' => '英语',
-    _ => '简中',
+    'ui' => context.l10n.followInterfaceLanguage,
+    'zh-TW' => context.l10n.traditionalChineseShort,
+    'en' => context.l10n.englishLanguage,
+    _ => context.l10n.simplifiedChineseShort,
   };
 
   void _onAppChanged() {
@@ -123,9 +125,9 @@ class _SettingsPageState extends State<SettingsPage> {
         s,
         style: TextStyle(
           fontSize: 11,
-          color: s == '检测中…'
+          color: s == context.l10n.settingsPageAutoCheckSetState
               ? p.muted
-              : s.startsWith('正常')
+              : s.startsWith(context.l10n.settingsPageHealthBadgeStartsWith)
               ? p.green
               : p.red,
         ),
@@ -156,8 +158,9 @@ class _SettingsPageState extends State<SettingsPage> {
     String user,
     String pass,
   ) async {
+    final l10n = context.l10n;
     setState(() {
-      _health[key] = '检测中…';
+      _health[key] = l10n.settingsPageAutoCheckSetState;
       _loginStatus[key] = 'gray';
     });
     String? health;
@@ -169,7 +172,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!mounted) return;
     if (health == null) {
       setState(() {
-        _health[key] = '连接失败';
+        _health[key] = l10n.settingsPageAutoCheckSetState2;
         _loginStatus[key] = 'gray';
       });
       return;
@@ -208,12 +211,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _detectOpenAiModels() async {
+    final l10n = context.l10n;
     final base = _aiBase.text.trim().replaceFirst(RegExp(r'/+$'), '');
     if (base.isEmpty) {
-      _toast('请先填写 API 地址');
+      _toast(l10n.settingsPageDetectOpenAiModelsToast2);
       return;
     }
-    _toast('正在获取模型列表…');
+    _toast(l10n.settingsPageDetectOpenAiModelsToast);
     try {
       final client = HttpClient()
         ..connectionTimeout = const Duration(seconds: 12);
@@ -238,16 +242,22 @@ class _SettingsPageState extends State<SettingsPage> {
               .toSet()
               .toList()
             ..sort();
-      if (models.isEmpty) throw const FormatException('响应未包含 data[].id');
+      if (models.isEmpty) {
+        throw FormatException(
+          l10n.settingsPageDetectOpenAiModelsFormatException,
+        );
+      }
       app.openAiModels
         ..clear()
         ..addAll(models);
       if (_aiModel.text.trim().isEmpty) _aiModel.text = models.first;
       app.setAiConfig(_aiBase.text, _aiModel.text, _aiKey.text);
       if (mounted) setState(() {});
-      _toast('已获取 ${models.length} 个模型');
+      _toast(
+        l10n.settingsPageDetectOpenAiModelsToast4((models.length).toString()),
+      );
     } catch (e) {
-      _toast('模型列表获取失败：$e');
+      _toast(l10n.settingsPageDetectOpenAiModelsToast3((e).toString()));
     }
   }
 
@@ -255,7 +265,11 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_sectionKey == null ? '设置' : _sectionTitle(_sectionKey!)),
+        title: Text(
+          _sectionKey == null
+              ? context.l10n.settings
+              : _sectionTitle(_sectionKey!),
+        ),
         leading: const BackButton(),
       ),
       body: SafeArea(
@@ -265,19 +279,23 @@ class _SettingsPageState extends State<SettingsPage> {
             final sections = <Widget>[
               _section(
                 'account',
-                '账号设置',
+                context.l10n.settingsPageSectionsSection5,
                 _group([
                   _row(
                     icon: Icons.dns_outlined,
                     title: 'ASMR.ONE',
-                    sub: app.asmrUser.isEmpty ? '未配置账号' : '账号：${app.asmrUser}',
+                    sub: app.asmrUser.isEmpty
+                        ? context.l10n.settingsPageSectionsSub
+                        : context.l10n.settingsPageSectionsSub8(
+                            (app.asmrUser).toString(),
+                          ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _healthBadge('asmr') ?? const SizedBox.shrink(),
                         _loginDot('asmr'),
                         _miniBtn(
-                          '检测',
+                          context.l10n.settingsPageSectionsMiniBtn,
                           () => _autoCheck(
                             'asmr',
                             'https://api.asmr.one',
@@ -286,15 +304,18 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        _miniBtn('配置', () async {
-                          await showOneConfigSheet(context, app);
-                          _autoCheck(
-                            'asmr',
-                            'https://api.asmr.one',
-                            app.asmrUser,
-                            app.asmrPass,
-                          );
-                        }),
+                        _miniBtn(
+                          context.l10n.settingsPageSectionsMiniBtn2,
+                          () async {
+                            await showOneConfigSheet(context, app);
+                            _autoCheck(
+                              'asmr',
+                              'https://api.asmr.one',
+                              app.asmrUser,
+                              app.asmrPass,
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -311,7 +332,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           _healthBadge('site$i') ?? const SizedBox.shrink(),
                           _loginDot('site$i'),
                           _miniBtn(
-                            '检测',
+                            context.l10n.settingsPageSectionsMiniBtn,
                             () => _autoCheck('site$i', s.url, s.user, s.pass),
                           ),
                           const SizedBox(width: 4),
@@ -364,8 +385,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         }
                       },
                       icon: const Icon(Icons.add, size: 17),
-                      label: const Text(
-                        '添加自建站点',
+                      label: Text(
+                        context.l10n.settingsPageSectionsText9,
                         style: TextStyle(fontSize: 13),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -382,12 +403,17 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'translation',
-                '翻译',
+                context.l10n.languageAndTranslation,
                 _group([
                   _row(
+                    icon: Icons.language_outlined,
+                    title: context.l10n.interfaceLanguage,
+                    trailing: _uiLanguageDropdown(),
+                  ),
+                  _row(
                     icon: Icons.translate,
-                    title: '翻译引擎',
-                    sub: 'Google / Microsoft 免费 · DeepL 免费 Key · OpenAI 兼容',
+                    title: context.l10n.translationEngine,
+                    sub: context.l10n.settingsPageSectionsSub10,
                     trailing: _engineDropdown(),
                     showDivider: false,
                   ),
@@ -398,14 +424,15 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           _input(
                             _deeplKey,
-                            'DeepL 免费版 API Key',
-                            '在 deepl.com 免费注册后获取（api-free）',
+                            context.l10n.settingsPageSectionsInput3,
+                            context.l10n.settingsPageSectionsInput4,
                             obscure: true,
                             onChanged: (_) => app.setDeeplKey(_deeplKey.text),
                           ),
                           OutlinedButton(
                             onPressed: () async {
-                              _toast('正在检测 DeepL…');
+                              final l10n = context.l10n;
+                              _toast(l10n.settingsPageSectionsToast3);
                               try {
                                 final r = await apiTranslateDeepl(
                                   text: 'こんにちは',
@@ -413,9 +440,21 @@ class _SettingsPageState extends State<SettingsPage> {
                                   dst: 'zh-CN',
                                   apiKey: _deeplKey.text,
                                 );
-                                if (mounted) _toast('DeepL 连接正常：$r');
+                                if (mounted) {
+                                  _toast(
+                                    l10n.settingsPageSectionsToast7(
+                                      (r).toString(),
+                                    ),
+                                  );
+                                }
                               } catch (e) {
-                                if (mounted) _toast('DeepL 连接失败：$e');
+                                if (mounted) {
+                                  _toast(
+                                    l10n.settingsPageSectionsToast6(
+                                      (e).toString(),
+                                    ),
+                                  );
+                                }
                               }
                             },
                             style: OutlinedButton.styleFrom(
@@ -425,8 +464,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              '测试连接',
+                            child: Text(
+                              context.l10n.testConnection,
                               style: TextStyle(fontSize: 13),
                             ),
                           ),
@@ -441,8 +480,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           _input(
                             _aiBase,
-                            'API 地址 (Base URL)',
-                            'https://api.openai.com/v1 或 http://127.0.0.1:11434/v1',
+                            context.l10n.settingsPageSectionsInput2,
+                            context.l10n.settingsPageSectionsInput5,
                           ),
                           _aiModelInput(),
                           Row(
@@ -454,8 +493,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                     foregroundColor: p.muted,
                                     side: BorderSide(color: p.line),
                                   ),
-                                  child: const Text(
-                                    '检测模型列表',
+                                  child: Text(
+                                    context.l10n.settingsPageSectionsText8,
                                     style: TextStyle(fontSize: 13),
                                   ),
                                 ),
@@ -465,13 +504,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(height: 8),
                           _input(
                             _aiKey,
-                            'API Key（本地服务可留空）',
+                            context.l10n.settingsPageSectionsInput,
                             'sk-...',
                             obscure: true,
                           ),
                           OutlinedButton(
                             onPressed: () async {
-                              _toast('正在检测连接…');
+                              final l10n = context.l10n;
+                              _toast(l10n.settingsPageSectionsToast2);
                               try {
                                 final r = await apiTranslateTest(
                                   baseUrl: _aiBase.text,
@@ -480,7 +520,13 @@ class _SettingsPageState extends State<SettingsPage> {
                                 );
                                 if (mounted) _toast(r);
                               } catch (e) {
-                                if (mounted) _toast('连接失败：$e');
+                                if (mounted) {
+                                  _toast(
+                                    l10n.settingsPageSectionsToast(
+                                      (e).toString(),
+                                    ),
+                                  );
+                                }
                               }
                             },
                             style: OutlinedButton.styleFrom(
@@ -490,8 +536,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              '测试连接',
+                            child: Text(
+                              context.l10n.testConnection,
                               style: TextStyle(fontSize: 13),
                             ),
                           ),
@@ -501,9 +547,12 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                   _row(
                     icon: null,
-                    title: '源语言 / 目标语言',
-                    sub:
-                        '日语 → ${_translationTargetLabel(app.translationTarget)}',
+                    title: context.l10n.sourceAndTargetLanguage,
+                    sub: context.l10n.settingsPageSectionsSub11(
+                      (_translationTargetLabel(
+                        app.translationTarget,
+                      )).toString(),
+                    ),
                     trailing: _translationTargetDropdown(),
                     showDivider: false,
                   ),
@@ -516,12 +565,12 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'lyrics_desktop',
-                '歌词',
+                context.l10n.lyrics,
                 _group([
                   _row(
                     icon: null,
-                    title: '繁简转换',
-                    sub: '歌词中文部分自动转换',
+                    title: context.l10n.chineseConversion,
+                    sub: context.l10n.settingsPageSectionsSub3,
                     trailing: _convDropdown(),
                     showDivider: false,
                   ),
@@ -531,20 +580,23 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'lyrics_desktop',
-                '歌词与桌面歌词',
+                context.l10n.settingsPageSectionsSection6,
                 _group([
                   _switchRow(
                     Icons.lyrics_outlined,
-                    '桌面歌词',
-                    '最顶层悬浮歌词窗',
+                    context.l10n.desktopLyrics,
+                    context.l10n.settingsPageSectionsSwitchRow9,
                     app.desktopLyricsOn,
                     (v) async {
+                      final l10n = context.l10n;
                       if (v && Platform.isAndroid) {
                         // 开启时先请求悬浮窗权限（未授权会拉起系统授权页）
                         final ok = await AndroidLyricsOverlay.instance
                             .requestPermission();
                         if (!ok) {
-                          if (mounted) _toast('未授予悬浮窗权限，桌面歌词无法显示');
+                          if (mounted) {
+                            _toast(l10n.playerPageToggleDesktopLyricsToast);
+                          }
                           return; // 保持关闭
                         }
                       }
@@ -553,10 +605,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   _switchRow(
                     Icons.cell_tower,
-                    '歌词库广播',
-                    '只读 API 服务 · 端口 2377',
+                    context.l10n.settingsPageSectionsSwitchRow2,
+                    context.l10n.settingsPageSectionsSwitchRow25,
                     app.lyricsLibraryBroadcastOn,
                     (v) async {
+                      final l10n = context.l10n;
                       try {
                         await LyricsLibraryBroadcastService.instance.setEnabled(
                           v,
@@ -564,7 +617,15 @@ class _SettingsPageState extends State<SettingsPage> {
                         app.setLyricsLibraryBroadcastOn(v);
                       } catch (e) {
                         if (mounted) {
-                          _toast(v ? '无法开启歌词库广播：$e' : '关闭歌词库广播失败：$e');
+                          _toast(
+                            v
+                                ? l10n.settingsPageSectionsToast5(
+                                    (e).toString(),
+                                  )
+                                : l10n.settingsPageSectionsToast4(
+                                    (e).toString(),
+                                  ),
+                          );
                         }
                       }
                     },
@@ -575,8 +636,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         Icon(Icons.format_size, size: 17, color: p.accent),
                         const SizedBox(width: 12),
-                        const Text(
-                          '字体大小',
+                        Text(
+                          context.l10n.settingsPageSectionsText6,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -601,14 +662,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   _colorRow(
                     icon: Icons.palette_outlined,
-                    label: '字体颜色',
+                    label: context.l10n.settingsPageSectionsLabel,
                     value: app.lyricsColor,
                     onChanged: (v) => app.setLyricsColor(v),
                     hexCtrl: _colorHexCtrl,
                   ),
                   _colorRow(
                     icon: Icons.border_color_outlined,
-                    label: '描边颜色',
+                    label: context.l10n.settingsPageSectionsLabel2,
                     value: app.lyricsOutlineColor,
                     onChanged: (v) => app.setLyricsOutlineColor(v),
                     hexCtrl: _outlineHexCtrl,
@@ -619,9 +680,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         Icon(Icons.line_weight, size: 17, color: p.accent),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            '描边宽度',
+                            context.l10n.settingsPageSectionsText5,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -646,27 +707,40 @@ class _SettingsPageState extends State<SettingsPage> {
                       ],
                     ),
                   ),
-                  _lockRow('桌面端', app.lyricsLockedDesktop, () {
-                    app.setLyricsLockedDesktop(false);
-                  }),
-                  _lockRow('安卓（竖屏）', app.lyricsLockedPortrait, () {
-                    app.setLyricsLockedPortrait(false);
-                  }),
-                  _lockRow('安卓（横屏）', app.lyricsLockedLandscape, () {
-                    app.setLyricsLockedLandscape(false);
-                  }, showDivider: false),
+                  _lockRow(
+                    context.l10n.settingsPageSectionsLockRow,
+                    app.lyricsLockedDesktop,
+                    () {
+                      app.setLyricsLockedDesktop(false);
+                    },
+                  ),
+                  _lockRow(
+                    context.l10n.settingsPageSectionsLockRow3,
+                    app.lyricsLockedPortrait,
+                    () {
+                      app.setLyricsLockedPortrait(false);
+                    },
+                  ),
+                  _lockRow(
+                    context.l10n.settingsPageSectionsLockRow2,
+                    app.lyricsLockedLandscape,
+                    () {
+                      app.setLyricsLockedLandscape(false);
+                    },
+                    showDivider: false,
+                  ),
                 ]),
                 rootVisible: false,
                 rootCardRadius: BorderRadius.zero,
               ),
               _section(
                 'playback',
-                '播放',
+                context.l10n.play,
                 _group([
                   _switchRow(
                     Icons.content_paste_search,
-                    '剪贴板检测',
-                    '自动识别复制的 RJ 链接',
+                    context.l10n.settingsPageSectionsSwitchRow3,
+                    context.l10n.settingsPageSectionsSwitchRow15,
                     app.clipboardDetect,
                     (v) {
                       app.setClipboardDetect(v);
@@ -674,85 +748,85 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   _switchRow(
                     Icons.restart_alt_outlined,
-                    '不记忆播放进度',
-                    '重启程序后恢复上次曲目，但从头开始播放',
+                    context.l10n.settingsPageSectionsSwitchRow7,
+                    context.l10n.settingsPageSectionsSwitchRow24,
                     app.doNotRememberPlaybackProgress,
                     app.setDoNotRememberPlaybackProgress,
                   ),
                   _row(
                     icon: Icons.fast_rewind,
-                    title: '快退秒数',
-                    sub: '5–60 秒，每次调整 5 秒',
+                    title: context.l10n.settingsPageSectionsTitle3,
+                    sub: context.l10n.settingsPageSectionsSub6,
                     trailing: PlaybackSeekSecondsControl(
-                      label: '快退',
+                      label: context.l10n.seekBackward,
                       value: app.playbackSeekBackwardSeconds,
                       onChanged: app.setPlaybackSeekBackwardSeconds,
                     ),
                   ),
                   _row(
                     icon: Icons.fast_forward,
-                    title: '快进秒数',
-                    sub: '5–60 秒，每次调整 5 秒',
+                    title: context.l10n.settingsPageSectionsTitle4,
+                    sub: context.l10n.settingsPageSectionsSub6,
                     trailing: PlaybackSeekSecondsControl(
-                      label: '快进',
+                      label: context.l10n.seekForward,
                       value: app.playbackSeekForwardSeconds,
                       onChanged: app.setPlaybackSeekForwardSeconds,
                     ),
                   ),
                   _playbackShortcutRow(
                     icon: Icons.play_circle_outline,
-                    title: '播放/暂停快捷键',
+                    title: context.l10n.settingsPageSectionsTitle14,
                     action: 'toggle',
                     keyId: app.playbackToggleShortcutKey,
                     onChanged: app.setPlaybackToggleShortcutKey,
                   ),
                   _playbackShortcutRow(
                     icon: Icons.skip_previous_outlined,
-                    title: '上一曲快捷键',
+                    title: context.l10n.settingsPageSectionsTitle9,
                     action: 'previous',
                     keyId: app.playbackPreviousShortcutKey,
                     onChanged: app.setPlaybackPreviousShortcutKey,
                   ),
                   _playbackShortcutRow(
                     icon: Icons.skip_next_outlined,
-                    title: '下一曲快捷键',
+                    title: context.l10n.settingsPageSectionsTitle11,
                     action: 'next',
                     keyId: app.playbackNextShortcutKey,
                     onChanged: app.setPlaybackNextShortcutKey,
                   ),
                   _playbackShortcutRow(
                     icon: Icons.fast_rewind,
-                    title: '快退快捷键',
+                    title: context.l10n.settingsPageSectionsTitle6,
                     action: 'seek_backward',
                     keyId: app.playbackSeekBackwardShortcutKey,
                     onChanged: app.setPlaybackSeekBackwardShortcutKey,
                   ),
                   _playbackShortcutRow(
                     icon: Icons.fast_forward,
-                    title: '快进快捷键',
+                    title: context.l10n.settingsPageSectionsTitle7,
                     action: 'seek_forward',
                     keyId: app.playbackSeekForwardShortcutKey,
                     onChanged: app.setPlaybackSeekForwardShortcutKey,
                   ),
                   _row(
                     icon: Icons.restart_alt_outlined,
-                    title: '恢复默认快捷键',
-                    sub: 'Space / PageUp / PageDown / 方向键←→',
+                    title: context.l10n.settingsPageSectionsTitle13,
+                    sub: context.l10n.settingsPageSectionsSub9,
                     trailing: Icon(Icons.refresh, size: 18, color: p.dim),
                     onTap: app.resetPlaybackShortcutKeys,
                   ),
                   if (Platform.isAndroid) ...[
                     _switchRow(
                       Icons.headphones_outlined,
-                      '拔出耳机自动暂停',
-                      '拔出耳机或断开蓝牙时自动暂停',
+                      context.l10n.settingsPageSectionsSwitchRow8,
+                      context.l10n.settingsPageSectionsSwitchRow18,
                       app.earPause,
                       (v) => app.setEarPause(v),
                     ),
                     _switchRow(
                       Icons.speaker_group_outlined,
-                      '忽略音频焦点',
-                      '与其他应用同时播放，互不打断',
+                      context.l10n.settingsPageSectionsSwitchRow5,
+                      context.l10n.settingsPageSectionsSwitchRow19,
                       app.ignoreAudioFocus,
                       (v) => app.setIgnoreAudioFocus(v),
                     ),
@@ -762,25 +836,27 @@ class _SettingsPageState extends State<SettingsPage> {
                       icon: _batteryIgnoring == true
                           ? Icons.battery_saver
                           : Icons.battery_alert_outlined,
-                      title: '关闭省电优化',
+                      title: context.l10n.settingsPageSectionsTitle10,
                       sub: _batteryIgnoring == true
-                          ? '已加入白名单，后台播放不受省电限制'
-                          : '防止后台播放被系统中断',
+                          ? context.l10n.settingsPageSectionsSub7
+                          : context.l10n.settingsPageSectionsSub4,
                       onTap: _requestBatteryIgnore,
                       trailing: _batteryIgnoring == null
                           ? null
                           : _miniBtn(
-                              _batteryIgnoring! ? '已关闭' : '去关闭',
+                              _batteryIgnoring!
+                                  ? context.l10n.settingsPageSectionsMiniBtn4
+                                  : context.l10n.settingsPageSectionsMiniBtn3,
                               _requestBatteryIgnore,
                             ),
                     ),
                   if (Platform.isWindows)
                     _switchRow(
                       Icons.desktop_windows_outlined,
-                      '关闭窗口后保留托盘',
+                      context.l10n.settingsPageSectionsSwitchRow10,
                       app.keepTrayOnClose
-                          ? '关闭后继续在后台播放，可从系统托盘恢复'
-                          : '关闭窗口时将停止后台运行并退出程序',
+                          ? context.l10n.settingsPageSectionsSwitchRow23
+                          : context.l10n.settingsPageSectionsSwitchRow22,
                       app.keepTrayOnClose,
                       app.setKeepTrayOnClose,
                     ),
@@ -792,12 +868,12 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'tracks',
-                '曲目',
+                context.l10n.settingsPageSectionsSection,
                 _group([
                   _switchRow(
                     Icons.route_outlined,
-                    '智能路径',
-                    '打开作品自动进入最佳目录',
+                    context.l10n.settingsPageSectionsSwitchRow,
+                    context.l10n.settingsPageSectionsSwitchRow14,
                     app.initialPathBehavior == 'auto',
                     (v) => app.setInitialPathBehavior(v ? 'auto' : 'root'),
                     showDivider: app.initialPathBehavior == 'auto',
@@ -805,14 +881,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (app.initialPathBehavior == 'auto') ...[
                     _switchRow(
                       Icons.hearing_outlined,
-                      '效果音偏好',
-                      '优先进入包含效果音的目录',
+                      context.l10n.settingsPageSectionsSwitchRow4,
+                      context.l10n.settingsPageSectionsSwitchRow13,
                       app.sePreference,
                       (v) => app.setSePreference(v),
                     ),
                     _row(
                       icon: Icons.audiotrack_outlined,
-                      title: '音频类型偏好',
+                      title: context.l10n.settingsPageSectionsTitle8,
                       sub: app.audioTypePreference.join(' > '),
                       onTap: _editAudioTypePreference,
                       trailing: Icon(
@@ -830,26 +906,26 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'privacy',
-                '隐私',
+                context.l10n.settingsPageSectionTitleText,
                 _group([
                   _switchRow(
                     Icons.notifications_off_outlined,
-                    '不显示通知栏媒体卡片',
-                    '播放时不在通知栏显示媒体卡片',
+                    context.l10n.settingsPageSectionsSwitchRow11,
+                    context.l10n.settingsPageSectionsSwitchRow20,
                     app.lsCover,
                     app.setLsCover,
                   ),
                   _switchRow(
                     Icons.branding_watermark_outlined,
-                    '通知栏封面显示项目 logo',
-                    '开启后封面位置显示项目 logo，不显示真实封面',
+                    context.l10n.settingsPageSectionsSwitchRow21,
+                    context.l10n.settingsPageSectionsSwitchRow26,
                     app.notifCover,
                     app.setNotifCover,
                   ),
                   _switchRow(
                     Icons.privacy_tip_outlined,
-                    '定时关闭后释放系统接口',
-                    '到点清除锁屏媒体卡片与通知',
+                    context.l10n.settingsPageSectionsSwitchRow12,
+                    context.l10n.settingsPageSectionsSwitchRow16,
                     app.releaseInterface,
                     app.setReleaseInterface,
                     showDivider: false,
@@ -862,7 +938,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'other',
-                '其他',
+                context.l10n.settingsPageSectionsSection2,
                 _group([_proxySettings()]),
                 rootVisible: false,
                 rootEntry: true,
@@ -873,7 +949,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'appearance',
-                '外观',
+                context.l10n.settingsPageSectionsSection3,
                 _group([
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
@@ -885,9 +961,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           color: p.accent,
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            '界面缩放',
+                            context.l10n.settingsPageSectionsText7,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -931,8 +1007,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           color: p.accent,
                         ),
                         const SizedBox(width: 12),
-                        const Text(
-                          '主题',
+                        Text(
+                          context.l10n.settingsPageSectionsText,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -941,18 +1017,22 @@ class _SettingsPageState extends State<SettingsPage> {
                         const Spacer(),
                         // 三段按钮按内容自适应宽度，不撑满整行
                         SegmentedButton<ThemeMode>(
-                          segments: const [
+                          segments: [
                             ButtonSegment(
                               value: ThemeMode.system,
-                              label: Text('跟随系统'),
+                              label: Text(context.l10n.followSystem),
                             ),
                             ButtonSegment(
                               value: ThemeMode.light,
-                              label: Text('浅色'),
+                              label: Text(
+                                context.l10n.settingsPageSectionsText2,
+                              ),
                             ),
                             ButtonSegment(
                               value: ThemeMode.dark,
-                              label: Text('深色'),
+                              label: Text(
+                                context.l10n.settingsPageSectionsText3,
+                              ),
                             ),
                           ],
                           selected: {app.themeMode},
@@ -1009,15 +1089,15 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'other',
-                '其他',
+                context.l10n.settingsPageSectionsSection2,
                 _group([
                   _row(
                     icon: Icons.restart_alt,
-                    title: '完全重置软件',
-                    sub: '清除本机全部数据，恢复初始状态',
+                    title: context.l10n.settingsPageSectionsTitle12,
+                    sub: context.l10n.settingsPageSectionsSub5,
                     onTap: _confirmReset,
                     trailing: Text(
-                      '重置',
+                      context.l10n.settingsPageSectionsText4,
                       style: TextStyle(fontSize: 12, color: p.red),
                     ),
                     showDivider: false,
@@ -1028,24 +1108,24 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               _section(
                 'about',
-                '关于',
+                context.l10n.settingsPageSectionsSection4,
                 _group([
                   _switchRow(
                     Icons.system_update_outlined,
-                    '自动检测更新',
-                    '启动后 3 秒请求更新服务',
+                    context.l10n.settingsPageSectionsSwitchRow6,
+                    context.l10n.settingsPageSectionsSwitchRow17,
                     app.updateCheckEnabled,
                     app.setUpdateCheckEnabled,
                   ),
                   _row(
                     icon: Icons.refresh_outlined,
-                    title: '检查更新',
-                    sub: '手动请求更新服务',
+                    title: context.l10n.settingsPageSectionsTitle5,
+                    sub: context.l10n.settingsPageSectionsSub2,
                     onTap: () => UpdateService.checkManually(context, app),
                   ),
                   _row(
                     icon: null,
-                    title: '版本',
+                    title: context.l10n.settingsPageSectionsTitle,
                     sub: null,
                     trailing: Text(
                       'Kikoeta ${UpdateService.currentVersion}',
@@ -1055,7 +1135,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   _row(
                     icon: null,
-                    title: '仓库',
+                    title: context.l10n.settingsPageSectionsTitle2,
                     sub: null,
                     trailing: const Text(
                       'https://github.com/chenflxs/kikoeta',
@@ -1118,12 +1198,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   String _sectionTitle(String key) => switch (key) {
-    'translation' => '翻译',
-    'lyrics_desktop' => '歌词与桌面歌词',
-    'playback' => '播放',
-    'tracks' => '曲目',
-    'privacy' => '隐私',
-    'other' => '其他',
+    'translation' => context.l10n.languageAndTranslation,
+    'lyrics_desktop' => context.l10n.settingsPageSectionsSection6,
+    'playback' => context.l10n.play,
+    'tracks' => context.l10n.settingsPageSectionsSection,
+    'privacy' => context.l10n.settingsPageSectionTitleText,
+    'other' => context.l10n.settingsPageSectionsSection2,
     _ => key,
   };
 
@@ -1158,7 +1238,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final row = _row(
       icon: _sectionIcon(key),
       title: title,
-      sub: '点击进入设置',
+      sub: context.l10n.settingsPageRowSub,
       trailing: Icon(Icons.chevron_right, size: 20, color: p.dim),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -1289,11 +1369,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   /// 打开项目仓库主页
   Future<void> _openRepo() async {
+    final l10n = context.l10n;
     final ok = await launchUrl(
       Uri.parse('https://github.com/chenflxs/kikoeta'),
       mode: LaunchMode.externalApplication,
     );
-    if (!ok) _toast('打开失败');
+    if (!ok) _toast(l10n.settingsPageOpenRepoToast);
   }
 
   /// 版本号彩蛋：像安卓开发者模式一样连续点击——前 3 次静默，
@@ -1307,15 +1388,21 @@ class _SettingsPageState extends State<SettingsPage> {
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: p.surface,
-          title: const Text(
-            '开发者模式',
+          title: Text(
+            context.l10n.settingsPageOnVersionTapText2,
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
-          content: const Text('你不会真以为有开发者模式吧？', style: TextStyle(fontSize: 13)),
+          content: Text(
+            context.l10n.settingsPageOnVersionTapText3,
+            style: TextStyle(fontSize: 13),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('好吧', style: TextStyle(color: p.accent)),
+              child: Text(
+                context.l10n.settingsPageOnVersionTapText,
+                style: TextStyle(color: p.accent),
+              ),
             ),
           ],
         ),
@@ -1323,7 +1410,9 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
     if (_devTaps > 3) {
-      _toast('再执行 ${7 - _devTaps} 步进入开发者模式');
+      _toast(
+        context.l10n.settingsPageOnVersionTapToast((7 - _devTaps).toString()),
+      );
     }
     _devTimer = Timer(const Duration(seconds: 3), () {
       _devTaps = 0;
@@ -1363,7 +1452,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return _row(
       icon: icon,
       title: title,
-      sub: '播放器页获得焦点时生效',
+      sub: context.l10n.settingsPagePlaybackShortcutRowSub,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1394,9 +1483,15 @@ class _SettingsPageState extends State<SettingsPage> {
     if (key == LogicalKeyboardKey.space) return 'Space';
     if (key == LogicalKeyboardKey.pageUp) return 'PageUp';
     if (key == LogicalKeyboardKey.pageDown) return 'PageDown';
-    if (key == LogicalKeyboardKey.arrowLeft) return '方向键←';
-    if (key == LogicalKeyboardKey.arrowRight) return '方向键→';
-    return key?.debugName ?? key?.keyLabel ?? '未设置';
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      return context.l10n.settingsPageShortcutLabelText3;
+    }
+    if (key == LogicalKeyboardKey.arrowRight) {
+      return context.l10n.settingsPageShortcutLabelText2;
+    }
+    return key?.debugName ??
+        key?.keyLabel ??
+        context.l10n.settingsPageShortcutLabelText;
   }
 
   Future<void> _editPlaybackShortcut({
@@ -1406,6 +1501,7 @@ class _SettingsPageState extends State<SettingsPage> {
     required bool physical,
     required ValueChanged<int> onChanged,
   }) async {
+    final l10n = context.l10n;
     final focusNode = FocusNode();
     try {
       final nextKeyId = await showDialog<int>(
@@ -1433,7 +1529,9 @@ class _SettingsPageState extends State<SettingsPage> {
             child: SizedBox(
               width: 260,
               child: Text(
-                '当前按键：${_shortcutLabel(keyId, physical: physical)}\n\n按下新的单个按键',
+                l10n.settingsPageNextKeyIdText(
+                  (_shortcutLabel(keyId, physical: physical)).toString(),
+                ),
                 style: TextStyle(fontSize: 13, color: p.text),
               ),
             ),
@@ -1441,7 +1539,7 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('取消'),
+              child: Text(l10n.cancel),
             ),
           ],
         ),
@@ -1449,7 +1547,9 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted || nextKeyId == null) return;
       final conflict = _shortcutConflict(action, nextKeyId, physical: physical);
       if (conflict != null) {
-        _toast('该按键已用于$conflict');
+        _toast(
+          l10n.settingsPageEditPlaybackShortcutToast((conflict).toString()),
+        );
         return;
       }
       onChanged(nextKeyId);
@@ -1466,22 +1566,22 @@ class _SettingsPageState extends State<SettingsPage> {
     if (physical) {
       if (action != 'seek_forward' &&
           keyId == app.playbackSeekForwardShortcutKey) {
-        return '快进';
+        return context.l10n.seekForward;
       }
       if (action != 'seek_backward' &&
           keyId == app.playbackSeekBackwardShortcutKey) {
-        return '快退';
+        return context.l10n.seekBackward;
       }
       return null;
     }
     if (action != 'toggle' && keyId == app.playbackToggleShortcutKey) {
-      return '播放/暂停';
+      return context.l10n.settingsPageShortcutConflictText3;
     }
     if (action != 'previous' && keyId == app.playbackPreviousShortcutKey) {
-      return '上一曲';
+      return context.l10n.settingsPageShortcutConflictText2;
     }
     if (action != 'next' && keyId == app.playbackNextShortcutKey) {
-      return '下一曲';
+      return context.l10n.settingsPageShortcutConflictText;
     }
     return null;
   }
@@ -1528,9 +1628,9 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        '媒体缓存上限',
+                        context.l10n.settingsPageMediaCacheLimitRowText,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -1549,7 +1649,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '仅限制在线播放缓冲，不影响下载功能',
+                  context.l10n.settingsPageMediaCacheLimitRowText2,
                   style: TextStyle(fontSize: 11, color: p.dim),
                 ),
                 const SizedBox(height: 2),
@@ -1593,17 +1693,19 @@ class _SettingsPageState extends State<SettingsPage> {
     final hasAddress = _proxyCtrl.text.trim().isNotEmpty;
     final status = enabled
         ? hasAddress
-              ? '已启用：${_proxyCtrl.text.trim()}'
-              : '已启用，请填写 HTTP 代理地址'
+              ? context.l10n.settingsPageStatusStatus4(
+                  (_proxyCtrl.text.trim()).toString(),
+                )
+              : context.l10n.settingsPageStatusStatus2
         : hasAddress
-        ? '已保存地址，开启后生效'
-        : '仅支持 HTTP 协议代理，对所有网络请求生效';
+        ? context.l10n.settingsPageStatusStatus
+        : context.l10n.settingsPageStatusStatus3;
 
     return Column(
       children: [
         _switchRow(
           Icons.vpn_lock_outlined,
-          'HTTP 代理',
+          context.l10n.settingsPageProxySettingsSwitchRow,
           status,
           enabled,
           app.setHttpProxyEnabled,
@@ -1619,11 +1721,13 @@ class _SettingsPageState extends State<SettingsPage> {
             textInputAction: TextInputAction.done,
             style: TextStyle(fontSize: 13, color: enabled ? p.text : p.dim),
             decoration: InputDecoration(
-              labelText: '代理服务器',
+              labelText: context.l10n.loginPageShowProxyDialogLabelText,
               labelStyle: TextStyle(fontSize: 12, color: p.muted),
-              hintText: '例如 http://代理地址:端口',
+              hintText: context.l10n.loginPageShowProxyDialogHintText,
               hintStyle: TextStyle(fontSize: 12, color: p.dim),
-              helperText: enabled ? '留空将不使用代理' : '开启 HTTP 代理后可编辑',
+              helperText: enabled
+                  ? context.l10n.settingsPageProxySettingsHelperText
+                  : context.l10n.settingsPageProxySettingsHelperText2,
               helperStyle: TextStyle(fontSize: 11, color: p.dim),
               isDense: true,
               filled: true,
@@ -1635,7 +1739,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               suffixIcon: enabled && hasAddress
                   ? IconButton(
-                      tooltip: '清空代理地址',
+                      tooltip: context.l10n.settingsPageProxySettingsTooltip,
                       icon: Icon(Icons.close_rounded, size: 17, color: p.dim),
                       onPressed: () {
                         _proxyCtrl.clear();
@@ -1694,8 +1798,8 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
           backgroundColor: p.surface,
-          title: const Text(
-            '音频类型偏好',
+          title: Text(
+            context.l10n.settingsPageSectionsTitle8,
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
           content: SizedBox(
@@ -1732,18 +1836,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   ..clear()
                   ..addAll(['mp3', 'flac', 'wav', 'opus', 'm4a', 'aac']);
               }),
-              child: const Text('恢复默认'),
+              child: Text(context.l10n.settingsPageEditAudioTypePreferenceText),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('取消'),
+              child: Text(context.l10n.cancel),
             ),
             TextButton(
               onPressed: () {
                 app.setAudioTypePreference(List.of(order));
                 Navigator.pop(ctx);
               },
-              child: const Text('保存'),
+              child: Text(context.l10n.save),
             ),
           ],
         ),
@@ -1753,16 +1857,18 @@ class _SettingsPageState extends State<SettingsPage> {
 
   /// 请求关闭省电优化（安卓）：拉起系统「忽略电池优化」授权页
   Future<void> _requestBatteryIgnore() async {
+    final l10n = context.l10n;
     if (!Platform.isAndroid) return;
     final v = await AndroidBattery.instance.requestIgnore();
     if (mounted) setState(() => _batteryIgnoring = v);
     if (v != true && mounted) {
-      _toast('请在系统设置中允许「忽略电池优化」');
+      _toast(l10n.settingsPageRequestBatteryIgnoreToast);
     }
   }
 
   /// 完全重置：5 秒倒计时确认 → 停止播放/隐藏悬浮窗 → 清空全部数据 → 自动回到登录页
   Future<void> _confirmReset() async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -1782,7 +1888,9 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('已重置：账号与全部本地数据已清除')));
+      ..showSnackBar(
+        SnackBar(content: Text(l10n.settingsPageConfirmResetText)),
+      );
   }
 
   void _selectEngine(String engine) {
@@ -1794,19 +1902,19 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _engineDropdown() {
-    const labels = {
+    final labels = {
       'google': 'Google',
       'microsoft': 'Microsoft',
       'deepl': 'DeepL',
       'index': 'Index-Translate',
-      'openai': 'OpenAI 兼容',
+      'openai': context.l10n.settingsPageLabelsLabels,
     };
     return _translationDropdown(
       label: labels[app.engine]!,
       icon: Icons.translate_outlined,
-      tooltip: '翻译引擎',
+      tooltip: context.l10n.translationEngine,
       items: [
-        _menuHead(context, '翻译引擎'),
+        _menuHead(context, context.l10n.translationEngine),
         ...labels.entries.map(
           (e) => PopupMenuItem(
             value: e.key,
@@ -1820,13 +1928,18 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _translationTargetDropdown() {
-    const labels = {'zh-CN': '简中', 'zh-TW': '繁中', 'en': '英语'};
+    final labels = {
+      'ui': context.l10n.followInterfaceLanguage,
+      'zh-CN': context.l10n.simplifiedChineseShort,
+      'zh-TW': context.l10n.traditionalChineseShort,
+      'en': context.l10n.englishLanguage,
+    };
     return _translationDropdown(
       label: labels[app.translationTarget]!,
       icon: Icons.language_outlined,
-      tooltip: '翻译目标语言',
+      tooltip: context.l10n.translationTargetLanguage,
       items: [
-        _menuHead(context, '目标语言'),
+        _menuHead(context, context.l10n.targetLanguage),
         ...labels.entries.map(
           (e) => PopupMenuItem(
             value: e.key,
@@ -1839,6 +1952,39 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ],
       onSelected: app.setTranslationTarget,
+    );
+  }
+
+  Widget _uiLanguageDropdown() {
+    final labels = {
+      'system': context.l10n.followSystem,
+      'zh-CN': context.l10n.simplifiedChinese,
+      'zh-TW': context.l10n.traditionalChinese,
+      'ja': '日本語',
+      'en': 'English',
+      'ru': 'Русский',
+    };
+    return _translationDropdown(
+      label: labels[app.uiLanguage]!,
+      icon: Icons.language_outlined,
+      tooltip: context.l10n.interfaceLanguage,
+      items: [
+        _menuHead(context, context.l10n.interfaceLanguage),
+        ...labels.entries.map((entry) {
+          final enabled = entry.key == 'zh-CN';
+          return PopupMenuItem<String>(
+            value: entry.key,
+            enabled: enabled,
+            height: 42,
+            child: MenuItem(
+              label: entry.value,
+              selected: app.uiLanguage == entry.key,
+              enabled: enabled,
+            ),
+          );
+        }),
+      ],
+      onSelected: app.setUiLanguage,
     );
   }
 
@@ -1882,11 +2028,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _convDropdown() {
-    const labels = {'orig': '关闭', 'tw': '简 → 繁', 'zh': '繁 → 简'};
+    final labels = {
+      'orig': context.l10n.close,
+      'tw': context.l10n.simplifiedToTraditional,
+      'zh': context.l10n.traditionalToSimplified,
+    };
     return _selectPill(
       labels[app.conv]!,
       (ctx) => [
-        _menuHead(ctx, '繁简转换'),
+        _menuHead(ctx, context.l10n.chineseConversion),
         ...labels.entries.map(
           (e) => PopupMenuItem(
             value: e.key,
@@ -2041,12 +2191,16 @@ class _SettingsPageState extends State<SettingsPage> {
             app.setAiConfig(_aiBase.text, _aiModel.text, _aiKey.text);
           },
           decoration: InputDecoration(
-            labelText: '模型名称',
+            labelText: context.l10n.settingsPageAiModelInputLabelText,
             labelStyle: TextStyle(fontSize: 11.5, color: p.muted),
-            hintText: hasModels ? '输入模型名或从列表选择' : '例如 gpt-4o-mini',
+            hintText: hasModels
+                ? context.l10n.settingsPageAiModelInputHintText
+                : context.l10n.settingsPageAiModelInputHintText2,
             hintStyle: TextStyle(fontSize: 12, color: p.dim),
             helperText: hasModels
-                ? '已检测到 ${app.openAiModels.length} 个模型'
+                ? context.l10n.settingsPageAiModelInputHelperText(
+                    (app.openAiModels.length).toString(),
+                  )
                 : null,
             helperStyle: TextStyle(fontSize: 10.5, color: p.dim),
             filled: true,
@@ -2068,7 +2222,9 @@ class _SettingsPageState extends State<SettingsPage> {
               vertical: 10,
             ),
             suffixIcon: IconButton(
-              tooltip: hasModels ? '选择已检测模型' : '请先检测模型列表',
+              tooltip: hasModels
+                  ? context.l10n.settingsPageAiModelInputTooltip
+                  : context.l10n.settingsPageAiModelInputTooltip2,
               onPressed: hasModels
                   ? () {
                       if (menuController.isOpen) {
@@ -2216,8 +2372,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }) {
     return _row(
       icon: locked ? Icons.lock_outline : Icons.lock_open_outlined,
-      title: '$label 歌词锁定',
-      sub: locked ? '已锁定：点击歌词不会响应，可在设置中解锁' : '未锁定',
+      title: context.l10n.settingsPageLockRowTitle((label).toString()),
+      sub: locked
+          ? context.l10n.settingsPageLockRowSub2
+          : context.l10n.settingsPageLockRowSub,
       showDivider: showDivider,
       trailing: locked
           ? GestureDetector(
@@ -2233,7 +2391,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  '解锁',
+                  context.l10n.settingsPageLockRowText,
                   style: TextStyle(fontSize: 11.5, color: p.accent),
                 ),
               ),
@@ -2279,32 +2437,32 @@ class _ResetConfirmDialogState extends State<_ResetConfirmDialog> {
   Widget build(BuildContext context) {
     final canConfirm = _count == 0;
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: Colors.deepOrange, size: 22),
           SizedBox(width: 8),
-          Text('完全重置'),
+          Text(context.l10n.settingsPageBuildText),
         ],
       ),
-      content: const Text(
-        '将清除本机全部数据，且不可恢复：\n\n'
-        '· ASMR.ONE 账号与自建站点配置\n'
-        '· 收藏 / 播放历史 / 歌单 / 黑名单\n'
-        '· 翻译结果、均衡器、桌面歌词、定时关闭等全部设置\n\n'
-        '请确认是否继续。',
+      content: Text(
+        context.l10n.settingsPageBuildText4,
         style: TextStyle(fontSize: 13.5, height: 1.5),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('取消'),
+          child: Text(context.l10n.cancel),
         ),
         TextButton(
           onPressed: canConfirm ? () => Navigator.pop(context, true) : null,
           style: canConfirm
               ? TextButton.styleFrom(foregroundColor: Colors.red)
               : null,
-          child: Text(canConfirm ? '确定重置' : '确定重置（$_count 秒）'),
+          child: Text(
+            canConfirm
+                ? context.l10n.settingsPageBuildText2
+                : context.l10n.settingsPageBuildText3((_count).toString()),
+          ),
         ),
       ],
     );

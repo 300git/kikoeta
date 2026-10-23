@@ -12,6 +12,7 @@ import 'app_paths.dart';
 import 'download_transfer.dart';
 import 'media_tree.dart';
 import 'settings_store.dart';
+import '../l10n/strings.dart';
 
 const _libraryKey = 'voice_downloads';
 const _maxConcurrentDownloads = 2;
@@ -649,7 +650,9 @@ class DownloadManager extends ChangeNotifier {
     item.updatedAt = DateTime.now();
     await _persistAndNotify();
     try {
-      if (selectedFiles(item).isEmpty) throw StateError('没有可下载的文件');
+      if (selectedFiles(item).isEmpty) {
+        throw StateError(appL10n.downloadServiceRunStateError);
+      }
       while (true) {
         // A later file may have been resumed during the previous transfer.
         // Wait for that action's disk snapshot before choosing the next file.
@@ -670,7 +673,9 @@ class DownloadManager extends ChangeNotifier {
         if (next == null) break;
         final node = next;
         final url = node.downloadUrl ?? node.url;
-        if (url == null || url.isEmpty) throw StateError('下载文件地址为空');
+        if (url == null || url.isEmpty) {
+          throw StateError(appL10n.downloadServiceRunStateError2);
+        }
         item.currentPath = node.path;
         item.currentFileDownloaded = 0;
         item.currentFileTotal = item.fileSizes[node.path] ?? 0;
@@ -788,7 +793,9 @@ class DownloadManager extends ChangeNotifier {
       rethrow;
     }
     final size = await target.length();
-    if (size == 0) throw const HttpException('下载文件为空');
+    if (size == 0) {
+      throw HttpException(appL10n.downloadServiceDownloadFileHttpException);
+    }
     (_completedFiles[item.id] ??= {})[node.path] = size;
     item.downloadedBytes = _completedBytes(item);
     item.updatedAt = DateTime.now();
@@ -1119,7 +1126,7 @@ Map<String, dynamic> _workToJson(Work work) => {
 
 Work _workFromJson(Map<String, dynamic> json) => Work(
   rj: json['rj'] as String? ?? '',
-  title: json['title'] as String? ?? '未知作品',
+  title: json['title'] as String? ?? appL10n.historyPageEntryWorkTitle,
   circle: json['circle'] as String? ?? '',
   va: json['va'] as String? ?? '',
   age: Age.values[(json['age'] as num?)?.toInt().clamp(0, 2) ?? 0],

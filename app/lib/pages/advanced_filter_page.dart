@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 
 class AdvancedFilterPage extends StatefulWidget {
   final AppState app;
@@ -14,10 +15,10 @@ class AdvancedFilterPage extends StatefulWidget {
 }
 
 class _AdvancedFilterPageState extends State<AdvancedFilterPage> {
-  static const _tabs = <_AdvancedFilterTab>[
-    _AdvancedFilterTab('声优', 'vas', '声优'),
-    _AdvancedFilterTab('社团', 'circles', '社团'),
-    _AdvancedFilterTab('标签', 'tags', '标签'),
+  static List<_AdvancedFilterTab> get _tabs => <_AdvancedFilterTab>[
+    _AdvancedFilterTab(appL10n.voiceActor, 'vas', appL10n.voiceActor),
+    _AdvancedFilterTab(appL10n.circle, 'circles', appL10n.circle),
+    _AdvancedFilterTab(appL10n.tag, 'tags', appL10n.tag),
   ];
 
   final _searchController = TextEditingController();
@@ -112,7 +113,7 @@ class _AdvancedFilterPageState extends State<AdvancedFilterPage> {
     final p = _palette;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('高级筛选'),
+        title: Text(context.l10n.advancedFilterPageBuildText),
         leading: const BackButton(),
       ),
       body: SafeArea(
@@ -156,7 +157,9 @@ class _AdvancedFilterPageState extends State<AdvancedFilterPage> {
       controller: _searchController,
       style: TextStyle(color: p.text, fontSize: 13),
       decoration: InputDecoration(
-        hintText: '搜索${_tab.placeholder}…',
+        hintText: context.l10n.advancedFilterPageBuildSearchFieldHintText(
+          (_tab.placeholder).toString(),
+        ),
         hintStyle: TextStyle(color: p.dim, fontSize: 13),
         prefixIcon: Icon(Icons.search, color: p.dim, size: 20),
         suffixIcon: _searchController.text.isEmpty
@@ -205,7 +208,7 @@ class _AdvancedFilterPageState extends State<AdvancedFilterPage> {
               const SizedBox(height: 14),
               OutlinedButton(
                 onPressed: _loadCurrentTab,
-                child: const Text('重试'),
+                child: Text(context.l10n.retry),
               ),
             ],
           ),
@@ -216,7 +219,9 @@ class _AdvancedFilterPageState extends State<AdvancedFilterPage> {
     if (values.isEmpty) {
       return Center(
         child: Text(
-          _searchController.text.isEmpty ? '暂无数据' : '没有匹配的参数',
+          _searchController.text.isEmpty
+              ? context.l10n.advancedFilterPageBuildContentText
+              : context.l10n.advancedFilterPageBuildContentText2,
           style: TextStyle(color: p.dim, fontSize: 13),
         ),
       );
@@ -286,9 +291,7 @@ class _FilterTabButton extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: selected ? palette.accent : palette.line,
-            ),
+            border: Border.all(color: selected ? palette.accent : palette.line),
           ),
           child: Text(
             label,

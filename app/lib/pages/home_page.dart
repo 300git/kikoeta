@@ -10,6 +10,7 @@ import '../services/theme_reveal.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../sheets.dart';
+import '../l10n/strings.dart';
 
 class HomePage extends StatefulWidget {
   final AppState app;
@@ -233,7 +234,7 @@ class _HomePageState extends State<HomePage> {
   String get serverLabel => app.customServer
       ? (app.customSites.isNotEmpty
             ? app.customSites[app.customServerIdx].alias
-            : '自建')
+            : context.l10n.homePageServerLabelText)
       : 'asmr.one';
 
   @override
@@ -297,7 +298,9 @@ class _HomePageState extends State<HomePage> {
         ),
         IconButton(
           onPressed: app.toggleSfw,
-          tooltip: app.sfwMode ? 'SFW 模式已开启：仅显示全年龄内容' : '开启 SFW 模式（仅显示全年龄内容）',
+          tooltip: app.sfwMode
+              ? context.l10n.homePageHeaderTooltip
+              : context.l10n.homePageHeaderTooltip2,
           icon: Icon(
             app.sfwMode
                 ? Icons.family_restroom
@@ -370,7 +373,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _sortRow() {
-    final labels = {'all': '全部', 'hot': '热门', 'rec': '推荐'};
+    final labels = {
+      'all': context.l10n.all,
+      'hot': context.l10n.homePageLabelsLabels,
+      'rec': context.l10n.homePageLabelsLabels2,
+    };
     return Row(
       children: [
         Expanded(
@@ -405,20 +412,20 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  static const sortLabels = {
-    'collect': '收录时间',
-    'date': '发布时间',
-    'myrating': '我的评价',
-    'sales': '销售数量',
-    'price': '销售价格',
-    'rating': '总评价',
-    'comments': '评论数量',
-    'rj': 'RJ号',
+  static Map<String, String> get sortLabels => {
+    'collect': appL10n.homePageSortLabelsSortLabels2,
+    'date': appL10n.favoritesPageReviewSortLabelsReviewSortLabels3,
+    'myrating': appL10n.favoritesPageReviewSortLabelsReviewSortLabels4,
+    'sales': appL10n.favoritesPageReviewSortLabelsReviewSortLabels2,
+    'price': appL10n.homePageSortLabelsSortLabels3,
+    'rating': appL10n.homePageSortLabelsSortLabels,
+    'comments': appL10n.favoritesPageReviewSortLabelsReviewSortLabels,
+    'rj': appL10n.blacklistPageTypeLabelsTypeLabels,
   };
 
   Widget _sortDropdown() {
     return PopupMenuButton<String>(
-      tooltip: '排序方式',
+      tooltip: context.l10n.favoritesPageReviewSortDropdownTooltip,
       // 悬停高亮跟随 child（MenuItem）的圆角，否则从圆角缺口漏出方形灰影
       borderRadius: BorderRadius.circular(11),
       onSelected: (v) {
@@ -427,7 +434,7 @@ class _HomePageState extends State<HomePage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: p.surface,
       itemBuilder: (ctx) => [
-        _menuHead('排序方式'),
+        _menuHead(context.l10n.favoritesPageReviewSortDropdownTooltip),
         ...sortLabels.entries.map(
           (e) => PopupMenuItem(
             value: e.key,
@@ -532,7 +539,7 @@ class _HomePageState extends State<HomePage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Text(
-                    '加载中…',
+                    context.l10n.loading,
                     style: TextStyle(fontSize: 12, color: p.dim),
                   ),
                 )
@@ -540,7 +547,7 @@ class _HomePageState extends State<HomePage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Text(
-                    '已显示全部作品',
+                    context.l10n.homePageGridText,
                     style: TextStyle(fontSize: 12, color: p.dim),
                   ),
                 ),
@@ -551,13 +558,13 @@ class _HomePageState extends State<HomePage> {
   Widget _emptyHint() {
     final String msg;
     if (app.loadingRemote || app.worksLoadingMore) {
-      msg = '正在加载…';
+      msg = context.l10n.homePageEmptyHintText2;
     } else if (app.remoteError != null) {
-      msg = '无网络连接，请检查网络或服务器设置';
+      msg = context.l10n.homePageEmptyHintText5;
     } else if (app.hasAgeFilter || app.subOnly) {
-      msg = '当前筛选条件下暂无作品';
+      msg = context.l10n.homePageEmptyHintText4;
     } else {
-      msg = '暂无作品';
+      msg = context.l10n.homePageEmptyHintText;
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -582,7 +589,7 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              '点击任意处重试',
+              context.l10n.homePageEmptyHintText3,
               style: TextStyle(fontSize: 11.5, color: p.accent),
             ),
           ),
@@ -662,9 +669,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Work> get _visibleSearchResults {
-    var res = _searchResults
-        .where((w) => !app.isBlacklistedWork(w))
-        .toList();
+    var res = _searchResults.where((w) => !app.isBlacklistedWork(w)).toList();
     if (app.hasAgeFilter) {
       res = res.where((w) => app.ageFilters.contains(w.age.index)).toList();
     }
@@ -690,7 +695,10 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 10),
-            Text('搜索中…', style: TextStyle(fontSize: 13, color: p.dim)),
+            Text(
+              context.l10n.homePageSearchResultsViewText,
+              style: TextStyle(fontSize: 13, color: p.dim),
+            ),
           ],
         ),
       );
@@ -708,11 +716,14 @@ class _HomePageState extends State<HomePage> {
               Icon(Icons.wifi_off, size: 34, color: p.dim),
               const SizedBox(height: 10),
               Text(
-                '无网络连接，请检查网络或服务器设置',
+                context.l10n.homePageEmptyHintText5,
                 style: TextStyle(fontSize: 13, color: p.dim),
               ),
               const SizedBox(height: 8),
-              Text('点击重试', style: TextStyle(fontSize: 11.5, color: p.accent)),
+              Text(
+                context.l10n.favoritesPageBodyText,
+                style: TextStyle(fontSize: 11.5, color: p.accent),
+              ),
             ],
           ),
         ),
@@ -721,7 +732,10 @@ class _HomePageState extends State<HomePage> {
     final res = _visibleSearchResults;
     if (res.isEmpty) {
       return Center(
-        child: Text('没有找到相关作品', style: TextStyle(fontSize: 13, color: p.dim)),
+        child: Text(
+          context.l10n.homePageSearchResultsViewText2,
+          style: TextStyle(fontSize: 13, color: p.dim),
+        ),
       );
     }
     return Column(
@@ -753,13 +767,16 @@ class _HomePageState extends State<HomePage> {
         if (_searchLoading)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Text('加载中…', style: TextStyle(fontSize: 12, color: p.dim)),
+            child: Text(
+              context.l10n.loading,
+              style: TextStyle(fontSize: 12, color: p.dim),
+            ),
           )
         else if (!_searchHasMore)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Text(
-              '已显示全部搜索结果',
+              context.l10n.homePageSearchResultsViewText3,
               style: TextStyle(fontSize: 12, color: p.dim),
             ),
           ),

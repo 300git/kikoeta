@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import '../l10n/strings.dart';
 
 class KtSourceFile {
   final String url;
@@ -102,7 +103,7 @@ class KtService {
   static String normalizeEndpoint(String value) {
     var text = value.trim();
     if (text.isEmpty) {
-      throw const FormatException('请输入 kikoeta-transl 的 IP/域名与端口');
+      throw FormatException(appL10n.ktServiceNormalizeEndpointFormatException2);
     }
     if (!text.contains('://')) text = 'http://$text';
     final uri = Uri.tryParse(text);
@@ -110,7 +111,7 @@ class KtService {
         (uri.scheme != 'http' && uri.scheme != 'https') ||
         uri.host.isEmpty ||
         !_hasExplicitPort(text)) {
-      throw const FormatException('连接地址格式应为 IP/域名:端口');
+      throw FormatException(appL10n.ktServiceNormalizeEndpointFormatException);
     }
     final clean = uri.replace(
       path: uri.path == '/' ? '' : uri.path.replaceFirst(RegExp(r'/+$'), ''),
@@ -231,7 +232,7 @@ class KtService {
     }
     final value = jsonDecode(utf8.decode(response.bodyBytes));
     if (value is! Map) {
-      throw const FormatException('kikoeta-transl 返回了无效响应');
+      throw FormatException(appL10n.ktServiceDecodeFormatException);
     }
     return Map<String, dynamic>.from(value);
   }
@@ -243,7 +244,7 @@ class KtService {
         return value['error'].toString();
       }
     } catch (_) {}
-    return 'kikoeta-transl 请求失败（HTTP ${response.statusCode}）';
+    return appL10n.ktServiceErrorMessageText((response.statusCode).toString());
   }
 }
 

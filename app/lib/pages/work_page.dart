@@ -11,6 +11,7 @@ import '../data.dart';
 import '../routes.dart';
 import '../services/api_service.dart';
 import '../services/download_service.dart';
+import '../services/dictation_media_matcher.dart';
 import '../services/media_selection.dart';
 import '../services/media_tree.dart';
 import '../src/rust/api/kikoeru_api.dart';
@@ -21,14 +22,15 @@ import '../widgets.dart';
 import '../widgets/media_tree_sliver.dart';
 import '../widgets/playlist_picker.dart';
 import 'dictation_translation_page.dart';
+import '../l10n/strings.dart';
 
 /// 播放标记的接口值与中文标签。
-const workProgressLabels = <String, String>{
-  'marked': '想听',
-  'listening': '在听',
-  'listened': '听过',
-  'replay': '重听',
-  'postponed': '搁置',
+Map<String, String> get workProgressLabels => <String, String>{
+  'marked': appL10n.wantToListen,
+  'listening': appL10n.listening,
+  'listened': appL10n.listened,
+  'replay': appL10n.replay,
+  'postponed': appL10n.postponed,
 };
 
 class WorkPage extends StatefulWidget {
@@ -252,11 +254,19 @@ class _WorkPageState extends State<WorkPage> {
   List<MediaTreeRow> _visibleRows = const [];
   bool _rowsDirty = true;
   bool _tracksFailed = false;
+  bool _dictationOpening = false;
   final MediaSelection _selection = MediaSelection();
   final Set<String> _expanded = {};
-  // 复选框滑动选中：长按某项后上下滑动，划过的行统一改成与起点相反的状态。
+  // 复选框滑动选中：按下后拖动，划过的区间成片切换，缩回复原。
   bool _dragSelectValue = true;
-  final Set<String> _dragApplied = {};
+  Set<String>? _dragBasePaths;
+  int? _dragAnchorRow;
+  int? _dragLastRow;
+  bool _mouseDragPending = false;
+  MediaNode? _mouseDownNode;
+  Offset _mouseDownPosition = Offset.zero;
+  Offset? _lastDragPosition;
+  Timer? _autoScrollTimer;
   final Map<String, GlobalKey> _rowKeys = {};
   List<String>? _smartTarget; // 智能路径自动进入的目录（标题链），用于「查看全部文件」
   late int _seenLoginEpoch;
@@ -295,6 +305,7 @@ class _WorkPageState extends State<WorkPage> {
 
   @override
   void dispose() {
+    _stopAutoScrollTimer();
     app.removeListener(_onAppChanged);
     _pageScroll.dispose();
     super.dispose();
@@ -490,6 +501,7 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _rateWork(double value) async {
+    final l10n = context.l10n;
     if (work.apiId == null) return;
     final previous = _userRating;
     setState(() => _userRating = value);
@@ -505,11 +517,12 @@ class _WorkPageState extends State<WorkPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _userRating = previous);
-      _toast('评分失败：$e');
+      _toast(l10n.workPageRateWorkToast((e).toString()));
     }
   }
 
   Future<void> _clearRating() async {
+    final l10n = context.l10n;
     if (work.apiId == null) return;
     final previous = _userRating;
     setState(() => _userRating = null);
@@ -519,7 +532,7 @@ class _WorkPageState extends State<WorkPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _userRating = previous);
-      _toast('取消评分失败：$e');
+      _toast(l10n.workPageClearRatingToast((e).toString()));
     }
   }
 
@@ -537,6 +550,7 @@ class _WorkPageState extends State<WorkPage> {
 
   /// 更新播放标记；再次选择当前标记时取消标记（progress=null）。
   Future<void> _setProgress(String progress) async {
+    final l10n = context.l10n;
     if (work.apiId == null) return;
     final previous = _myProgress;
     final clearing = previous == progress;
@@ -550,7 +564,11 @@ class _WorkPageState extends State<WorkPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _myProgress = previous);
-      _toast(clearing ? '取消标记失败：$e' : '标记失败：$e');
+      _toast(
+        clearing
+            ? l10n.workPageSetProgressToast2((e).toString())
+            : l10n.workPageSetProgressToast((e).toString()),
+      );
     }
   }
 
@@ -560,7 +578,7 @@ class _WorkPageState extends State<WorkPage> {
     final marked = _myProgress != null;
     final color = marked ? p.accent : p.text;
     return PopupMenuButton<String>(
-      tooltip: '标记',
+      tooltip: context.l10n.mark,
       onSelected: _setProgress,
       itemBuilder: (_) => [
         for (final entry in workProgressLabels.entries)
@@ -593,7 +611,9 @@ class _WorkPageState extends State<WorkPage> {
             ),
             const SizedBox(width: 4),
             Text(
-              marked ? (workProgressLabels[_myProgress] ?? '标记') : '标记',
+              marked
+                  ? (workProgressLabels[_myProgress] ?? context.l10n.mark)
+                  : context.l10n.mark,
               style: TextStyle(fontSize: 12.5, color: color),
             ),
           ],
@@ -603,8 +623,9 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _openReviewDialog() async {
+    final l10n = context.l10n;
     if (work.apiId == null) {
-      _toast('该作品缺少编号，无法评价');
+      _toast(l10n.workPageOpenReviewDialogToast);
       return;
     }
     final result = await showDialog<_ReviewResult>(
@@ -636,8 +657,9 @@ class _WorkPageState extends State<WorkPage> {
 
   /// 把当前作品添加到 one 站自建播放列表。
   Future<void> _addToServerPlaylist() async {
+    final l10n = context.l10n;
     if (work.apiId == null) {
-      _toast('该作品缺少编号，无法添加');
+      _toast(l10n.workPageAddToServerPlaylistToast2);
       return;
     }
     final picked = await showPlaylistPicker(
@@ -648,30 +670,33 @@ class _WorkPageState extends State<WorkPage> {
     final pl = picked?.playlist;
     if (pl == null || !mounted) return;
     if (!pl.isOwned || pl.isSystem) {
-      _toast('只能添加到自建播放列表');
+      _toast(l10n.workPageAddToServerPlaylistToast);
       return;
     }
     try {
       await ApiService.addWorksToPlaylist(app, pl.id, [work.rj]);
-      if (mounted) _toast('已添加到「${pl.name}」');
+      if (mounted) {
+        _toast(l10n.workPageAddToPlaylistToast2((pl.name).toString()));
+      }
     } catch (e) {
-      if (mounted) _toast('添加失败：$e');
+      if (mounted) _toast(l10n.favoritesPageAddWorksByRjToast((e).toString()));
     }
   }
 
   Future<void> _openLanguageEdition(LanguageEdition edition) async {
+    final l10n = context.l10n;
     if (_openingLanguageEdition) return;
     setState(() => _openingLanguageEdition = true);
     try {
       final target = await ApiService.fetchWork(app, edition.id);
       if (!mounted) return;
       if (app.sfwMode && target.age != Age.all) {
-        _toast('SFW 模式下不能打开非全年龄作品');
+        _toast(l10n.workPageOpenLanguageEditionToast2);
         return;
       }
       await Navigator.of(context).push(buildWorkRoute(app, target));
     } catch (_) {
-      if (mounted) _toast('无法加载该语言版本');
+      if (mounted) _toast(l10n.workPageOpenLanguageEditionToast);
     } finally {
       if (mounted) setState(() => _openingLanguageEdition = false);
     }
@@ -694,7 +719,7 @@ class _WorkPageState extends State<WorkPage> {
               Align(
                 alignment: Alignment.topRight,
                 child: IconButton(
-                  tooltip: '关闭',
+                  tooltip: context.l10n.close,
                   icon: const Icon(Icons.close, size: 18),
                   onPressed: () => Navigator.of(dialogContext).pop(),
                 ),
@@ -876,7 +901,7 @@ class _WorkPageState extends State<WorkPage> {
       MediaTreeIndex(nodes.toList()).files.where(_isMediaFile).toList();
   void _playFiles(Iterable<MediaNode> files, {MediaNode? selected}) {
     if (app.sfwMode && work.age != Age.all) {
-      _toast('SFW 模式下不能播放非全年龄作品');
+      _toast(context.l10n.workPagePlayAsAudioToast);
       return;
     }
     final selectedExt = selected == null ? null : _ext(selected.title);
@@ -884,7 +909,7 @@ class _WorkPageState extends State<WorkPage> {
         .where((item) => selectedExt == null || _ext(item.title) == selectedExt)
         .toList();
     if (audio.isEmpty) {
-      _toast('暂无音频文件（文件流需登录后可用）');
+      _toast(context.l10n.workPagePlayFilesToast);
       return;
     }
     final selectedIndex = selected == null
@@ -900,7 +925,7 @@ class _WorkPageState extends State<WorkPage> {
 
   void _playAsAudio(MediaNode n) {
     if (app.sfwMode && work.age != Age.all) {
-      _toast('SFW 模式下不能播放非全年龄作品');
+      _toast(context.l10n.workPagePlayAsAudioToast);
       return;
     }
     app.startPlayback(work, [n]);
@@ -908,14 +933,15 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _downloadSelected() async {
+    final l10n = context.l10n;
     final tree = _tree;
     if (tree == null) {
-      _toast('曲目列表尚未加载');
+      _toast(l10n.workPageDownloadSelectedToast2);
       return;
     }
     final selected = Set<String>.of(_selection.projects);
     if (selected.isEmpty) {
-      _toast('请先勾选要下载的项目或文件夹');
+      _toast(l10n.workPageDownloadSelectedToast4);
       return;
     }
     try {
@@ -925,15 +951,16 @@ class _WorkPageState extends State<WorkPage> {
         tree: tree,
         selectedPaths: selected,
       );
-      if (mounted) _toast('已加入下载队列');
+      if (mounted) _toast(l10n.workPageDownloadSelectedToast);
     } catch (e) {
-      if (mounted) _toast('加入下载失败：$e');
+      if (mounted) _toast(l10n.workPageDownloadSelectedToast3((e).toString()));
     }
   }
 
   Future<void> _copyRj() async {
+    final l10n = context.l10n;
     await Clipboard.setData(ClipboardData(text: work.rj));
-    if (mounted) _toast('已复制 ${work.rj}');
+    if (mounted) _toast(l10n.workPageCopyRjToast((work.rj).toString()));
   }
 
   bool _isImage(MediaNode n) => n.title.toLowerCase().contains(
@@ -988,13 +1015,14 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _refreshWork() async {
+    final l10n = context.l10n;
     if (downloadItem != null) {
       setState(() {
         _tree = ApiService.sortedMediaNodes(downloadItem!.tree);
         _tracksFailed = false;
         _applyDownloadSmartPath();
       });
-      _toast('已刷新本地下载记录');
+      _toast(l10n.workPageRefreshWorkToast3);
       return;
     }
     await Future.wait([
@@ -1002,22 +1030,30 @@ class _WorkPageState extends State<WorkPage> {
       _loadWorkDetails(),
       _loadSimilarWorks(),
     ]);
-    if (mounted) _toast(_tracksFailed ? '刷新失败' : '已刷新');
+    if (mounted) {
+      _toast(
+        _tracksFailed
+            ? l10n.workPageRefreshWorkToast2
+            : l10n.workPageRefreshWorkToast,
+      );
+    }
   }
 
   Future<void> _openExternalWork(String url) async {
+    final l10n = context.l10n;
     final ok = await launchUrl(
       Uri.parse(url),
       mode: LaunchMode.externalApplication,
     );
-    if (!ok && mounted) _toast('打开失败');
+    if (!ok && mounted) _toast(l10n.settingsPageOpenRepoToast);
   }
 
   Future<void> _deleteSelectedLocalFiles() async {
+    final l10n = context.l10n;
     final item = downloadItem;
     final selected = Set<String>.of(_selection.projects);
     if (item == null || selected.isEmpty) {
-      _toast('请先勾选要删除的本地文件');
+      _toast(l10n.workPageDeleteSelectedLocalFilesToast2);
       return;
     }
     final deleted = await DownloadManager.instance.deleteDownloadedFiles(
@@ -1026,29 +1062,32 @@ class _WorkPageState extends State<WorkPage> {
     );
     if (!mounted) return;
     if (deleted == 0) {
-      _toast('所选项目中没有已下载文件');
+      _toast(l10n.workPageDeleteSelectedLocalFilesToast);
       return;
     }
     setState(() => _selection.clear());
-    _toast('已删除 $deleted 个本地文件');
+    _toast(l10n.workPageDeleteSelectedLocalFilesToast3((deleted).toString()));
   }
 
   Future<void> _confirmDeleteWork() async {
+    final l10n = context.l10n;
     final item = downloadItem;
     if (item == null) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除作品'),
-        content: Text('确定删除“${item.work.title}”的全部本地文件吗？此操作无法撤销。'),
+        title: Text(l10n.workPageConfirmedText2),
+        content: Text(
+          l10n.workPageConfirmedText4((item.work.title).toString()),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('删除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -1059,7 +1098,7 @@ class _WorkPageState extends State<WorkPage> {
     if (DownloadManager.instance.downloads.any(
       (entry) => entry.id == item.id,
     )) {
-      _toast('删除失败，请关闭正在占用该作品的程序后重试');
+      _toast(l10n.workPageConfirmDeleteWorkToast);
       return;
     }
     Navigator.of(context).pop();
@@ -1071,6 +1110,7 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _onMoreAction(String action) async {
+    final l10n = context.l10n;
     switch (action) {
       case 'deleteLocal':
         await _deleteSelectedLocalFiles();
@@ -1085,34 +1125,47 @@ class _WorkPageState extends State<WorkPage> {
         await _addToServerPlaylist();
         return;
       case 'dictationTranslation':
+        if (_dictationOpening) return;
         final tree = _tree;
         if (tree == null) {
-          _toast(_tracksFailed ? '曲目加载失败，请刷新后重试' : '曲目列表加载中，请稍候');
+          _toast(
+            _tracksFailed
+                ? l10n.workPageOnMoreActionToast2
+                : l10n.workPageOnMoreActionToast,
+          );
           return;
         }
-        if (_selection.paths.isEmpty) {
-          _toast('请先勾选需要听写翻译的媒体文件');
-          return;
+        final automatic = _selection.paths.isEmpty;
+        _dictationOpening = true;
+        try {
+          final tracks = automatic
+              ? await DictationMediaMatcher.selectForDictation(_indexForTree())
+              : _collectDictationMedia(tree)
+                    .where(
+                      (track) =>
+                          _selection.paths.contains(track.path) &&
+                          ((track.downloadUrl?.isNotEmpty ?? false) ||
+                              (track.url?.isNotEmpty ?? false)),
+                    )
+                    .toList();
+          if (!mounted) return;
+          if (tracks.isEmpty) {
+            _toast(l10n.workPageOnMoreActionToast4);
+            return;
+          }
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => DictationTranslationPage(
+                app: app,
+                work: work,
+                tracks: tracks,
+                automaticallyMatched: automatic,
+              ),
+            ),
+          );
+        } finally {
+          _dictationOpening = false;
         }
-        final tracks = _collectDictationMedia(tree)
-            .where(
-              (track) =>
-                  _selection.paths.contains(track.path) &&
-                  ((track.downloadUrl?.isNotEmpty ?? false) ||
-                      (track.url?.isNotEmpty ?? false)),
-            )
-            .toList();
-        if (tracks.isEmpty) {
-          _toast('所选项目中没有可提交给 kikoeta-transl 的媒体文件');
-          return;
-        }
-        if (!mounted) return;
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) =>
-                DictationTranslationPage(app: app, work: work, tracks: tracks),
-          ),
-        );
         return;
       case 'asmr':
         await _openExternalWork('https://asmr.one/work/${work.rj}');
@@ -1136,7 +1189,7 @@ class _WorkPageState extends State<WorkPage> {
     } else if (_isVideo(n)) {
       _openVideoChooser(n);
     } else {
-      _toast('暂不支持查看该类型：${n.title}');
+      _toast(context.l10n.workPageOpenFileToast((n.title).toString()));
     }
   }
 
@@ -1149,7 +1202,7 @@ class _WorkPageState extends State<WorkPage> {
     ];
     final start = images.indexWhere((node) => identical(node, current));
     if (start < 0) {
-      _toast('文件流需登录后可用');
+      _toast(context.l10n.playerPageOpenCurrentToast);
       return;
     }
     _openPreview([for (final node in images) node.url!], start);
@@ -1164,8 +1217,9 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _showTextViewer(MediaNode n) async {
+    final l10n = context.l10n;
     if (n.url == null) {
-      _toast('文件流需登录后可用');
+      _toast(l10n.playerPageOpenCurrentToast);
       return;
     }
     final bytes = await apiGetBytes(url: n.url!);
@@ -1198,7 +1252,7 @@ class _WorkPageState extends State<WorkPage> {
                     text = r.text;
                   });
                 } catch (e) {
-                  _toast('解码失败：$e');
+                  _toast(l10n.workPageApplyEncodingToast((e).toString()));
                 }
               }
 
@@ -1222,7 +1276,7 @@ class _WorkPageState extends State<WorkPage> {
                         const SizedBox(width: 8),
                         PopupMenuButton<String>(
                           initialValue: encoding,
-                          tooltip: '切换编码',
+                          tooltip: l10n.workPageShowTextViewerTooltip,
                           onSelected: applyEncoding,
                           itemBuilder: (_) => _textEncodings.map((e) {
                             final active = e == encoding;
@@ -1311,21 +1365,21 @@ class _WorkPageState extends State<WorkPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
         title: Text(n.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        content: const Text('选择打开方式'),
+        content: Text(context.l10n.workPageOpenVideoChooserText),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _launchExternal(n);
             },
-            child: const Text('外部播放器打开'),
+            child: Text(context.l10n.workPageOpenVideoChooserText3),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _playAsAudio(n);
             },
-            child: const Text('音频方式打开'),
+            child: Text(context.l10n.workPageOpenVideoChooserText2),
           ),
         ],
       ),
@@ -1333,16 +1387,17 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _launchExternal(MediaNode n) async {
+    final l10n = context.l10n;
     final url = n.url;
     if (url == null) {
-      _toast('文件流需登录后可用');
+      _toast(l10n.playerPageOpenCurrentToast);
       return;
     }
     final ok = await launchUrl(
       Uri.parse(url),
       mode: LaunchMode.externalApplication,
     );
-    if (!ok) _toast('打开失败');
+    if (!ok) _toast(l10n.settingsPageOpenRepoToast);
   }
 
   List<PlaylistTrack> _selectedAudioTracks() {
@@ -1374,12 +1429,12 @@ class _WorkPageState extends State<WorkPage> {
 
   void _addToPlaylist() {
     if (_selection.paths.isEmpty) {
-      _toast('请先勾选文件或文件夹');
+      _toast(context.l10n.workPageAddToPlaylistToast);
       return;
     }
     final tracks = _selectedAudioTracks();
     if (tracks.isEmpty) {
-      _toast('所选项目中没有可播放的音频文件');
+      _toast(context.l10n.workPageAddToPlaylistToast3);
       return;
     }
     final existing = app.playlists.keys.toList();
@@ -1397,13 +1452,15 @@ class _WorkPageState extends State<WorkPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    '添加到歌单',
+                  Text(
+                    context.l10n.workPageAddToPlaylistText2,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '已选择 ${tracks.length} 个音频文件',
+                    context.l10n.workPageAddToPlaylistText4(
+                      (tracks.length).toString(),
+                    ),
                     style: TextStyle(fontSize: 12, color: p.muted),
                   ),
                   const SizedBox(height: 10),
@@ -1445,7 +1502,10 @@ class _WorkPageState extends State<WorkPage> {
                             color: newMode ? p.accent : p.dim,
                           ),
                           const SizedBox(width: 10),
-                          const Text('新建歌单', style: TextStyle(fontSize: 13.5)),
+                          Text(
+                            context.l10n.playlistsPageBuildText2,
+                            style: TextStyle(fontSize: 13.5),
+                          ),
                         ],
                       ),
                     ),
@@ -1456,7 +1516,7 @@ class _WorkPageState extends State<WorkPage> {
                       autofocus: true,
                       style: TextStyle(fontSize: 13, color: p.text),
                       decoration: InputDecoration(
-                        hintText: '歌单名称',
+                        hintText: context.l10n.playlistsPageNameHintText,
                         hintStyle: TextStyle(fontSize: 13, color: p.dim),
                         filled: true,
                         fillColor: p.surface2,
@@ -1476,7 +1536,11 @@ class _WorkPageState extends State<WorkPage> {
                       final name = newMode ? nameCtrl.text.trim() : chosen;
                       if (name.isEmpty) {
                         ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(content: Text('请输入歌单名称')),
+                          SnackBar(
+                            content: Text(
+                              context.l10n.workPageAddToPlaylistText3,
+                            ),
+                          ),
                         );
                         return;
                       }
@@ -1484,7 +1548,11 @@ class _WorkPageState extends State<WorkPage> {
                       Navigator.pop(ctx);
                       _selection.clear();
                       setState(() {});
-                      _toast('已添加到「$name」');
+                      _toast(
+                        context.l10n.workPageAddToPlaylistToast2(
+                          (name).toString(),
+                        ),
+                      );
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: p.accent,
@@ -1492,8 +1560,8 @@ class _WorkPageState extends State<WorkPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      '确认添加',
+                    child: Text(
+                      context.l10n.workPageAddToPlaylistText,
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -1528,43 +1596,133 @@ class _WorkPageState extends State<WorkPage> {
     return false;
   }
 
-  /// 长按复选框一侧后开始滑动选中：起手时记下要写入的状态（与起点当前
-  /// 状态相反），之后划过的行统一写成该状态，重复经过的行不会反复翻转。
-  void _beginDragSelect(MediaNode node) {
-    _dragSelectValue = _selection.state(node) != true;
-    _dragApplied.clear();
-    _applyDragSelect(node);
-    HapticFeedback.selectionClick();
+  /// 指针落在哪一行上（只遍历已构建的可见行）。
+  int? _rowIndexAt(Offset globalPosition) {
+    for (var i = 0; i < _visibleRows.length; i++) {
+      final context = _rowKeys[_visibleRows[i].node.path]?.currentContext;
+      final box = context?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) continue;
+      final rect = box.localToGlobal(Offset.zero) & box.size;
+      if (rect.contains(globalPosition)) return i;
+    }
+    return null;
   }
 
-  void _applyDragSelect(MediaNode node) {
-    if (!_dragApplied.add(node.path)) return;
-    _selection.setSelected(node, _dragSelectValue, _tree ?? const []);
+  void _beginDragSelect(MediaNode node) {
+    final anchor = _visibleRows.indexWhere((row) => row.node.path == node.path);
+    if (anchor < 0) return;
+    _dragBasePaths = Set<String>.of(_selection.paths);
+    _dragAnchorRow = anchor;
+    _dragLastRow = null;
+    _dragSelectValue = _selection.state(node) != true;
+    HapticFeedback.selectionClick();
+    _applyDragRange(anchor);
+  }
+
+  /// 从快照重算 [锚点..当前行] 区间；划出区间的行随快照一起复原。
+  void _applyDragRange(int rowIndex) {
+    final base = _dragBasePaths;
+    final anchor = _dragAnchorRow;
+    if (base == null || anchor == null || _dragLastRow == rowIndex) return;
+    _dragLastRow = rowIndex;
+    final roots = _tree ?? const <MediaNode>[];
+    _selection.restorePaths(base);
+    for (
+      var i = math.min(anchor, rowIndex);
+      i <= math.max(anchor, rowIndex);
+      i++
+    ) {
+      _selection.setSelected(_visibleRows[i].node, _dragSelectValue, roots);
+    }
     setState(() {});
   }
 
   void _endDragSelect() {
-    _dragApplied.clear();
+    _stopAutoScrollTimer();
+    _lastDragPosition = null;
+    _dragBasePaths = null;
+    _dragAnchorRow = null;
+    _dragLastRow = null;
+    _mouseDragPending = false;
+    _mouseDownNode = null;
   }
 
-  /// 手指移到哪一行就选中哪一行：只遍历当前可见行（懒加载列表里已构建
-  /// 的部分），用行自身的 RenderBox 做命中判断。
-  void _applyDragSelectAt(Offset globalPosition) {
-    _autoScrollForDrag(globalPosition);
-    for (final row in _visibleRows) {
-      final context = _rowKeys[row.node.path]?.currentContext;
-      final box = context?.findRenderObject();
-      if (box is! RenderBox || !box.hasSize) continue;
-      final rect = box.localToGlobal(Offset.zero) & box.size;
-      if (!rect.contains(globalPosition)) continue;
-      _applyDragSelect(row.node);
-      return;
+  void _selectFiles({required bool invert}) {
+    final roots = _tree;
+    if (roots == null) return;
+    final scope = _indexForVisibleTree();
+    _endDragSelect();
+    setState(() {
+      if (invert) {
+        _selection.invert(roots, scope: scope);
+      } else {
+        _selection.selectAll(roots, scope: scope);
+      }
+    });
+  }
+
+  /// 鼠标在 Windows 上同一次拖动不会走长按，所以按下后越过 slop 即起手；
+  /// 触摸屏仍走长按，避免和页面滚动争手势。
+  void _onSelectPointerDown(PointerDownEvent event, MediaNode node) {
+    if (event.kind != PointerDeviceKind.mouse) return;
+    if (_dragBasePaths != null) return;
+    _mouseDownNode = node;
+    _mouseDownPosition = event.position;
+    _mouseDragPending = true;
+  }
+
+  void _onSelectPointerMove(PointerMoveEvent event) {
+    if (!_mouseDragPending) return;
+    final node = _mouseDownNode;
+    if (node == null) return;
+    if (_dragBasePaths == null) {
+      if ((event.position - _mouseDownPosition).distance < kTouchSlop) return;
+      _beginDragSelect(node);
     }
+    _onDragMove(event.position);
+  }
+
+  void _onSelectPointerUp(PointerUpEvent event) {
+    if (!_mouseDragPending) return;
+    _endDragSelect();
+  }
+
+  /// 拖动中指针位置更新：命中某行就延展区间，靠近视口上下边缘时继续滚动。
+  void _onDragMove(Offset globalPosition) {
+    _lastDragPosition = globalPosition;
+    _autoScrollForDrag(globalPosition);
+    final rowIndex = _rowIndexAt(globalPosition);
+    if (rowIndex != null) _applyDragRange(rowIndex);
+    _ensureAutoScrollTimer();
+  }
+
+  /// 指针停在边缘不动时不会再收到 move 事件，用定时器继续滚动并延展区间。
+  void _ensureAutoScrollTimer() {
+    if (_autoScrollTimer != null) return;
+    _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      final position = _lastDragPosition;
+      if (position == null || _dragBasePaths == null) {
+        _stopAutoScrollTimer();
+        return;
+      }
+      if (!_autoScrollForDrag(position)) {
+        _stopAutoScrollTimer();
+        return;
+      }
+      final rowIndex = _rowIndexAt(position);
+      if (rowIndex != null) _applyDragRange(rowIndex);
+    });
+  }
+
+  void _stopAutoScrollTimer() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = null;
   }
 
   /// 拖到视口上下边缘时继续滚动，否则手指出屏后就只能选到已构建的行。
-  void _autoScrollForDrag(Offset globalPosition) {
-    if (!_pageScroll.hasClients) return;
+  /// 返回是否真的滚动了。
+  bool _autoScrollForDrag(Offset globalPosition) {
+    if (!_pageScroll.hasClients) return false;
     final screen = MediaQuery.sizeOf(context);
     const edge = 72.0;
     const step = 14.0;
@@ -1575,13 +1733,14 @@ class _WorkPageState extends State<WorkPage> {
     } else if (globalPosition.dy < edge + kToolbarHeight) {
       delta = -step;
     }
-    if (delta == 0) return;
+    if (delta == 0) return false;
     final next = (position.pixels + delta).clamp(
       position.minScrollExtent,
       position.maxScrollExtent,
     );
-    if (next == position.pixels) return;
+    if (next == position.pixels) return false;
     _pageScroll.jumpTo(next);
+    return true;
   }
 
   Widget _nodeRow(
@@ -1610,8 +1769,9 @@ class _WorkPageState extends State<WorkPage> {
     );
     return InkWell(
       onLongPress: () async {
+        final l10n = context.l10n;
         await Clipboard.setData(ClipboardData(text: n.title));
-        if (mounted) _toast('已复制文件名：${n.title}');
+        if (mounted) _toast(l10n.workPageNodeRowToast((n.title).toString()));
       },
       onTap: () {
         if (n.isDir) {
@@ -1674,24 +1834,31 @@ class _WorkPageState extends State<WorkPage> {
                 ],
               ),
             ),
-            // 复选框一侧兼作滑动选中的起手区：长按进入滑动选中，拖动时按
-            // 手指命中的行写入状态；垂直拖动交给外层的页面滚动。
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onLongPressStart: (_) => _beginDragSelect(n),
-              onLongPressMoveUpdate: (details) =>
-                  _applyDragSelectAt(details.globalPosition),
-              onLongPressEnd: (_) => _endDragSelect(),
-              onLongPressCancel: _endDragSelect,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Checkbox(
-                  tristate: n.isDir,
-                  value: checked,
-                  activeColor: p.accent,
-                  visualDensity: VisualDensity.compact,
-                  onChanged: (_) =>
-                      setState(() => _selection.toggle(n, _tree ?? const [])),
+            // 复选框一侧兼作滑动选中区：触摸屏长按起手，鼠标按住越过 slop
+            // 即起手（Windows 上鼠标拖拽不会触发长按）；划过的区间成片切换，
+            // 缩回则复原。
+            Listener(
+              onPointerDown: (event) => _onSelectPointerDown(event, n),
+              onPointerMove: _onSelectPointerMove,
+              onPointerUp: _onSelectPointerUp,
+              onPointerCancel: (_) => _onSelectPointerUp,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onLongPressStart: (_) => _beginDragSelect(n),
+                onLongPressMoveUpdate: (details) =>
+                    _onDragMove(details.globalPosition),
+                onLongPressEnd: (_) => _endDragSelect(),
+                onLongPressCancel: _endDragSelect,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Checkbox(
+                    tristate: n.isDir,
+                    value: checked,
+                    activeColor: p.accent,
+                    visualDensity: VisualDensity.compact,
+                    onChanged: (_) =>
+                        setState(() => _selection.toggle(n, _tree ?? const [])),
+                  ),
                 ),
               ),
             ),
@@ -1713,12 +1880,24 @@ class _WorkPageState extends State<WorkPage> {
     final visibleTree = _tree == null ? null : _indexForVisibleTree().roots;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('作品详情'),
+        title: Text(context.l10n.workDetails),
         leading: const BackButton(),
         actions: [
-          _markButton(),
+          if (_selection.paths.isNotEmpty) ...[
+            IconButton(
+              tooltip: context.l10n.selectAll,
+              onPressed: () => _selectFiles(invert: false),
+              icon: const Icon(Icons.select_all),
+            ),
+            IconButton(
+              tooltip: context.l10n.invertSelection,
+              onPressed: () => _selectFiles(invert: true),
+              icon: const Icon(Icons.flip_to_back),
+            ),
+          ] else
+            _markButton(),
           PopupMenuButton<String>(
-            tooltip: '更多',
+            tooltip: context.l10n.more,
             icon: const Icon(Icons.more_vert),
             onSelected: _onMoreAction,
             itemBuilder: (_) => [
@@ -1728,53 +1907,59 @@ class _WorkPageState extends State<WorkPage> {
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onLongPress: _onDeleteWorkLongPress,
-                    child: const _WorkMenuEntry(
+                    child: _WorkMenuEntry(
                       icon: Icons.delete_outline,
-                      label: '删除',
+                      label: context.l10n.delete,
                       destructive: true,
                     ),
                   ),
                 ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'refresh',
-                child: _WorkMenuEntry(icon: Icons.refresh, label: '刷新'),
+                child: _WorkMenuEntry(
+                  icon: Icons.refresh,
+                  label: context.l10n.refresh,
+                ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'dictationTranslation',
-                child: _WorkMenuEntry(icon: Icons.graphic_eq, label: '听写翻译'),
+                child: _WorkMenuEntry(
+                  icon: Icons.graphic_eq,
+                  label: context.l10n.dictationTranslationPageBuildText,
+                ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'addToPlaylist',
                 child: _WorkMenuEntry(
                   icon: Icons.playlist_add,
-                  label: '添加到播放列表',
+                  label: context.l10n.workPageBuildLabel2,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'review',
                 child: _WorkMenuEntry(
                   icon: Icons.chat_bubble_outline,
-                  label: '评论',
+                  label: context.l10n.workPageBuildLabel,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'asmr',
                 child: _WorkMenuEntry(
                   icon: Icons.open_in_new,
-                  label: '跳转 asmr.one',
+                  label: context.l10n.workPageBuildLabel5,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'dlsite',
                 child: _WorkMenuEntry(
                   icon: Icons.open_in_new,
-                  label: '跳转 DLsite',
+                  label: context.l10n.workPageBuildLabel4,
                 ),
               ),
               PopupMenuItem(
                 value: 'mediaOnly',
                 child: MenuItem(
-                  label: '仅显示媒体文件',
+                  label: context.l10n.workPageBuildLabel3,
                   selected: app.mediaFilesOnly,
                   checkbox: true,
                 ),
@@ -1904,7 +2089,9 @@ class _WorkPageState extends State<WorkPage> {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                '时长 ${work.dur}',
+                                context.l10n.workPageBuildText9(
+                                  (work.dur).toString(),
+                                ),
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   color: p.muted,
@@ -1921,13 +2108,18 @@ class _WorkPageState extends State<WorkPage> {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () async {
+                              final l10n = context.l10n;
                               try {
                                 await ApiService.toggleFavorite(app, work);
                                 if (mounted) {
                                   setState(() {});
                                 }
                               } catch (e) {
-                                if (mounted) _toast('收藏操作失败：$e');
+                                if (mounted) {
+                                  _toast(
+                                    l10n.workPageBuildToast((e).toString()),
+                                  );
+                                }
                               }
                             },
                             icon: Icon(
@@ -1935,7 +2127,9 @@ class _WorkPageState extends State<WorkPage> {
                               size: 17,
                             ),
                             label: Text(
-                              fav ? '已收藏' : '收藏',
+                              fav
+                                  ? context.l10n.workPageBuildText
+                                  : context.l10n.favorites,
                               style: const TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -1964,10 +2158,10 @@ class _WorkPageState extends State<WorkPage> {
                                   : const Icon(Icons.translate, size: 17),
                               label: Text(
                                 _translating
-                                    ? '翻译中'
+                                    ? context.l10n.workPageBuildText2
                                     : app.translated.containsKey(work.rj)
-                                    ? '取消翻译'
-                                    : '翻译',
+                                    ? context.l10n.workPageBuildText5
+                                    : context.l10n.translate,
                                 style: const TextStyle(fontSize: 13),
                               ),
                               style: OutlinedButton.styleFrom(
@@ -1989,8 +2183,8 @@ class _WorkPageState extends State<WorkPage> {
                           child: OutlinedButton.icon(
                             onPressed: _addToPlaylist,
                             icon: const Icon(Icons.playlist_add, size: 17),
-                            label: const Text(
-                              '添加至歌单',
+                            label: Text(
+                              context.l10n.workPageBuildText6,
                               style: TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -2007,8 +2201,8 @@ class _WorkPageState extends State<WorkPage> {
                           child: OutlinedButton.icon(
                             onPressed: _downloadSelected,
                             icon: const Icon(Icons.download_outlined, size: 17),
-                            label: const Text(
-                              '下载选中项目',
+                            label: Text(
+                              context.l10n.workPageBuildText7,
                               style: TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -2039,7 +2233,9 @@ class _WorkPageState extends State<WorkPage> {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      _tree == null ? '曲目列表' : '曲目列表（文件夹结构）',
+                      _tree == null
+                          ? context.l10n.workPageBuildText3
+                          : context.l10n.workPageBuildText8,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -2113,7 +2309,7 @@ class _WorkPageState extends State<WorkPage> {
             children: [
               Expanded(
                 child: Text(
-                  '相似作品',
+                  context.l10n.workPageSimilarWorksSliversText,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -2199,13 +2395,13 @@ class _WorkPageState extends State<WorkPage> {
                         vertical: 4,
                       ),
                       child: Text(
-                        '加载更多相似作品',
+                        context.l10n.workPageSimilarWorksSliversText2,
                         style: TextStyle(fontSize: 12, color: p.accent),
                       ),
                     ),
                   )
                 : Text(
-                    '已显示全部相似作品',
+                    context.l10n.workPageSimilarWorksSliversText3,
                     style: TextStyle(fontSize: 12, color: p.dim),
                   ),
           ),
@@ -2237,7 +2433,7 @@ class _WorkPageState extends State<WorkPage> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '查看全部文件',
+              context.l10n.workPageAllFilesRowText,
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
@@ -2289,10 +2485,10 @@ class _WorkPageState extends State<WorkPage> {
       child: Center(
         child: Text(
           _tracksFailed
-              ? '无网络连接，无法获取曲目列表'
+              ? context.l10n.workPageTreePlaceholderText3
               : app.mediaFilesOnly
-              ? '该作品没有音频或视频文件'
-              : '该作品暂无曲目',
+              ? context.l10n.workPageTreePlaceholderText2
+              : context.l10n.workPageTreePlaceholderText,
           style: TextStyle(fontSize: 12.5, color: p.dim),
         ),
       ),
@@ -2302,7 +2498,7 @@ class _WorkPageState extends State<WorkPage> {
   void _showCover() {
     final url = work.coverUrl;
     if (url == null || url.isEmpty) {
-      _toast('文件流需登录后可用');
+      _toast(context.l10n.playerPageOpenCurrentToast);
       return;
     }
     _openPreview([url], 0);
@@ -2315,6 +2511,7 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _selectVoiceActor() async {
+    final l10n = context.l10n;
     final names = work.va
         .replaceFirst('CV. ', '')
         .split(' / ')
@@ -2346,7 +2543,7 @@ class _WorkPageState extends State<WorkPage> {
                   children: [
                     Expanded(
                       child: Text(
-                        '选择 CV',
+                        l10n.workPageSelectedText,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -2355,7 +2552,7 @@ class _WorkPageState extends State<WorkPage> {
                       ),
                     ),
                     IconButton(
-                      tooltip: '关闭',
+                      tooltip: l10n.close,
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: () => Navigator.of(dialogContext).pop(),
                     ),
@@ -2473,7 +2670,7 @@ class _WorkPageState extends State<WorkPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
         ),
         child: Text(
-          '多语言',
+          context.l10n.workPageLanguageEditionsButtonText,
           style: TextStyle(
             fontSize: 11.5,
             decoration: TextDecoration.underline,
@@ -2515,12 +2712,13 @@ class _WorkPageState extends State<WorkPage> {
 
   /// 长按翻译键：快速切换翻译引擎
   Future<void> _pickEngine() async {
-    const engines = [
-      ('google', 'Google（免费，无需 Key）'),
-      ('microsoft', 'Microsoft（免费，无需 Key）'),
-      ('deepl', 'DeepL（免费版 Key）'),
-      ('index', 'Index-Translate（官方接口）'),
-      ('openai', 'OpenAI 兼容（可配置）'),
+    final l10n = context.l10n;
+    final engines = [
+      ('google', l10n.workPageEnginesEngines3),
+      ('microsoft', l10n.workPageEnginesEngines4),
+      ('deepl', l10n.workPageEnginesEngines),
+      ('index', l10n.workPageEnginesEngines5),
+      ('openai', l10n.workPageEnginesEngines2),
     ];
     final selected = await showModalBottomSheet<String>(
       context: context,
@@ -2547,7 +2745,7 @@ class _WorkPageState extends State<WorkPage> {
               ),
               const SizedBox(height: 14),
               Text(
-                '切换翻译引擎',
+                l10n.workPageSelectedText2,
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
@@ -2609,23 +2807,24 @@ class _WorkPageState extends State<WorkPage> {
 
   /// 长按标签：确认加入黑名单
   Future<void> _blacklistTag(String t) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('加入黑名单'),
+        title: Text(l10n.workPageOkText),
         content: Text(
-          '将标签「$t」加入黑名单？\n加入后，含该标签的作品将从首页与搜索中过滤。',
+          l10n.workPageOkText2((t).toString()),
           style: TextStyle(fontSize: 13.5, color: p.text, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('确定', style: TextStyle(color: p.red)),
+            child: Text(l10n.confirm, style: TextStyle(color: p.red)),
           ),
         ],
       ),
@@ -2636,68 +2835,74 @@ class _WorkPageState extends State<WorkPage> {
   }
 
   Future<void> _translateTitles() async {
+    final l10n = context.l10n;
     // 已翻译：再次点击取消翻译（恢复原文）
     if (app.translated.containsKey(work.rj)) {
       app.removeTranslated(work.rj);
       if (mounted) setState(() {});
-      _toast('已取消翻译');
+      _toast(l10n.workPageTranslateTitlesToast);
       return;
     }
     if (app.engine == 'openai' || app.engine == 'index') {
       final cfg = app.activeAiConfig;
       if ((cfg['base'] ?? '').trim().isEmpty ||
           (cfg['model'] ?? '').trim().isEmpty) {
-        _toast('请先在设置中配置 API 地址与模型名');
+        _toast(l10n.workPageTranslateTitlesToast4);
         return;
       }
     } else if (app.engine == 'deepl') {
       if (app.deeplKey.trim().isEmpty) {
-        _toast('请先在设置中填写 DeepL 免费版 API Key');
+        _toast(l10n.workPageTranslateTitlesToast6);
         return;
       }
     } else if (app.engine != 'google' && app.engine != 'microsoft') {
-      _toast('未知翻译引擎');
+      _toast(l10n.workPageTranslateTitlesToast2);
       return;
     }
     if (_tree == null) {
-      _toast(_tracksFailed ? '无网络连接，无法获取曲目列表' : '曲目列表加载中，请稍候');
+      _toast(
+        _tracksFailed
+            ? l10n.workPageTreePlaceholderText3
+            : l10n.workPageOnMoreActionToast,
+      );
       return;
     }
     final audio = _collectAudio(_tree!);
     final lines = [work.title, ...audio.map((n) => n.title)];
-    _toast('正在翻译 ${lines.length} 行标题…');
+    _toast(l10n.workPageTranslateTitlesToast5((lines.length).toString()));
     setState(() => _translating = true);
     try {
       final joined = lines.join('\n');
+      final target = app.resolvedTranslationTarget;
       final zh = switch (app.engine) {
         'google' => await apiTranslateGoogle(
           text: joined,
           src: 'ja',
-          dst: app.translationTarget,
+          dst: target,
         ),
         'microsoft' => await apiTranslateMicrosoft(
           text: joined,
           src: 'ja',
-          dst: app.translationTarget,
+          dst: target,
         ),
         'deepl' => await apiTranslateDeepl(
           text: joined,
           src: 'ja',
-          dst: app.translationTarget,
+          dst: target,
           apiKey: app.deeplKey,
         ),
         _ => await apiTranslateOpenai(
           baseUrl: app.activeAiConfig['base']!,
           model: app.activeAiConfig['model']!,
           apiKey: app.activeAiConfig['key'] ?? '',
-          text: '[[KIKOETA_TARGET:${app.translationTarget}]]\n$joined',
+          text: '[[KIKOETA_TARGET:$target]]\n$joined',
           temperature: 0.2,
         ),
       };
       // 保留空行位置，避免兼容模型漏译某一行后把后续曲目错位映射。
       final parts = zh.replaceAll('\r\n', '\n').split('\n');
       if (parts.every((part) => part.trim().isEmpty)) {
-        throw const FormatException('翻译结果为空');
+        throw FormatException(l10n.workPageTranslateTitlesFormatException);
       }
       final trackZh = <String, String>{};
       for (var i = 0; i < audio.length; i++) {
@@ -2712,9 +2917,9 @@ class _WorkPageState extends State<WorkPage> {
         trackZh,
       );
       if (mounted) setState(() {});
-      _toast('翻译完成（标题 + ${trackZh.length} 个曲目）');
+      _toast(l10n.workPageTranslateTitlesToast7((trackZh.length).toString()));
     } catch (e) {
-      _toast('翻译失败：$e');
+      _toast(l10n.workPageTranslateTitlesToast3((e).toString()));
     } finally {
       if (mounted) setState(() => _translating = false);
     }
@@ -2815,6 +3020,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     if (_saving) return;
     setState(() => _saving = true);
     try {
@@ -2832,24 +3038,25 @@ class _ReviewDialogState extends State<_ReviewDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      _notify('保存失败：$e');
+      _notify(l10n.workPageSubmitNotify((e).toString()));
     }
   }
 
   Future<void> _delete() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除标记'),
-        content: const Text('确定要删除标记吗？'),
+        title: Text(l10n.workPageConfirmedText),
+        content: Text(l10n.workPageConfirmedText3),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('确定'),
+            child: Text(l10n.confirm),
           ),
         ],
       ),
@@ -2863,7 +3070,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      _notify('删除失败：$e');
+      _notify(l10n.workPageDeleteNotify((e).toString()));
     }
   }
 
@@ -2878,8 +3085,8 @@ class _ReviewDialogState extends State<_ReviewDialog> {
     return AlertDialog(
       backgroundColor: p.surface,
       surfaceTintColor: Colors.transparent,
-      title: const Text(
-        '我的评论',
+      title: Text(
+        context.l10n.workPageBuildText4,
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
       ),
       content: SizedBox(
@@ -2937,7 +3144,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
               maxLines: 6,
               style: TextStyle(fontSize: 13, color: p.text),
               decoration: InputDecoration(
-                hintText: '写评论…',
+                hintText: context.l10n.workPageBuildHintText,
                 hintStyle: TextStyle(fontSize: 13, color: p.dim),
                 filled: true,
                 fillColor: p.surface2,
@@ -2963,12 +3170,15 @@ class _ReviewDialogState extends State<_ReviewDialog> {
       actions: [
         TextButton(
           onPressed: _saving ? null : _delete,
-          child: Text('删除标记', style: TextStyle(color: p.red)),
+          child: Text(
+            context.l10n.workPageConfirmedText,
+            style: TextStyle(color: p.red),
+          ),
         ),
         TextButton(
           onPressed: _saving ? null : _submit,
           child: Text(
-            '确定',
+            context.l10n.confirm,
             style: TextStyle(color: p.accent, fontWeight: FontWeight.w600),
           ),
         ),
@@ -3452,7 +3662,7 @@ class _ImagePreviewDialogState extends State<_ImagePreviewDialog>
               right: 8,
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
-                tooltip: '关闭',
+                tooltip: context.l10n.close,
                 icon: const Icon(Icons.close, color: Colors.white, size: 28),
               ),
             ),
@@ -3465,7 +3675,7 @@ class _ImagePreviewDialogState extends State<_ImagePreviewDialog>
                   child: _chromeBox(
                     _sideButton(
                       icon: Icons.chevron_left,
-                      tooltip: '上一张',
+                      tooltip: context.l10n.workPageBuildTooltip,
                       onPressed: () => _turn(-1),
                     ),
                   ),
@@ -3480,7 +3690,7 @@ class _ImagePreviewDialogState extends State<_ImagePreviewDialog>
                   child: _chromeBox(
                     _sideButton(
                       icon: Icons.chevron_right,
-                      tooltip: '下一张',
+                      tooltip: context.l10n.workPageBuildTooltip2,
                       onPressed: () => _turn(1),
                     ),
                   ),

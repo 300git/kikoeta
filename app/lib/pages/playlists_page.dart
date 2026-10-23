@@ -4,6 +4,7 @@ import '../data.dart';
 import '../routes.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 
 class PlaylistsPage extends StatelessWidget {
   final AppState app;
@@ -18,7 +19,10 @@ class PlaylistsPage extends StatelessWidget {
             ? AppColors.dark
             : AppColors.light;
         return Scaffold(
-          appBar: AppBar(title: const Text('歌单'), leading: const BackButton()),
+          appBar: AppBar(
+            title: Text(context.l10n.morePageBuildRow),
+            leading: const BackButton(),
+          ),
           floatingActionButton: app.sfwMode
               ? null
               : FloatingActionButton.extended(
@@ -26,19 +30,22 @@ class PlaylistsPage extends StatelessWidget {
                   backgroundColor: p.accent,
                   foregroundColor: Colors.white,
                   icon: const Icon(Icons.add, size: 20),
-                  label: const Text('新建歌单', style: TextStyle(fontSize: 13)),
+                  label: Text(
+                    context.l10n.playlistsPageBuildText2,
+                    style: TextStyle(fontSize: 13),
+                  ),
                 ),
           body: app.sfwMode
               ? Center(
                   child: Text(
-                    'SFW 模式下不显示歌单',
+                    context.l10n.playlistsPageBuildText4,
                     style: TextStyle(fontSize: 13, color: p.dim),
                   ),
                 )
               : app.playlists.isEmpty
               ? Center(
                   child: Text(
-                    '暂无歌单，点击右下角新建',
+                    context.l10n.playlistsPageBuildText5,
                     style: TextStyle(fontSize: 13, color: p.dim),
                   ),
                 )
@@ -95,7 +102,9 @@ class PlaylistsPage extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${entries.length} 个条目',
+                                    context.l10n.playlistsPageBuildText7(
+                                      (entries.length).toString(),
+                                    ),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: p.dim,
@@ -112,14 +121,16 @@ class PlaylistsPage extends StatelessWidget {
                                   app.deletePlaylist(name);
                                 }
                               },
-                              itemBuilder: (_) => const [
+                              itemBuilder: (_) => [
                                 PopupMenuItem(
                                   value: 'rename',
-                                  child: Text('重命名'),
+                                  child: Text(
+                                    context.l10n.playlistsPageBuildText,
+                                  ),
                                 ),
                                 PopupMenuItem(
                                   value: 'delete',
-                                  child: Text('删除'),
+                                  child: Text(context.l10n.delete),
                                 ),
                               ],
                               icon: Icon(
@@ -140,6 +151,7 @@ class PlaylistsPage extends StatelessWidget {
   }
 
   Future<void> _createPlaylist(BuildContext context) async {
+    final l10n = context.l10n;
     final p = Theme.of(context).brightness == Brightness.dark
         ? AppColors.dark
         : AppColors.light;
@@ -148,13 +160,13 @@ class PlaylistsPage extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('新建歌单'),
+        title: Text(l10n.playlistsPageBuildText2),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           style: TextStyle(fontSize: 13, color: p.text),
           decoration: InputDecoration(
-            hintText: '歌单名称',
+            hintText: l10n.playlistsPageNameHintText,
             hintStyle: TextStyle(fontSize: 13, color: p.dim),
             filled: true,
             fillColor: p.surface2,
@@ -164,11 +176,11 @@ class PlaylistsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            child: const Text('创建'),
+            child: Text(l10n.playlistsPageNameText),
           ),
         ],
       ),
@@ -179,6 +191,7 @@ class PlaylistsPage extends StatelessWidget {
   }
 
   Future<void> _renamePlaylist(BuildContext context, String oldName) async {
+    final l10n = context.l10n;
     final p = Theme.of(context).brightness == Brightness.dark
         ? AppColors.dark
         : AppColors.light;
@@ -187,7 +200,7 @@ class PlaylistsPage extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: const Text('重命名歌单'),
+        title: Text(l10n.playlistsPageNameText2),
         content: TextField(
           controller: ctrl,
           autofocus: true,
@@ -201,11 +214,11 @@ class PlaylistsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            child: const Text('保存'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -250,9 +263,9 @@ class PlaylistDetailPage extends StatelessWidget {
     PlaylistTrack track,
   ) {
     if (track.url == null || track.url!.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('该音频缺少可用文件流，请从作品详情重新添加')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.playlistsPagePlayTrackText2)),
+      );
       return;
     }
     final files = <MediaNode>[];
@@ -275,9 +288,9 @@ class PlaylistDetailPage extends StatelessWidget {
       }
     }
     if (files.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('歌单中没有可播放的音频')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.playlistsPagePlayTrackText)),
+      );
       return;
     }
     app.startPlayback(
@@ -311,7 +324,9 @@ class PlaylistDetailPage extends StatelessWidget {
           body: entries.isEmpty
               ? Center(
                   child: Text(
-                    hiddenBySfw ? 'SFW 模式下不显示歌单内容' : '歌单为空',
+                    hiddenBySfw
+                        ? context.l10n.playlistsPageBuildText6
+                        : context.l10n.playlistsPageBuildText3,
                     style: TextStyle(fontSize: 13, color: p.dim),
                   ),
                 )
@@ -325,8 +340,8 @@ class PlaylistDetailPage extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             isDesktop
-                                ? '拖动标题调整作品顺序，拖动媒体调整播放顺序'
-                                : '长按标题调整作品顺序，长按媒体调整播放顺序',
+                                ? context.l10n.playlistsPageBuildText8
+                                : context.l10n.playlistsPageBuildText9,
                             style: TextStyle(fontSize: 11.5, color: p.dim),
                           ),
                         ],
@@ -387,12 +402,15 @@ class PlaylistDetailPage extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '${e.tracks.length} 个音频',
+                                context.l10n.playlistsPageHeaderText(
+                                  (e.tracks.length).toString(),
+                                ),
                                 style: TextStyle(fontSize: 11, color: p.dim),
                               ),
                               const SizedBox(width: 4),
                               Tooltip(
-                                message: '拖动调整作品顺序',
+                                message:
+                                    context.l10n.playlistsPageHeaderMessage,
                                 child: Icon(
                                   Icons.drag_indicator,
                                   size: 17,
@@ -408,7 +426,8 @@ class PlaylistDetailPage extends StatelessWidget {
                                   color: p.dim,
                                 ),
                                 visualDensity: VisualDensity.compact,
-                                tooltip: '移除作品',
+                                tooltip:
+                                    context.l10n.playlistsPageHeaderTooltip,
                               ),
                             ],
                           );
@@ -480,7 +499,9 @@ class PlaylistDetailPage extends StatelessWidget {
                                             ),
                                           const SizedBox(width: 4),
                                           Tooltip(
-                                            message: '拖动调整播放顺序',
+                                            message: context
+                                                .l10n
+                                                .playlistsPageRowMessage,
                                             child: Icon(
                                               Icons.drag_indicator,
                                               size: 15,

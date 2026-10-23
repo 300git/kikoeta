@@ -11,6 +11,8 @@ import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'data.dart';
+import 'l10n/generated/app_localizations.dart';
+import 'l10n/app_language.dart';
 import 'pages/favorites_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
@@ -38,6 +40,7 @@ import 'services/theme_reveal.dart';
 import 'src/rust/api/kikoeru_api.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'l10n/strings.dart';
 
 final GlobalKey<ScaffoldMessengerState> appMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -585,7 +588,7 @@ class KikoetaApp extends StatefulWidget {
   State<KikoetaApp> createState() => _KikoetaAppState();
 }
 
-/// 仅监听 MaterialApp 自身依赖的状态（主题模式 / 登录态 / UI 缩放）。
+/// 仅监听 MaterialApp 自身依赖的状态（主题模式 / 登录态 / UI 缩放 / 语言）。
 /// 其余状态变化由各页面自行监听并局部重建，
 /// 避免每次 notify()（音量拖动、播放/暂停、收藏等）都重建整棵应用树导致掉帧。
 class _KikoetaAppState extends State<KikoetaApp>
@@ -596,6 +599,7 @@ class _KikoetaAppState extends State<KikoetaApp>
   late ThemeMode _themeMode;
   late bool _loginRequired;
   late int _uiScalePercent;
+  late String _uiLanguage;
   late int _playbackToggleShortcutKey;
 
   /// 根节点：抓「切换前外观」的截图用
@@ -619,6 +623,7 @@ class _KikoetaAppState extends State<KikoetaApp>
     _themeMode = appState.themeMode;
     _loginRequired = appState.loginRequired;
     _uiScalePercent = appState.uiScalePercent;
+    _uiLanguage = appState.uiLanguage;
     _playbackToggleShortcutKey = appState.playbackToggleShortcutKey;
     appState.addListener(_onChanged);
     _revealAnim.addStatusListener(_onRevealStatus);
@@ -751,12 +756,14 @@ class _KikoetaAppState extends State<KikoetaApp>
     if (_themeMode == appState.themeMode &&
         _loginRequired == appState.loginRequired &&
         _uiScalePercent == appState.uiScalePercent &&
+        _uiLanguage == appState.uiLanguage &&
         _playbackToggleShortcutKey == appState.playbackToggleShortcutKey) {
       return;
     }
     _themeMode = appState.themeMode;
     _loginRequired = appState.loginRequired;
     _uiScalePercent = appState.uiScalePercent;
+    _uiLanguage = appState.uiLanguage;
     _playbackToggleShortcutKey = appState.playbackToggleShortcutKey;
     setState(() {});
   }
@@ -771,7 +778,10 @@ class _KikoetaAppState extends State<KikoetaApp>
 
   Widget _buildApp() {
     return MaterialApp(
-      title: 'Kikoeta',
+      onGenerateTitle: (context) => context.l10n.appName,
+      locale: AppLanguage.localeOverride,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: appMessengerKey,
       navigatorKey: appNavigatorKey,
@@ -1033,20 +1043,20 @@ class _ShellState extends State<Shell> {
                           fontSize: 12,
                         ),
                         labelType: NavigationRailLabelType.all,
-                        destinations: const [
+                        destinations: [
                           NavigationRailDestination(
                             icon: Icon(Icons.home_outlined),
                             selectedIcon: Icon(Icons.home),
-                            label: Text('首页'),
+                            label: Text(context.l10n.home),
                           ),
                           NavigationRailDestination(
                             icon: Icon(Icons.favorite_border),
                             selectedIcon: Icon(Icons.favorite),
-                            label: Text('收藏'),
+                            label: Text(context.l10n.favorites),
                           ),
                           NavigationRailDestination(
                             icon: Icon(Icons.more_horiz),
-                            label: Text('更多'),
+                            label: Text(context.l10n.more),
                           ),
                         ],
                       ),
@@ -1068,20 +1078,20 @@ class _ShellState extends State<Shell> {
                   selectedItemColor: p.accent,
                   unselectedItemColor: p.dim,
                   type: BottomNavigationBarType.fixed,
-                  items: const [
+                  items: [
                     BottomNavigationBarItem(
                       icon: Icon(Icons.home_outlined),
                       activeIcon: Icon(Icons.home),
-                      label: '首页',
+                      label: context.l10n.home,
                     ),
                     BottomNavigationBarItem(
                       icon: Icon(Icons.favorite_border),
                       activeIcon: Icon(Icons.favorite),
-                      label: '收藏',
+                      label: context.l10n.favorites,
                     ),
                     BottomNavigationBarItem(
                       icon: Icon(Icons.more_horiz),
-                      label: '更多',
+                      label: context.l10n.more,
                     ),
                   ],
                 ),

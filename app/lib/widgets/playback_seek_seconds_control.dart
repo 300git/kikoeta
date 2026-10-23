@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../data.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 
 class PlaybackSeekSecondsControl extends StatefulWidget {
   final String label;
@@ -81,7 +82,9 @@ class _PlaybackSeekSecondsControlState
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            tooltip: '减少${widget.label}秒数',
+            tooltip: context.l10n.playbackSeekSecondsControlBuildTooltip(
+              (widget.label).toString(),
+            ),
             onPressed: widget.value > AppState.playbackSeekMinSeconds
                 ? () =>
                       _saveValue(_draftValue - AppState.playbackSeekStepSeconds)
@@ -121,7 +124,9 @@ class _PlaybackSeekSecondsControlState
             ),
           ),
           IconButton(
-            tooltip: '增加${widget.label}秒数',
+            tooltip: context.l10n.playbackSeekSecondsControlBuildTooltip2(
+              (widget.label).toString(),
+            ),
             onPressed: widget.value < AppState.playbackSeekMaxSeconds
                 ? () =>
                       _saveValue(_draftValue + AppState.playbackSeekStepSeconds)

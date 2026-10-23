@@ -1,0 +1,3694 @@
+{
+  "@@locale": "zh",
+  "appName": "Kikoeta",
+  "invertSelection": "反选",
+  "@invertSelection": {
+    "description": "作品详情页：反转当前文件筛选范围内的勾选状态。"
+  },
+  "traditionalChinese": "繁体中文",
+  "@traditionalChinese": {
+    "description": "界面语言列表中的繁体中文选项，目前不可选。"
+  },
+  "@appName": {
+    "description": "应用名称，保留品牌原文。"
+  },
+  "home": "首页",
+  "@home": {
+    "description": "main.dart: scaffold"
+  },
+  "favorites": "收藏",
+  "@favorites": {
+    "description": "main.dart: scaffold"
+  },
+  "more": "更多",
+  "@more": {
+    "description": "main.dart: scaffold"
+  },
+  "voiceActor": "声优",
+  "@voiceActor": {
+    "description": "pages/advanced_filter_page.dart: _tabs"
+  },
+  "circle": "社团",
+  "@circle": {
+    "description": "pages/advanced_filter_page.dart: _tabs"
+  },
+  "tag": "标签",
+  "@tag": {
+    "description": "pages/advanced_filter_page.dart: _tabs"
+  },
+  "retry": "重试",
+  "@retry": {
+    "description": "pages/advanced_filter_page.dart: _buildContent"
+  },
+  "advancedFilterPageBuildText": "高级筛选",
+  "@advancedFilterPageBuildText": {
+    "description": "pages/advanced_filter_page.dart: build"
+  },
+  "advancedFilterPageBuildContentText": "暂无数据",
+  "@advancedFilterPageBuildContentText": {
+    "description": "pages/advanced_filter_page.dart: _buildContent"
+  },
+  "advancedFilterPageBuildContentText2": "没有匹配的参数",
+  "@advancedFilterPageBuildContentText2": {
+    "description": "pages/advanced_filter_page.dart: _buildContent"
+  },
+  "advancedFilterPageBuildSearchFieldHintText": "搜索{placeholder}…",
+  "@advancedFilterPageBuildSearchFieldHintText": {
+    "description": "pages/advanced_filter_page.dart: _buildSearchField",
+    "placeholders": {
+      "placeholder": {
+        "type": "String"
+      }
+    }
+  },
+  "add": "添加",
+  "@add": {
+    "description": "pages/blacklist_page.dart: build"
+  },
+  "cancel": "取消",
+  "@cancel": {
+    "description": "pages/blacklist_page.dart: result"
+  },
+  "blacklistPageTypeLabelsTypeLabels": "RJ号",
+  "@blacklistPageTypeLabelsTypeLabels": {
+    "description": "pages/blacklist_page.dart: _typeLabels"
+  },
+  "blacklist": "黑名单",
+  "@blacklist": {
+    "description": "pages/blacklist_page.dart: build"
+  },
+  "blacklistPageResultText": "添加黑名单",
+  "@blacklistPageResultText": {
+    "description": "pages/blacklist_page.dart: result"
+  },
+  "blacklistPageResultHintText": "要屏蔽的 RJ 号 / 名称",
+  "@blacklistPageResultHintText": {
+    "description": "pages/blacklist_page.dart: result"
+  },
+  "blacklistPageBuildText": "暂无黑名单条目\n黑名单中的作品不会出现在首页与搜索",
+  "@blacklistPageBuildText": {
+    "description": "pages/blacklist_page.dart: build"
+  },
+  "local": "本地",
+  "@local": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "network": "网络",
+  "@network": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "password": "密码",
+  "@password": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageWorkCardTitle": "作品",
+  "@dictationTranslationPageWorkCardTitle": {
+    "description": "pages/dictation_translation_page.dart: _workCard"
+  },
+  "username": "用户名",
+  "@username": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageWorkCardText": "取消任务",
+  "@dictationTranslationPageWorkCardText": {
+    "description": "pages/dictation_translation_page.dart: _workCard"
+  },
+  "dictationTranslationPageInitStateText": "等待开始",
+  "@dictationTranslationPageInitStateText": {
+    "description": "pages/dictation_translation_page.dart: initState"
+  },
+  "dictationTranslationPageTestConnectionToast": "连接成功",
+  "@dictationTranslationPageTestConnectionToast": {
+    "description": "pages/dictation_translation_page.dart: _testConnection"
+  },
+  "dictationTranslationPageLogCardTitle": "运行日志",
+  "@dictationTranslationPageLogCardTitle": {
+    "description": "pages/dictation_translation_page.dart: _logCard"
+  },
+  "dictationTranslationPageStartUpdate": "任务失败",
+  "@dictationTranslationPageStartUpdate": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageBuildText": "听写翻译",
+  "@dictationTranslationPageBuildText": {
+    "description": "pages/dictation_translation_page.dart: build"
+  },
+  "dictationTranslationPageConnectionCardTitle": "服务连接",
+  "@dictationTranslationPageConnectionCardTitle": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageConnectionCardInputDecoration": "服务地址",
+  "@dictationTranslationPageConnectionCardInputDecoration": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageConnectionCardTooltip": "显示密码",
+  "@dictationTranslationPageConnectionCardTooltip": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageConnectionCardTooltip2": "隐藏密码",
+  "@dictationTranslationPageConnectionCardTooltip2": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "testConnection": "测试连接",
+  "@testConnection": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageProgressCardTitle": "听写进度",
+  "@dictationTranslationPageProgressCardTitle": {
+    "description": "pages/dictation_translation_page.dart: _progressCard"
+  },
+  "dictationTranslationPageStartUpdate2": "任务已排队",
+  "@dictationTranslationPageStartUpdate2": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageStartUpdate3": "任务已取消",
+  "@dictationTranslationPageStartUpdate3": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageWorkCardTitle2": "待处理音频",
+  "@dictationTranslationPageWorkCardTitle2": {
+    "description": "pages/dictation_translation_page.dart: _workCard"
+  },
+  "dictationTranslationPageWorkCardText2": "正在取消…",
+  "@dictationTranslationPageWorkCardText2": {
+    "description": "pages/dictation_translation_page.dart: _workCard"
+  },
+  "dictationTranslationPageStartUpdate4": "听写翻译完成",
+  "@dictationTranslationPageStartUpdate4": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageSyncCachedResultsUpdate": "缓存同步完成",
+  "@dictationTranslationPageSyncCachedResultsUpdate": {
+    "description": "pages/dictation_translation_page.dart: _syncCachedResults"
+  },
+  "dictationTranslationPageConnectionCardText": "使用默认账密",
+  "@dictationTranslationPageConnectionCardText": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageWorkCardText3": "开始听写翻译",
+  "@dictationTranslationPageWorkCardText3": {
+    "description": "pages/dictation_translation_page.dart: _workCard"
+  },
+  "dictationTranslationPageStartUpdate5": "正在写入歌词库",
+  "@dictationTranslationPageStartUpdate5": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageStartAppendLog": "错误：{error}",
+  "@dictationTranslationPageStartAppendLog": {
+    "description": "pages/dictation_translation_page.dart: _start",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageConnectionCardInputDecoration2": "本地服务地址（固定）",
+  "@dictationTranslationPageConnectionCardInputDecoration2": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageConnectionCardText2": "安卓设备仅支持网络连接",
+  "@dictationTranslationPageConnectionCardText2": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageTestConnectionToast2": "连接失败：{error}",
+  "@dictationTranslationPageTestConnectionToast2": {
+    "description": "pages/dictation_translation_page.dart: _testConnection",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageCancelToast": "取消失败：{error}",
+  "@dictationTranslationPageCancelToast": {
+    "description": "pages/dictation_translation_page.dart: _cancel",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageConnectionCardText3": "前往 GitHub 下载",
+  "@dictationTranslationPageConnectionCardText3": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageSyncCachedResultsAppendLog": "缓存同步失败：{error}",
+  "@dictationTranslationPageSyncCachedResultsAppendLog": {
+    "description": "pages/dictation_translation_page.dart: _syncCachedResults",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageStartToast": "听写翻译失败：{error}",
+  "@dictationTranslationPageStartToast": {
+    "description": "pages/dictation_translation_page.dart: _start",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageSyncCachedResultsToast": "，去重 {skipped} 个",
+  "@dictationTranslationPageSyncCachedResultsToast": {
+    "description": "pages/dictation_translation_page.dart: _syncCachedResults",
+    "placeholders": {
+      "skipped": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageStartUpdate6": "正在连接 kikoeta-transl",
+  "@dictationTranslationPageStartUpdate6": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageStartException": "kikoeta-transl 任务失败",
+  "@dictationTranslationPageStartException": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageBuildTooltip": "同步 kikoeta-transl 缓存",
+  "@dictationTranslationPageBuildTooltip": {
+    "description": "pages/dictation_translation_page.dart: build"
+  },
+  "dictationTranslationPageConnectionCardText4": "尚未安装 kikoeta-transl？",
+  "@dictationTranslationPageConnectionCardText4": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageTestConnectionFormatException": "kikoeta-transl 服务未就绪",
+  "@dictationTranslationPageTestConnectionFormatException": {
+    "description": "pages/dictation_translation_page.dart: _testConnection"
+  },
+  "dictationTranslationPageLogCardSelectableText": "等待 kikoeta-transl 日志…",
+  "@dictationTranslationPageLogCardSelectableText": {
+    "description": "pages/dictation_translation_page.dart: _logCard"
+  },
+  "dictationTranslationPageStartToast2": "请从作品详情页的更多选项进入并启动听写翻译",
+  "@dictationTranslationPageStartToast2": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageStartToast3": "请返回作品详情页勾选需要听写翻译的媒体文件",
+  "@dictationTranslationPageStartToast3": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageStartFormatException": "kikoeta-transl 未返回任务编号",
+  "@dictationTranslationPageStartFormatException": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageOpenKikoetaTranslDownloadToast": "无法打开 kikoeta-transl 项目页面",
+  "@dictationTranslationPageOpenKikoetaTranslDownloadToast": {
+    "description": "pages/dictation_translation_page.dart: _openKikoetaTranslDownload"
+  },
+  "dictationTranslationPageServiceFormatException": "kikoeta-transl 用户名不能包含冒号",
+  "@dictationTranslationPageServiceFormatException": {
+    "description": "pages/dictation_translation_page.dart: _service"
+  },
+  "dictationTranslationPageCancelAppendLog": "已向 kikoeta-transl 发送取消请求",
+  "@dictationTranslationPageCancelAppendLog": {
+    "description": "pages/dictation_translation_page.dart: _cancel"
+  },
+  "dictationTranslationPageServiceFormatException2": "请输入 kikoeta-transl 用户名和密码",
+  "@dictationTranslationPageServiceFormatException2": {
+    "description": "pages/dictation_translation_page.dart: _service"
+  },
+  "dictationTranslationPageSyncCachedResultsToast2": "kikoeta-transl 没有可同步的缓存结果",
+  "@dictationTranslationPageSyncCachedResultsToast2": {
+    "description": "pages/dictation_translation_page.dart: _syncCachedResults"
+  },
+  "dictationTranslationPageStartFormatException2": "kikoeta-transl 没有返回可用的 LRC 文件",
+  "@dictationTranslationPageStartFormatException2": {
+    "description": "pages/dictation_translation_page.dart: _start"
+  },
+  "dictationTranslationPageProgressCardText": " · 已入库 {savedFiles}",
+  "@dictationTranslationPageProgressCardText": {
+    "description": "pages/dictation_translation_page.dart: _progressCard",
+    "placeholders": {
+      "savedFiles": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageStartToast4": "有 {missing} 个音频缺少可下载地址，请登录作品服务器后重试",
+  "@dictationTranslationPageStartToast4": {
+    "description": "pages/dictation_translation_page.dart: _start",
+    "placeholders": {
+      "missing": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageStartAppendLog2": "任务 {jobId} 已创建，共 {length} 个音频",
+  "@dictationTranslationPageStartAppendLog2": {
+    "description": "pages/dictation_translation_page.dart: _start",
+    "placeholders": {
+      "jobId": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageConnectionCardText5": "下载并启动 kikoeta-transl 后，即可使用本地或网络听写翻译。",
+  "@dictationTranslationPageConnectionCardText5": {
+    "description": "pages/dictation_translation_page.dart: _connectionCard"
+  },
+  "dictationTranslationPageSyncCachedResultsAppendLog2": "同步 {jobId}/{name} 失败：{error}",
+  "@dictationTranslationPageSyncCachedResultsAppendLog2": {
+    "description": "pages/dictation_translation_page.dart: _syncCachedResults",
+    "placeholders": {
+      "jobId": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageSyncCachedResultsAppendLog3": "缓存同步完成：写入 {saved}，去重跳过 {skipped}，失败 {failed}",
+  "@dictationTranslationPageSyncCachedResultsAppendLog3": {
+    "description": "pages/dictation_translation_page.dart: _syncCachedResults",
+    "placeholders": {
+      "saved": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "String"
+      },
+      "failed": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageSyncCachedResultsAppendLog4": "开始同步 {length} 条 kikoeta-transl 缓存任务",
+  "@dictationTranslationPageSyncCachedResultsAppendLog4": {
+    "description": "pages/dictation_translation_page.dart: _syncCachedResults",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageWorkCardText4": "要创建任务，请打开作品详情页，在右上角“更多”中选择“听写翻译”。未勾选文件时会自动匹配，优先选择无效果音版本并保留独立特典；也可先手动勾选指定文件。",
+  "dictationAutoSelectionHint": "已自动匹配：优先无效果音，保留独立特典。请检查媒体列表；需要调整时，可返回作品页手动勾选。",
+  "@dictationTranslationPageWorkCardText4": {
+    "description": "pages/dictation_translation_page.dart: _workCard"
+  },
+  "dictationTranslationPageStartAppendLog3": "已按 {rj} 写入 {savedFiles} 个歌词文件",
+  "@dictationTranslationPageStartAppendLog3": {
+    "description": "pages/dictation_translation_page.dart: _start",
+    "placeholders": {
+      "rj": {
+        "type": "String"
+      },
+      "savedFiles": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageWorkCardText5": "{rj} · 已从作品详情页勾选 {length} 个媒体文件",
+  "@dictationTranslationPageWorkCardText5": {
+    "description": "pages/dictation_translation_page.dart: _workCard",
+    "placeholders": {
+      "rj": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageStartToast5": "完成：{savedFiles} 个歌词已写入 {rj} 歌词库",
+  "@dictationTranslationPageStartToast5": {
+    "description": "pages/dictation_translation_page.dart: _start",
+    "placeholders": {
+      "savedFiles": {
+        "type": "String"
+      },
+      "rj": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageSyncCachedResultsToast3": "同步完成：写入 {saved} 个歌词{value}",
+  "@dictationTranslationPageSyncCachedResultsToast3": {
+    "description": "pages/dictation_translation_page.dart: _syncCachedResults",
+    "placeholders": {
+      "saved": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "dictationTranslationPageProgressCardText2": "已处理 {finishedFiles} / {length}{value}",
+  "@dictationTranslationPageProgressCardText2": {
+    "description": "pages/dictation_translation_page.dart: _progressCard",
+    "placeholders": {
+      "finishedFiles": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "selectMultiple": "多选",
+  "@selectMultiple": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "selectAll": "全选",
+  "@selectAll": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloads": "下载",
+  "@downloads": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloading": "下载中",
+  "@downloading": {
+    "description": "pages/downloads_page.dart: _progressText"
+  },
+  "downloadsPageStatusStatus": "等待中",
+  "@downloadsPageStatusStatus": {
+    "description": "pages/downloads_page.dart: status"
+  },
+  "downloadsPageStatusStatus2": "已完成",
+  "@downloadsPageStatusStatus2": {
+    "description": "pages/downloads_page.dart: status"
+  },
+  "downloadsPageStatusStatus3": "已暂停",
+  "@downloadsPageStatusStatus3": {
+    "description": "pages/downloads_page.dart: status"
+  },
+  "exitSelection": "退出多选",
+  "@exitSelection": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildTooltip": "关闭搜索",
+  "@downloadsPageBuildTooltip": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageStatusStatus4": "下载失败",
+  "@downloadsPageStatusStatus4": {
+    "description": "pages/downloads_page.dart: status"
+  },
+  "downloadsPageStatusStatus5": "等待下载",
+  "@downloadsPageStatusStatus5": {
+    "description": "pages/downloads_page.dart: status"
+  },
+  "deselectAll": "取消全选",
+  "@deselectAll": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildText": "下载文件",
+  "@downloadsPageBuildText": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildText2": "暂无下载音声",
+  "@downloadsPageBuildText2": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildText3": "完整文件结构",
+  "@downloadsPageBuildText3": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildTooltip2": "删除选中作品",
+  "@downloadsPageBuildTooltip2": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildText4": "暂无下载文件",
+  "@downloadsPageBuildText4": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildTooltip3": "搜索已下载作品",
+  "@downloadsPageBuildTooltip3": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildTooltip4": "开始/暂停全部",
+  "@downloadsPageBuildTooltip4": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageBuildTooltip5": "删除选中下载记录",
+  "@downloadsPageBuildTooltip5": {
+    "description": "pages/downloads_page.dart: build"
+  },
+  "downloadsPageFileNameFileName": "暂无正在下载的文件",
+  "@downloadsPageFileNameFileName": {
+    "description": "pages/downloads_page.dart: fileName"
+  },
+  "downloadsPageProgressTextText": "下载中 {percent}%",
+  "@downloadsPageProgressTextText": {
+    "description": "pages/downloads_page.dart: _progressText",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsPageBuildText5": "加载更多（{value}）",
+  "@downloadsPageBuildText5": {
+    "description": "pages/downloads_page.dart: build",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsPageBuildText6": "{rj}  {downloaded}/{length} 个文件已下载",
+  "@downloadsPageBuildText6": {
+    "description": "pages/downloads_page.dart: build",
+    "placeholders": {
+      "rj": {
+        "type": "String"
+      },
+      "downloaded": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsPageStatusStatus6": "下载中 {round}%",
+  "@downloadsPageStatusStatus6": {
+    "description": "pages/downloads_page.dart: status",
+    "placeholders": {
+      "round": {
+        "type": "String"
+      }
+    }
+  },
+  "postponed": "搁置",
+  "@postponed": {
+    "description": "pages/favorites_page.dart: _reviewFilterLabels"
+  },
+  "remove": "移除",
+  "@remove": {
+    "description": "pages/favorites_page.dart: ok"
+  },
+  "all": "全部",
+  "@all": {
+    "description": "pages/favorites_page.dart: _reviewFilterLabels"
+  },
+  "wantToListen": "想听",
+  "@wantToListen": {
+    "description": "pages/favorites_page.dart: _reviewFilterLabels"
+  },
+  "listening": "在听",
+  "@listening": {
+    "description": "pages/favorites_page.dart: _reviewFilterLabels"
+  },
+  "listened": "听过",
+  "@listened": {
+    "description": "pages/favorites_page.dart: _reviewFilterLabels"
+  },
+  "replay": "重听",
+  "@replay": {
+    "description": "pages/favorites_page.dart: _reviewFilterLabels"
+  },
+  "favoritesPageReviewFilterButtonTooltip": "进度筛选",
+  "@favoritesPageReviewFilterButtonTooltip": {
+    "description": "pages/favorites_page.dart: _reviewFilterButton"
+  },
+  "favoritesPageLabelLabel": "取消收藏",
+  "@favoritesPageLabelLabel": {
+    "description": "pages/favorites_page.dart: label"
+  },
+  "loading": "加载中…",
+  "@loading": {
+    "description": "pages/favorites_page.dart: _body"
+  },
+  "favoritesPageReviewSortDropdownTooltip": "排序方式",
+  "@favoritesPageReviewSortDropdownTooltip": {
+    "description": "pages/favorites_page.dart: _reviewSortDropdown"
+  },
+  "favoritesPageReviewSortLabelsReviewSortLabels": "评论数量",
+  "@favoritesPageReviewSortLabelsReviewSortLabels": {
+    "description": "pages/favorites_page.dart: _reviewSortLabels"
+  },
+  "favoritesPageBodyText": "点击重试",
+  "@favoritesPageBodyText": {
+    "description": "pages/favorites_page.dart: _body"
+  },
+  "favoritesPageReviewSortLabelsReviewSortLabels2": "销售数量",
+  "@favoritesPageReviewSortLabelsReviewSortLabels2": {
+    "description": "pages/favorites_page.dart: _reviewSortLabels"
+  },
+  "favoritesPageBuildTooltip": "切换歌单",
+  "@favoritesPageBuildTooltip": {
+    "description": "pages/favorites_page.dart: build"
+  },
+  "favoritesPageReviewSortLabelsReviewSortLabels3": "发布时间",
+  "@favoritesPageReviewSortLabelsReviewSortLabels3": {
+    "description": "pages/favorites_page.dart: _reviewSortLabels"
+  },
+  "favoritesPageReviewSortLabelsReviewSortLabels4": "我的评价",
+  "@favoritesPageReviewSortLabelsReviewSortLabels4": {
+    "description": "pages/favorites_page.dart: _reviewSortLabels"
+  },
+  "favoritesPageReviewSortLabelsReviewSortLabels5": "标记时间",
+  "@favoritesPageReviewSortLabelsReviewSortLabels5": {
+    "description": "pages/favorites_page.dart: _reviewSortLabels"
+  },
+  "ageRating": "年龄分级",
+  "@ageRating": {
+    "description": "pages/favorites_page.dart: _reviewSortLabels"
+  },
+  "favoritesPageInputText": "添加作品",
+  "@favoritesPageInputText": {
+    "description": "pages/favorites_page.dart: input"
+  },
+  "favoritesPageBodyText2": "已显示全部",
+  "@favoritesPageBodyText2": {
+    "description": "pages/favorites_page.dart: _body"
+  },
+  "favoritesPageLabelLabel2": "移出播放列表",
+  "@favoritesPageLabelLabel2": {
+    "description": "pages/favorites_page.dart: label"
+  },
+  "favoritesPagePlaylistHeaderActionsTooltip": "复制分享链接",
+  "@favoritesPagePlaylistHeaderActionsTooltip": {
+    "description": "pages/favorites_page.dart: _playlistHeaderActions"
+  },
+  "favoritesPageAddWorksByRjToast": "添加失败：{e}",
+  "@favoritesPageAddWorksByRjToast": {
+    "description": "pages/favorites_page.dart: _addWorksByRj",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLinkCopied": "已复制分享链接",
+  "@shareLinkCopied": {
+    "description": "pages/favorites_page.dart: _copyCurrentShareLink"
+  },
+  "favoritesPageRemoveSelectedWorksToast": "无法获取作品编号",
+  "@favoritesPageRemoveSelectedWorksToast": {
+    "description": "pages/favorites_page.dart: _removeSelectedWorks"
+  },
+  "favoritesPageBodyText3": "还没有收藏的作品",
+  "@favoritesPageBodyText3": {
+    "description": "pages/favorites_page.dart: _body"
+  },
+  "favoritesPageRemoveCurrentLikedPlaylistToast": "取消收藏失败：{e}",
+  "@favoritesPageRemoveCurrentLikedPlaylistToast": {
+    "description": "pages/favorites_page.dart: _removeCurrentLikedPlaylist",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesPagePlaylistHeaderActionsTooltip2": "取消收藏该播放列表",
+  "@favoritesPagePlaylistHeaderActionsTooltip2": {
+    "description": "pages/favorites_page.dart: _playlistHeaderActions"
+  },
+  "favoritesPageBodyText4": "该播放列表还没有作品",
+  "@favoritesPageBodyText4": {
+    "description": "pages/favorites_page.dart: _body"
+  },
+  "favoritesPagePlaylistHeaderActionsTooltip3": "按 RJ 号添加作品",
+  "@favoritesPagePlaylistHeaderActionsTooltip3": {
+    "description": "pages/favorites_page.dart: _playlistHeaderActions"
+  },
+  "favoritesPageAddWorksByRjToast2": "没有识别到 RJ 号",
+  "@favoritesPageAddWorksByRjToast2": {
+    "description": "pages/favorites_page.dart: _addWorksByRj"
+  },
+  "favoritesPageSelectionBarText": "已选 {count} 项",
+  "@favoritesPageSelectionBarText": {
+    "description": "pages/favorites_page.dart: _selectionBar",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesPageRemoveSelectedWorksToast2": "{label}失败：{e}",
+  "@favoritesPageRemoveSelectedWorksToast2": {
+    "description": "pages/favorites_page.dart: _removeSelectedWorks",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesPageBodyText5": "SFW 模式下不显示收藏内容",
+  "@favoritesPageBodyText5": {
+    "description": "pages/favorites_page.dart: _body"
+  },
+  "favoritesPageBodyText6": "加载失败，请确认已在设置中登录",
+  "@favoritesPageBodyText6": {
+    "description": "pages/favorites_page.dart: _body"
+  },
+  "favoritesPageOkText": "确定从我的播放列表中移除该歌单吗？",
+  "@favoritesPageOkText": {
+    "description": "pages/favorites_page.dart: ok"
+  },
+  "favoritesPageAddWorksByRjToast3": "已添加 {length} 个作品",
+  "@favoritesPageAddWorksByRjToast3": {
+    "description": "pages/favorites_page.dart: _addWorksByRj",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesPageOkText2": "确定将 {count} 个作品{label}吗？",
+  "@favoritesPageOkText2": {
+    "description": "pages/favorites_page.dart: ok",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesPageRemoveSelectedWorksToast3": "已{label} {length} 个作品",
+  "@favoritesPageRemoveSelectedWorksToast3": {
+    "description": "pages/favorites_page.dart: _removeSelectedWorks",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesPageInputHintText": "输入 RJ 号，可一次填多个\n例如：RJ01367541 RJ01417842\n支持换行、空格或逗号分隔",
+  "@favoritesPageInputHintText": {
+    "description": "pages/favorites_page.dart: input"
+  },
+  "clear": "清空",
+  "@clear": {
+    "description": "pages/history_page.dart: build"
+  },
+  "historyPageEntryWorkTitle": "未知作品",
+  "@historyPageEntryWorkTitle": {
+    "description": "pages/history_page.dart: _entryWork"
+  },
+  "playHistory": "播放历史",
+  "@playHistory": {
+    "description": "pages/history_page.dart: build"
+  },
+  "historyPageBuildText": "暂无播放历史",
+  "@historyPageBuildText": {
+    "description": "pages/history_page.dart: build"
+  },
+  "historyPageBuildText2": "SFW 模式下不显示播放历史",
+  "@historyPageBuildText2": {
+    "description": "pages/history_page.dart: build"
+  },
+  "historyPageFmtTimeText": "今天 {padLeft}:{padLeft2}",
+  "@historyPageFmtTimeText": {
+    "description": "pages/history_page.dart: _fmtTime",
+    "placeholders": {
+      "padLeft": {
+        "type": "String"
+      },
+      "padLeft2": {
+        "type": "String"
+      }
+    }
+  },
+  "historyPageFmtTimeText2": "{month}月{day}日 {padLeft}:{padLeft2}",
+  "@historyPageFmtTimeText2": {
+    "description": "pages/history_page.dart: _fmtTime",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      },
+      "padLeft": {
+        "type": "String"
+      },
+      "padLeft2": {
+        "type": "String"
+      }
+    }
+  },
+  "homePageServerLabelText": "自建",
+  "@homePageServerLabelText": {
+    "description": "pages/home_page.dart: serverLabel"
+  },
+  "homePageLabelsLabels": "热门",
+  "@homePageLabelsLabels": {
+    "description": "pages/home_page.dart: labels"
+  },
+  "homePageLabelsLabels2": "推荐",
+  "@homePageLabelsLabels2": {
+    "description": "pages/home_page.dart: labels"
+  },
+  "homePageSortLabelsSortLabels": "总评价",
+  "@homePageSortLabelsSortLabels": {
+    "description": "pages/home_page.dart: sortLabels"
+  },
+  "homePageSortLabelsSortLabels2": "收录时间",
+  "@homePageSortLabelsSortLabels2": {
+    "description": "pages/home_page.dart: sortLabels"
+  },
+  "homePageSortLabelsSortLabels3": "销售价格",
+  "@homePageSortLabelsSortLabels3": {
+    "description": "pages/home_page.dart: sortLabels"
+  },
+  "homePageEmptyHintText": "暂无作品",
+  "@homePageEmptyHintText": {
+    "description": "pages/home_page.dart: _emptyHint"
+  },
+  "homePageSearchResultsViewText": "搜索中…",
+  "@homePageSearchResultsViewText": {
+    "description": "pages/home_page.dart: _searchResultsView"
+  },
+  "homePageEmptyHintText2": "正在加载…",
+  "@homePageEmptyHintText2": {
+    "description": "pages/home_page.dart: _emptyHint"
+  },
+  "homePageGridText": "已显示全部作品",
+  "@homePageGridText": {
+    "description": "pages/home_page.dart: _grid"
+  },
+  "homePageEmptyHintText3": "点击任意处重试",
+  "@homePageEmptyHintText3": {
+    "description": "pages/home_page.dart: _emptyHint"
+  },
+  "homePageSearchResultsViewText2": "没有找到相关作品",
+  "@homePageSearchResultsViewText2": {
+    "description": "pages/home_page.dart: _searchResultsView"
+  },
+  "homePageSearchResultsViewText3": "已显示全部搜索结果",
+  "@homePageSearchResultsViewText3": {
+    "description": "pages/home_page.dart: _searchResultsView"
+  },
+  "homePageEmptyHintText4": "当前筛选条件下暂无作品",
+  "@homePageEmptyHintText4": {
+    "description": "pages/home_page.dart: _emptyHint"
+  },
+  "homePageEmptyHintText5": "无网络连接，请检查网络或服务器设置",
+  "@homePageEmptyHintText5": {
+    "description": "pages/home_page.dart: _emptyHint"
+  },
+  "homePageHeaderTooltip": "SFW 模式已开启：仅显示全年龄内容",
+  "@homePageHeaderTooltip": {
+    "description": "pages/home_page.dart: _header"
+  },
+  "homePageHeaderTooltip2": "开启 SFW 模式（仅显示全年龄内容）",
+  "@homePageHeaderTooltip2": {
+    "description": "pages/home_page.dart: _header"
+  },
+  "save": "保存",
+  "@save": {
+    "description": "pages/login_page.dart: _showProxyDialog"
+  },
+  "loginPageBuildLoginText": "登 录",
+  "@loginPageBuildLoginText": {
+    "description": "pages/login_page.dart: _buildLogin"
+  },
+  "loginPageShowNoAccountText": "关于账号",
+  "@loginPageShowNoAccountText": {
+    "description": "pages/login_page.dart: _showNoAccount"
+  },
+  "loginPageShowNoAccountText2": "我知道了",
+  "@loginPageShowNoAccountText2": {
+    "description": "pages/login_page.dart: _showNoAccount"
+  },
+  "loginPageBuildSiteConfigTooltip": "返回登录",
+  "@loginPageBuildSiteConfigTooltip": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageBuildSiteConfigText": "已有站点",
+  "@loginPageBuildSiteConfigText": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageBuildSiteConfigHint": "站点密码",
+  "@loginPageBuildSiteConfigHint": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageShowProxyDialogLabelText": "代理服务器",
+  "@loginPageShowProxyDialogLabelText": {
+    "description": "pages/login_page.dart: _showProxyDialog"
+  },
+  "loginPageBuildLoginText2": "我没有账号",
+  "@loginPageBuildLoginText2": {
+    "description": "pages/login_page.dart: _buildLogin"
+  },
+  "loginPageBuildSiteConfigText2": "使用该站点",
+  "@loginPageBuildSiteConfigText2": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageBuildSiteConfigText3": "添加新站点",
+  "@loginPageBuildSiteConfigText3": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageBuildSiteConfigText4": "保存并进入",
+  "@loginPageBuildSiteConfigText4": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageShowProxyDialogText": "配置网络代理",
+  "@loginPageShowProxyDialogText": {
+    "description": "pages/login_page.dart: _showProxyDialog"
+  },
+  "loginPageBuildLoginText3": "配置自建站点",
+  "@loginPageBuildLoginText3": {
+    "description": "pages/login_page.dart: _buildLogin"
+  },
+  "loginPageBuildSiteConfigHint2": "站点登录账号",
+  "@loginPageBuildSiteConfigHint2": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageShowProxyDialogToast": "网络代理已启用",
+  "@loginPageShowProxyDialogToast": {
+    "description": "pages/login_page.dart: _showProxyDialog"
+  },
+  "loginPageShowProxyDialogToast2": "网络代理已关闭",
+  "@loginPageShowProxyDialogToast2": {
+    "description": "pages/login_page.dart: _showProxyDialog"
+  },
+  "loginPageBuildLoginHint": "one 站账号",
+  "@loginPageBuildLoginHint": {
+    "description": "pages/login_page.dart: _buildLogin"
+  },
+  "loginPageLoginToast": "请输入账号和密码",
+  "@loginPageLoginToast": {
+    "description": "pages/login_page.dart: _login"
+  },
+  "loginPageLoginToast2": "请检查网络或账号密码",
+  "@loginPageLoginToast2": {
+    "description": "pages/login_page.dart: _login"
+  },
+  "loginPageShowProxyDialogText2": "使用 HTTP 代理",
+  "@loginPageShowProxyDialogText2": {
+    "description": "pages/login_page.dart: _showProxyDialog"
+  },
+  "loginPageBuildLoginText4": "登录 one 站账号",
+  "@loginPageBuildLoginText4": {
+    "description": "pages/login_page.dart: _buildLogin"
+  },
+  "loginPageShowProxyDialogHelperText": "仅支持 HTTP 代理",
+  "@loginPageShowProxyDialogHelperText": {
+    "description": "pages/login_page.dart: _showProxyDialog"
+  },
+  "loginPageBuildSiteConfigHint3": "别名，如：家庭 NAS",
+  "@loginPageBuildSiteConfigHint3": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageSaveNewSiteToast": "请填写别名、地址、账号和密码",
+  "@loginPageSaveNewSiteToast": {
+    "description": "pages/login_page.dart: _saveNewSite"
+  },
+  "loginPageShowProxyDialogHintText": "例如 http://代理地址:端口",
+  "@loginPageShowProxyDialogHintText": {
+    "description": "pages/login_page.dart: _showProxyDialog"
+  },
+  "loginPageBuildSiteConfigText5": "支持 IP+端口，如 http://192.168.1.100:3000",
+  "@loginPageBuildSiteConfigText5": {
+    "description": "pages/login_page.dart: _buildSiteConfig"
+  },
+  "loginPageLoginToast3": "登录失败：{value}",
+  "@loginPageLoginToast3": {
+    "description": "pages/login_page.dart: _login",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "loginPageShowNoAccountText3": "本项目不提供任何注册服务。\n\n账号与密码需要您自行获取，本项目不提供任何获取渠道。\n\n您使用该账号在本应用中获取、播放的任何内容，其所有权与责任均归属内容提供方与账号持有人，本项目对此不承担任何责任。\n\n账号信息仅保存在本地设备，不会上传到任何第三方服务器。",
+  "@loginPageShowNoAccountText3": {
+    "description": "pages/login_page.dart: _showNoAccount"
+  },
+  "close": "关闭",
+  "@close": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "delete": "删除",
+  "@delete": {
+    "description": "pages/lyrics_library_page.dart: ok"
+  },
+  "remote": "远程",
+  "@remote": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "continueAction": "继续",
+  "@continueAction": {
+    "description": "pages/lyrics_library_page.dart: ok"
+  },
+  "online": "在线",
+  "@online": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "importAction": "导入",
+  "@importAction": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageBuildNavItem": "远程库",
+  "@lyricsLibraryPageBuildNavItem": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibrary": "歌词库",
+  "@lyricsLibrary": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageBuildNavItem2": "本地文件",
+  "@lyricsLibraryPageBuildNavItem2": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageProceedText": "继续导入",
+  "@lyricsLibraryPageProceedText": {
+    "description": "pages/lyrics_library_page.dart: proceed"
+  },
+  "lyricsLibraryPageImportText": "取消导入",
+  "@lyricsLibraryPageImportText": {
+    "description": "pages/lyrics_library_page.dart: _import"
+  },
+  "lyricsLibraryPageProgressPhase": "准备导入",
+  "@lyricsLibraryPageProgressPhase": {
+    "description": "pages/lyrics_library_page.dart: progress"
+  },
+  "lyricsLibraryPageOkText": "深度刷新",
+  "@lyricsLibraryPageOkText": {
+    "description": "pages/lyrics_library_page.dart: ok"
+  },
+  "lyricsLibraryPageOkText2": "删除歌词",
+  "@lyricsLibraryPageOkText2": {
+    "description": "pages/lyrics_library_page.dart: ok"
+  },
+  "lyricsLibraryPageSectionContentText": "选择文件夹",
+  "@lyricsLibraryPageSectionContentText": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageConfirmedText": "删除远程库",
+  "@lyricsLibraryPageConfirmedText": {
+    "description": "pages/lyrics_library_page.dart: confirmed"
+  },
+  "lyricsLibraryPageSectionContentText2": "导入远程库",
+  "@lyricsLibraryPageSectionContentText2": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageBuildText": "导入歌词库",
+  "@lyricsLibraryPageBuildText": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageBuildLabel": "刷新歌词库",
+  "@lyricsLibraryPageBuildLabel": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageBuildTooltip": "搜索歌词库",
+  "@lyricsLibraryPageBuildTooltip": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageBuildText2": "正在导入歌词",
+  "@lyricsLibraryPageBuildText2": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageImportText2": "跳过冲突文件",
+  "@lyricsLibraryPageImportText2": {
+    "description": "pages/lyrics_library_page.dart: _import"
+  },
+  "lyricsLibraryPageImportText3": "覆盖冲突文件",
+  "@lyricsLibraryPageImportText3": {
+    "description": "pages/lyrics_library_page.dart: _import"
+  },
+  "lyricsLibraryPageOkText3": "移除远程作品",
+  "@lyricsLibraryPageOkText3": {
+    "description": "pages/lyrics_library_page.dart: ok"
+  },
+  "lyricsLibraryPageProceedText2": "大型内容导入",
+  "@lyricsLibraryPageProceedText2": {
+    "description": "pages/lyrics_library_page.dart: proceed"
+  },
+  "lyricsLibraryPageImportText4": "发现导入冲突",
+  "@lyricsLibraryPageImportText4": {
+    "description": "pages/lyrics_library_page.dart: _import"
+  },
+  "lyricsLibraryPageRemoteSourceListTooltip": "只刷新此远程库",
+  "@lyricsLibraryPageRemoteSourceListTooltip": {
+    "description": "pages/lyrics_library_page.dart: _remoteSourceList"
+  },
+  "lyricsLibraryPageOkText4": "删除歌词库作品",
+  "@lyricsLibraryPageOkText4": {
+    "description": "pages/lyrics_library_page.dart: ok"
+  },
+  "lyricsLibraryPageBuildLabel2": "刷新全部远程库",
+  "@lyricsLibraryPageBuildLabel2": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageBuildText3": "正在准备文件…",
+  "@lyricsLibraryPageBuildText3": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageSelectionDialogTitle": "选择歌词文件夹",
+  "@lyricsLibraryPageSelectionDialogTitle": {
+    "description": "pages/lyrics_library_page.dart: selection"
+  },
+  "lyricsLibraryPageSectionContentText3": "正在连接并同步",
+  "@lyricsLibraryPageSectionContentText3": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageSearchFieldHintText": "搜索作品 ID",
+  "@lyricsLibraryPageSearchFieldHintText": {
+    "description": "pages/lyrics_library_page.dart: _searchField"
+  },
+  "lyricsLibraryPageImportText5": "导入失败：{e}",
+  "@lyricsLibraryPageImportText5": {
+    "description": "pages/lyrics_library_page.dart: _import",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageRemoteSourceListText": "尚未导入远程库",
+  "@lyricsLibraryPageRemoteSourceListText": {
+    "description": "pages/lyrics_library_page.dart: _remoteSourceList"
+  },
+  "lyricsLibraryPageBuildHint": "长按执行深度刷新",
+  "@lyricsLibraryPageBuildHint": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageBuildText4": "正在统计歌词文件",
+  "@lyricsLibraryPageBuildText4": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageScanProgressPhase": "正在检查文件冲突",
+  "@lyricsLibraryPageScanProgressPhase": {
+    "description": "pages/lyrics_library_page.dart: scanProgress"
+  },
+  "lyricsLibraryPageResultDialogTitle": "选择 ZIP 文件",
+  "@lyricsLibraryPageResultDialogTitle": {
+    "description": "pages/lyrics_library_page.dart: result"
+  },
+  "lyricsLibraryPageSectionContentText4": "选择 ZIP 压缩包",
+  "@lyricsLibraryPageSectionContentText4": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageBuildText5": "暂时无法统计歌词文件",
+  "@lyricsLibraryPageBuildText5": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageRefreshText": "刷新失败：{error}",
+  "@lyricsLibraryPageRefreshText": {
+    "description": "pages/lyrics_library_page.dart: _refresh",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageShowFilesText": "没有可用的歌词或字幕文件",
+  "@lyricsLibraryPageShowFilesText": {
+    "description": "pages/lyrics_library_page.dart: _showFiles"
+  },
+  "lyricsLibraryPageBuildText6": "暂无数据，点击右上角导入",
+  "@lyricsLibraryPageBuildText6": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageShowFilesText2": "加载歌词文件失败，请重试",
+  "@lyricsLibraryPageShowFilesText2": {
+    "description": "pages/lyrics_library_page.dart: _showFiles"
+  },
+  "lyricsLibraryPageReorderSetState": "调整优先级失败：{error}",
+  "@lyricsLibraryPageReorderSetState": {
+    "description": "pages/lyrics_library_page.dart: _reorder",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageSectionContentLabelText": "HTTP / HTTPS 地址",
+  "@lyricsLibraryPageSectionContentLabelText": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageBuildHint2": "同步所有已导入远程库的作品索引",
+  "@lyricsLibraryPageBuildHint2": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageImportText6": "所选文件夹里没有歌词或字幕文件",
+  "@lyricsLibraryPageImportText6": {
+    "description": "pages/lyrics_library_page.dart: _import"
+  },
+  "lyricsLibraryPageSectionContentText5": "选择要导入的歌词文件或压缩包。",
+  "@lyricsLibraryPageSectionContentText5": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageSectionContentText6": "输入开启了歌词库广播的设备地址。",
+  "@lyricsLibraryPageSectionContentText6": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageRefreshOneSetState": "刷新 {url} 失败：{error}",
+  "@lyricsLibraryPageRefreshOneSetState": {
+    "description": "pages/lyrics_library_page.dart: _refreshOne",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageRemoveRemoteLibrarySetState": "删除 {url} 失败：{error}",
+  "@lyricsLibraryPageRemoveRemoteLibrarySetState": {
+    "description": "pages/lyrics_library_page.dart: _removeRemoteLibrary",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageBuildText7": "{directoryCount} 个目录",
+  "@lyricsLibraryPageBuildText7": {
+    "description": "pages/lyrics_library_page.dart: build",
+    "placeholders": {
+      "directoryCount": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageBuildText8": "{length} 个",
+  "@lyricsLibraryPageBuildText8": {
+    "description": "pages/lyrics_library_page.dart: build",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageBuildText9": "暂无远程作品，点击右上角导入并连接远程库",
+  "@lyricsLibraryPageBuildText9": {
+    "description": "pages/lyrics_library_page.dart: build"
+  },
+  "lyricsLibraryPageOkText5": "确定移除 {workId} 的远程作品索引吗？",
+  "@lyricsLibraryPageOkText5": {
+    "description": "pages/lyrics_library_page.dart: ok",
+    "placeholders": {
+      "workId": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageOkText6": "确定删除 {workId} 的全部歌词文件吗？",
+  "@lyricsLibraryPageOkText6": {
+    "description": "pages/lyrics_library_page.dart: ok",
+    "placeholders": {
+      "workId": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageOkText7": "将删除没有歌词或字幕文件的作品目录，是否继续？",
+  "@lyricsLibraryPageOkText7": {
+    "description": "pages/lyrics_library_page.dart: ok"
+  },
+  "lyricsLibraryPageSectionContentText7": "已导入的远程库（从上到下优先级递减，拖动排序）",
+  "@lyricsLibraryPageSectionContentText7": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageRemoteSourceListText2": "优先级 {value} · 长按删除",
+  "@lyricsLibraryPageRemoteSourceListText2": {
+    "description": "pages/lyrics_library_page.dart: _remoteSourceList",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageConfirmedText2": "确定移除远程库 {url} 及其已同步的作品索引吗？",
+  "@lyricsLibraryPageConfirmedText2": {
+    "description": "pages/lyrics_library_page.dart: confirmed",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageSectionContentText8": "导入时只同步作品索引；播放时再下载该作品的全部歌词。",
+  "@lyricsLibraryPageSectionContentText8": {
+    "description": "pages/lyrics_library_page.dart: sectionContent"
+  },
+  "lyricsLibraryPageProceedText3": "检测到大型压缩包或文件夹，导入过程可能需要较长时间，请耐心等待。",
+  "@lyricsLibraryPageProceedText3": {
+    "description": "pages/lyrics_library_page.dart: proceed"
+  },
+  "lyricsLibraryPageOkText8": "确定删除选中的 {length} 个作品目录吗？",
+  "@lyricsLibraryPageOkText8": {
+    "description": "pages/lyrics_library_page.dart: ok",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageImportText7": "检测到 {length} 个已存在文件，如何处理？",
+  "@lyricsLibraryPageImportText7": {
+    "description": "pages/lyrics_library_page.dart: _import",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageOkText9": "确定移除选中的 {length} 个远程作品索引吗？",
+  "@lyricsLibraryPageOkText9": {
+    "description": "pages/lyrics_library_page.dart: ok",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryPageBuildText10": "{fileCount} 个歌词/字幕文件 · {value}",
+  "@lyricsLibraryPageBuildText10": {
+    "description": "pages/lyrics_library_page.dart: build",
+    "placeholders": {
+      "fileCount": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "morePageBuildRow": "歌单",
+  "@morePageBuildRow": {
+    "description": "pages/more_page.dart: build"
+  },
+  "settings": "设置",
+  "@settings": {
+    "description": "pages/more_page.dart: build"
+  },
+  "morePageBuildRow2": "随心听",
+  "@morePageBuildRow2": {
+    "description": "pages/more_page.dart: build"
+  },
+  "morePageBuildText": "服务器：{server}",
+  "@morePageBuildText": {
+    "description": "pages/more_page.dart: build",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "morePageOpenRandomWorkText": "当前条件下没有可播放的作品",
+  "@morePageOpenRandomWorkText": {
+    "description": "pages/more_page.dart: _openRandomWork"
+  },
+  "morePageOpenRandomWorkText2": "随心听加载失败，请稍后重试",
+  "@morePageOpenRandomWorkText2": {
+    "description": "pages/more_page.dart: _openRandomWork"
+  },
+  "playerPageShowLyricSettingsText": "归零",
+  "@playerPageShowLyricSettingsText": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "back": "返回",
+  "@back": {
+    "description": "pages/player_page.dart: _wideLandscape"
+  },
+  "seekBackward": "快退",
+  "@seekBackward": {
+    "description": "pages/player_page.dart: left"
+  },
+  "seekForward": "快进",
+  "@seekForward": {
+    "description": "pages/player_page.dart: right"
+  },
+  "playerPageUtilsUtil": "定时",
+  "@playerPageUtilsUtil": {
+    "description": "pages/player_page.dart: _utils"
+  },
+  "equalizer": "均衡器",
+  "@equalizer": {
+    "description": "pages/player_page.dart: actions"
+  },
+  "playerPageUtilsUtil2": "定时中",
+  "@playerPageUtilsUtil2": {
+    "description": "pages/player_page.dart: _utils"
+  },
+  "playerPageShowLyricSettingsText2": "繁简互转",
+  "@playerPageShowLyricSettingsText2": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "autoMatch": "自动匹配",
+  "@autoMatch": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "workDetails": "作品详情",
+  "@workDetails": {
+    "description": "pages/player_page.dart: actions"
+  },
+  "playlist": "播放列表",
+  "@playlist": {
+    "description": "pages/player_page.dart: actions"
+  },
+  "sleepTimer": "定时关闭",
+  "@sleepTimer": {
+    "description": "pages/player_page.dart: actions"
+  },
+  "playerPageWideLyricsPanelText": "暂无歌词",
+  "@playerPageWideLyricsPanelText": {
+    "description": "pages/player_page.dart: _wideLyricsPanel"
+  },
+  "playerPageTopBarText": "正在播放",
+  "@playerPageTopBarText": {
+    "description": "pages/player_page.dart: _topBar"
+  },
+  "desktopLyrics": "桌面歌词",
+  "@desktopLyrics": {
+    "description": "pages/player_page.dart: _topBar"
+  },
+  "playerPagePlayModeLabelText": "循环播放",
+  "@playerPagePlayModeLabelText": {
+    "description": "pages/player_page.dart: _playModeLabel"
+  },
+  "playerPagePlayModeLabelText2": "单曲循环",
+  "@playerPagePlayModeLabelText2": {
+    "description": "pages/player_page.dart: _playModeLabel"
+  },
+  "playerPagePlayModeLabelText3": "列表播放",
+  "@playerPagePlayModeLabelText3": {
+    "description": "pages/player_page.dart: _playModeLabel"
+  },
+  "playerPageShowLyricSettingsText3": "歌词设置",
+  "@playerPageShowLyricSettingsText3": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "playerPageShowLyricSettingsText4": "字幕偏移",
+  "@playerPageShowLyricSettingsText4": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "simplifiedToTraditional": "简 → 繁",
+  "@simplifiedToTraditional": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "traditionalToSimplified": "繁 → 简",
+  "@traditionalToSimplified": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "playerPageShowQueueText": "播放列表为空",
+  "@playerPageShowQueueText": {
+    "description": "pages/player_page.dart: _showQueue"
+  },
+  "playerPageResDialogTitle": "选择歌词文件",
+  "@playerPageResDialogTitle": {
+    "description": "pages/player_page.dart: res"
+  },
+  "playerPagePickOnlineLyricText": "选择在线歌词",
+  "@playerPagePickOnlineLyricText": {
+    "description": "pages/player_page.dart: _pickOnlineLyric"
+  },
+  "playerPageBuildText": "暂无播放内容",
+  "@playerPageBuildText": {
+    "description": "pages/player_page.dart: build"
+  },
+  "playerPageShowLyricSettingsTitle": "选择离线歌词",
+  "@playerPageShowLyricSettingsTitle": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "playerPagePickOnlineLyricToast": "未找到在线歌词",
+  "@playerPagePickOnlineLyricToast": {
+    "description": "pages/player_page.dart: _pickOnlineLyric"
+  },
+  "playerPageShowLyricSettingsTitle2": "选择歌词库歌词",
+  "@playerPageShowLyricSettingsTitle2": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "playerPageLoadOnlineLyricToast": "该歌词无法解析",
+  "@playerPageLoadOnlineLyricToast": {
+    "description": "pages/player_page.dart: _loadOnlineLyric"
+  },
+  "playerPageLyricsPanelText": "正在加载歌词…",
+  "@playerPageLyricsPanelText": {
+    "description": "pages/player_page.dart: _lyricsPanel"
+  },
+  "playerPageNextToast": "已播放完播放列表",
+  "@playerPageNextToast": {
+    "description": "pages/player_page.dart: _next"
+  },
+  "playerPageOpenCurrentToast": "文件流需登录后可用",
+  "@playerPageOpenCurrentToast": {
+    "description": "pages/player_page.dart: _openCurrent"
+  },
+  "playerPageShowLyricSettingsSub": "歌词库中没有该作品",
+  "@playerPageShowLyricSettingsSub": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "playerPageOpenMediaToast": "打开媒体超时，请重试",
+  "@playerPageOpenMediaToast": {
+    "description": "pages/player_page.dart: _openMedia"
+  },
+  "playerPageLibraryAutoTileText": "从歌词库自动匹配歌词",
+  "@playerPageLibraryAutoTileText": {
+    "description": "pages/player_page.dart: _libraryAutoTile"
+  },
+  "playerPageOpenMediaToast2": "打开失败，正在重试…",
+  "@playerPageOpenMediaToast2": {
+    "description": "pages/player_page.dart: _openMedia"
+  },
+  "playerPageFriendlyPlayErrorText": "媒体流代理异常，请重试",
+  "@playerPageFriendlyPlayErrorText": {
+    "description": "pages/player_page.dart: _friendlyPlayError"
+  },
+  "playerPageVolumeControlTooltip": "响度提升（上限 120）",
+  "@playerPageVolumeControlTooltip": {
+    "description": "pages/player_page.dart: _volumeControl"
+  },
+  "playerPageShowLyricSettingsSub2": "从本地选择歌词或字幕文件",
+  "@playerPageShowLyricSettingsSub2": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "playerPageInitStateToast": "网络波动，正在自动重连…",
+  "@playerPageInitStateToast": {
+    "description": "pages/player_page.dart: initState"
+  },
+  "playerPagePickLibraryLyricToast": "歌词库中没有该作品的歌词",
+  "@playerPagePickLibraryLyricToast": {
+    "description": "pages/player_page.dart: _pickLibraryLyric"
+  },
+  "playerPageOpenMediaToast3": "打开媒体超时，正在重试…",
+  "@playerPageOpenMediaToast3": {
+    "description": "pages/player_page.dart: _openMedia"
+  },
+  "playerPageShowLyricSettingsSub3": "仅显示当前作品的歌词文件",
+  "@playerPageShowLyricSettingsSub3": {
+    "description": "pages/player_page.dart: _showLyricSettings"
+  },
+  "playerPageCheckSleepToast": "已停止播放，系统接口已释放",
+  "@playerPageCheckSleepToast": {
+    "description": "pages/player_page.dart: _checkSleep"
+  },
+  "playerPagePickOnlineLyricSub": "按曲目名与中文优先自动选择",
+  "@playerPagePickOnlineLyricSub": {
+    "description": "pages/player_page.dart: _pickOnlineLyric"
+  },
+  "playerPageFriendlyPlayErrorText2": "服务器返回错误，请稍后重试",
+  "@playerPageFriendlyPlayErrorText2": {
+    "description": "pages/player_page.dart: _friendlyPlayError"
+  },
+  "playerPageVolumeControlTooltip2": "启用响度提升（上限 120）",
+  "@playerPageVolumeControlTooltip2": {
+    "description": "pages/player_page.dart: _volumeControl"
+  },
+  "playerPageFriendlyPlayErrorText3": "登录已失效，请重新登录后重试",
+  "@playerPageFriendlyPlayErrorText3": {
+    "description": "pages/player_page.dart: _friendlyPlayError"
+  },
+  "playerPagePickOfflineLyricToast": "文件中没有可读取的带时间轴歌词",
+  "@playerPagePickOfflineLyricToast": {
+    "description": "pages/player_page.dart: _pickOfflineLyric"
+  },
+  "playerPageFriendlyPlayErrorText4": "无法连接媒体流，请检查网络后重试",
+  "@playerPageFriendlyPlayErrorText4": {
+    "description": "pages/player_page.dart: _friendlyPlayError"
+  },
+  "playerPageVolumeControlTooltip3": "响度提升 Plus（上限 200）",
+  "@playerPageVolumeControlTooltip3": {
+    "description": "pages/player_page.dart: _volumeControl"
+  },
+  "playerPageToggleDesktopLyricsToast": "未授予悬浮窗权限，桌面歌词无法显示",
+  "@playerPageToggleDesktopLyricsToast": {
+    "description": "pages/player_page.dart: _toggleDesktopLyrics"
+  },
+  "playerPageSeekCircleMessage": "{label} {seconds} 秒",
+  "@playerPageSeekCircleMessage": {
+    "description": "pages/player_page.dart: _seekCircle",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "playerPageLibraryAutoTileText2": "优先匹配本地歌词，找不到时使用在线歌词",
+  "@playerPageLibraryAutoTileText2": {
+    "description": "pages/player_page.dart: _libraryAutoTile"
+  },
+  "playerPageShowQueueText2": "播放列表（{length}）",
+  "@playerPageShowQueueText2": {
+    "description": "pages/player_page.dart: _showQueue",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "playerPageInitStateToast2": "播放失败：{friendlyPlayError}",
+  "@playerPageInitStateToast2": {
+    "description": "pages/player_page.dart: initState",
+    "placeholders": {
+      "friendlyPlayError": {
+        "type": "String"
+      }
+    }
+  },
+  "playerPageOpenMediaToast4": "无法打开媒体流：{friendlyPlayError}",
+  "@playerPageOpenMediaToast4": {
+    "description": "pages/player_page.dart: _openMedia",
+    "placeholders": {
+      "friendlyPlayError": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistsPageNameText": "创建",
+  "@playlistsPageNameText": {
+    "description": "pages/playlists_page.dart: name"
+  },
+  "playlistsPageBuildText": "重命名",
+  "@playlistsPageBuildText": {
+    "description": "pages/playlists_page.dart: build"
+  },
+  "playlistsPageBuildText2": "新建歌单",
+  "@playlistsPageBuildText2": {
+    "description": "pages/playlists_page.dart: build"
+  },
+  "playlistsPageNameHintText": "歌单名称",
+  "@playlistsPageNameHintText": {
+    "description": "pages/playlists_page.dart: name"
+  },
+  "playlistsPageBuildText3": "歌单为空",
+  "@playlistsPageBuildText3": {
+    "description": "pages/playlists_page.dart: build"
+  },
+  "playlistsPageHeaderTooltip": "移除作品",
+  "@playlistsPageHeaderTooltip": {
+    "description": "pages/playlists_page.dart: header"
+  },
+  "playlistsPageNameText2": "重命名歌单",
+  "@playlistsPageNameText2": {
+    "description": "pages/playlists_page.dart: name"
+  },
+  "playlistsPageHeaderMessage": "拖动调整作品顺序",
+  "@playlistsPageHeaderMessage": {
+    "description": "pages/playlists_page.dart: header"
+  },
+  "playlistsPageRowMessage": "拖动调整播放顺序",
+  "@playlistsPageRowMessage": {
+    "description": "pages/playlists_page.dart: row"
+  },
+  "playlistsPagePlayTrackText": "歌单中没有可播放的音频",
+  "@playlistsPagePlayTrackText": {
+    "description": "pages/playlists_page.dart: _playTrack"
+  },
+  "playlistsPageBuildText4": "SFW 模式下不显示歌单",
+  "@playlistsPageBuildText4": {
+    "description": "pages/playlists_page.dart: build"
+  },
+  "playlistsPageBuildText5": "暂无歌单，点击右下角新建",
+  "@playlistsPageBuildText5": {
+    "description": "pages/playlists_page.dart: build"
+  },
+  "playlistsPageBuildText6": "SFW 模式下不显示歌单内容",
+  "@playlistsPageBuildText6": {
+    "description": "pages/playlists_page.dart: build"
+  },
+  "playlistsPageBuildText7": "{length} 个条目",
+  "@playlistsPageBuildText7": {
+    "description": "pages/playlists_page.dart: build",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistsPagePlayTrackText2": "该音频缺少可用文件流，请从作品详情重新添加",
+  "@playlistsPagePlayTrackText2": {
+    "description": "pages/playlists_page.dart: _playTrack"
+  },
+  "playlistsPageBuildText8": "拖动标题调整作品顺序，拖动媒体调整播放顺序",
+  "@playlistsPageBuildText8": {
+    "description": "pages/playlists_page.dart: build"
+  },
+  "playlistsPageBuildText9": "长按标题调整作品顺序，长按媒体调整播放顺序",
+  "@playlistsPageBuildText9": {
+    "description": "pages/playlists_page.dart: build"
+  },
+  "playlistsPageHeaderText": "{length} 个音频",
+  "@playlistsPageHeaderText": {
+    "description": "pages/playlists_page.dart: header",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "traditionalChineseShort": "繁中",
+  "@traditionalChineseShort": {
+    "description": "pages/settings_page.dart: _translationTargetLabel"
+  },
+  "englishLanguage": "英语",
+  "@englishLanguage": {
+    "description": "pages/settings_page.dart: _translationTargetLabel"
+  },
+  "simplifiedChineseShort": "简中",
+  "@simplifiedChineseShort": {
+    "description": "pages/settings_page.dart: _translationTargetLabel"
+  },
+  "settingsPageHealthBadgeStartsWith": "正常",
+  "@settingsPageHealthBadgeStartsWith": {
+    "description": "pages/settings_page.dart: _healthBadge"
+  },
+  "settingsPageSectionsMiniBtn": "检测",
+  "@settingsPageSectionsMiniBtn": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsMiniBtn2": "配置",
+  "@settingsPageSectionsMiniBtn2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageLockRowText": "解锁",
+  "@settingsPageLockRowText": {
+    "description": "pages/settings_page.dart: _lockRow"
+  },
+  "play": "播放",
+  "@play": {
+    "description": "pages/settings_page.dart: _sectionTitle"
+  },
+  "lyrics": "歌词",
+  "@lyrics": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSection": "曲目",
+  "@settingsPageSectionsSection": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageOnVersionTapText": "好吧",
+  "@settingsPageOnVersionTapText": {
+    "description": "pages/settings_page.dart: _onVersionTap"
+  },
+  "settingsPageSectionsSection2": "其他",
+  "@settingsPageSectionsSection2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSection3": "外观",
+  "@settingsPageSectionsSection3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsText": "主题",
+  "@settingsPageSectionsText": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsText2": "浅色",
+  "@settingsPageSectionsText2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsText3": "深色",
+  "@settingsPageSectionsText3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsText4": "重置",
+  "@settingsPageSectionsText4": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSection4": "关于",
+  "@settingsPageSectionsSection4": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionTitleText": "隐私",
+  "@settingsPageSectionTitleText": {
+    "description": "pages/settings_page.dart: _sectionTitle"
+  },
+  "settingsPageSectionsTitle": "版本",
+  "@settingsPageSectionsTitle": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsTitle2": "仓库",
+  "@settingsPageSectionsTitle2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageLockRowSub": "未锁定",
+  "@settingsPageLockRowSub": {
+    "description": "pages/settings_page.dart: _lockRow"
+  },
+  "settingsPageSectionsMiniBtn3": "去关闭",
+  "@settingsPageSectionsMiniBtn3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageShortcutConflictText": "下一曲",
+  "@settingsPageShortcutConflictText": {
+    "description": "pages/settings_page.dart: _shortcutConflict"
+  },
+  "settingsPageShortcutConflictText2": "上一曲",
+  "@settingsPageShortcutConflictText2": {
+    "description": "pages/settings_page.dart: _shortcutConflict"
+  },
+  "settingsPageSectionsLockRow": "桌面端",
+  "@settingsPageSectionsLockRow": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsMiniBtn4": "已关闭",
+  "@settingsPageSectionsMiniBtn4": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageShortcutLabelText": "未设置",
+  "@settingsPageShortcutLabelText": {
+    "description": "pages/settings_page.dart: _shortcutLabel"
+  },
+  "translationEngine": "翻译引擎",
+  "@translationEngine": {
+    "description": "pages/settings_page.dart: _engineDropdown"
+  },
+  "settingsPageSectionsLabel": "字体颜色",
+  "@settingsPageSectionsLabel": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsLabel2": "描边颜色",
+  "@settingsPageSectionsLabel2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "simplifiedChinese": "简体中文",
+  "@simplifiedChinese": {
+    "description": "pages/settings_page.dart: labels"
+  },
+  "settingsPageAutoCheckSetState": "检测中…",
+  "@settingsPageAutoCheckSetState": {
+    "description": "pages/settings_page.dart: _autoCheck"
+  },
+  "settingsPageSectionsTitle3": "快退秒数",
+  "@settingsPageSectionsTitle3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "interfaceLanguage": "界面语言",
+  "@interfaceLanguage": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsTitle4": "快进秒数",
+  "@settingsPageSectionsTitle4": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageAiModelInputLabelText": "模型名称",
+  "@settingsPageAiModelInputLabelText": {
+    "description": "pages/settings_page.dart: _aiModelInput"
+  },
+  "settingsPageShortcutLabelText2": "方向键→",
+  "@settingsPageShortcutLabelText2": {
+    "description": "pages/settings_page.dart: _shortcutLabel"
+  },
+  "chineseConversion": "繁简转换",
+  "@chineseConversion": {
+    "description": "pages/settings_page.dart: _convDropdown"
+  },
+  "settingsPageSectionsText5": "描边宽度",
+  "@settingsPageSectionsText5": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSection5": "账号设置",
+  "@settingsPageSectionsSection5": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsText6": "字体大小",
+  "@settingsPageSectionsText6": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageShortcutLabelText3": "方向键←",
+  "@settingsPageShortcutLabelText3": {
+    "description": "pages/settings_page.dart: _shortcutLabel"
+  },
+  "settingsPageBuildText": "完全重置",
+  "@settingsPageBuildText": {
+    "description": "pages/settings_page.dart: build"
+  },
+  "settingsPageSectionsSwitchRow": "智能路径",
+  "@settingsPageSectionsSwitchRow": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageAutoCheckSetState2": "连接失败",
+  "@settingsPageAutoCheckSetState2": {
+    "description": "pages/settings_page.dart: _autoCheck"
+  },
+  "followSystem": "跟随系统",
+  "@followSystem": {
+    "description": "pages/settings_page.dart: labels"
+  },
+  "settingsPageOpenRepoToast": "打开失败",
+  "@settingsPageOpenRepoToast": {
+    "description": "pages/settings_page.dart: _openRepo"
+  },
+  "settingsPageEditAudioTypePreferenceText": "恢复默认",
+  "@settingsPageEditAudioTypePreferenceText": {
+    "description": "pages/settings_page.dart: _editAudioTypePreference"
+  },
+  "settingsPageSectionsText7": "界面缩放",
+  "@settingsPageSectionsText7": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageBuildText2": "确定重置",
+  "@settingsPageBuildText2": {
+    "description": "pages/settings_page.dart: build"
+  },
+  "settingsPageSectionsTitle5": "检查更新",
+  "@settingsPageSectionsTitle5": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "targetLanguage": "目标语言",
+  "@targetLanguage": {
+    "description": "pages/settings_page.dart: _translationTargetDropdown"
+  },
+  "languageAndTranslation": "语言与翻译",
+  "@languageAndTranslation": {
+    "description": "pages/settings_page.dart: _sectionTitle"
+  },
+  "settingsPageSectionsSwitchRow2": "歌词库广播",
+  "@settingsPageSectionsSwitchRow2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow3": "剪贴板检测",
+  "@settingsPageSectionsSwitchRow3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageShortcutConflictText3": "播放/暂停",
+  "@settingsPageShortcutConflictText3": {
+    "description": "pages/settings_page.dart: _shortcutConflict"
+  },
+  "settingsPageSectionsTitle6": "快退快捷键",
+  "@settingsPageSectionsTitle6": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow4": "效果音偏好",
+  "@settingsPageSectionsSwitchRow4": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsTitle7": "快进快捷键",
+  "@settingsPageSectionsTitle7": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageOnVersionTapText2": "开发者模式",
+  "@settingsPageOnVersionTapText2": {
+    "description": "pages/settings_page.dart: _onVersionTap"
+  },
+  "settingsPageSectionsSub": "未配置账号",
+  "@settingsPageSectionsSub": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageRowSub": "点击进入设置",
+  "@settingsPageRowSub": {
+    "description": "pages/settings_page.dart: row"
+  },
+  "settingsPageSectionsTitle8": "音频类型偏好",
+  "@settingsPageSectionsTitle8": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsText8": "检测模型列表",
+  "@settingsPageSectionsText8": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageProxySettingsTooltip": "清空代理地址",
+  "@settingsPageProxySettingsTooltip": {
+    "description": "pages/settings_page.dart: _proxySettings"
+  },
+  "settingsPageSectionsTitle9": "上一曲快捷键",
+  "@settingsPageSectionsTitle9": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsTitle10": "关闭省电优化",
+  "@settingsPageSectionsTitle10": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow5": "忽略音频焦点",
+  "@settingsPageSectionsSwitchRow5": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow6": "自动检测更新",
+  "@settingsPageSectionsSwitchRow6": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageMediaCacheLimitRowText": "媒体缓存上限",
+  "@settingsPageMediaCacheLimitRowText": {
+    "description": "pages/settings_page.dart: _mediaCacheLimitRow"
+  },
+  "settingsPageSectionsTitle11": "下一曲快捷键",
+  "@settingsPageSectionsTitle11": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "translationTargetLanguage": "翻译目标语言",
+  "@translationTargetLanguage": {
+    "description": "pages/settings_page.dart: _translationTargetDropdown"
+  },
+  "followInterfaceLanguage": "跟随界面语言",
+  "@followInterfaceLanguage": {
+    "description": "pages/settings_page.dart: _translationTargetLabel"
+  },
+  "settingsPageSectionsText9": "添加自建站点",
+  "@settingsPageSectionsText9": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsLockRow2": "安卓（横屏）",
+  "@settingsPageSectionsLockRow2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsLockRow3": "安卓（竖屏）",
+  "@settingsPageSectionsLockRow3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsTitle12": "完全重置软件",
+  "@settingsPageSectionsTitle12": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageProxySettingsSwitchRow": "HTTP 代理",
+  "@settingsPageProxySettingsSwitchRow": {
+    "description": "pages/settings_page.dart: _proxySettings"
+  },
+  "settingsPageAiModelInputTooltip": "选择已检测模型",
+  "@settingsPageAiModelInputTooltip": {
+    "description": "pages/settings_page.dart: _aiModelInput"
+  },
+  "settingsPageSectionsTitle13": "恢复默认快捷键",
+  "@settingsPageSectionsTitle13": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow7": "不记忆播放进度",
+  "@settingsPageSectionsSwitchRow7": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSection6": "歌词与桌面歌词",
+  "@settingsPageSectionsSection6": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsToast": "连接失败：{e}",
+  "@settingsPageSectionsToast": {
+    "description": "pages/settings_page.dart: sections",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsToast2": "正在检测连接…",
+  "@settingsPageSectionsToast2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow8": "拔出耳机自动暂停",
+  "@settingsPageSectionsSwitchRow8": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsTitle14": "播放/暂停快捷键",
+  "@settingsPageSectionsTitle14": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSub2": "手动请求更新服务",
+  "@settingsPageSectionsSub2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow9": "最顶层悬浮歌词窗",
+  "@settingsPageSectionsSwitchRow9": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageAiModelInputTooltip2": "请先检测模型列表",
+  "@settingsPageAiModelInputTooltip2": {
+    "description": "pages/settings_page.dart: _aiModelInput"
+  },
+  "settingsPageProxySettingsHelperText": "留空将不使用代理",
+  "@settingsPageProxySettingsHelperText": {
+    "description": "pages/settings_page.dart: _proxySettings"
+  },
+  "settingsPageLabelsLabels": "OpenAI 兼容",
+  "@settingsPageLabelsLabels": {
+    "description": "pages/settings_page.dart: labels"
+  },
+  "settingsPageSectionsSwitchRow10": "关闭窗口后保留托盘",
+  "@settingsPageSectionsSwitchRow10": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageDetectOpenAiModelsToast": "正在获取模型列表…",
+  "@settingsPageDetectOpenAiModelsToast": {
+    "description": "pages/settings_page.dart: _detectOpenAiModels"
+  },
+  "settingsPageSectionsSwitchRow11": "不显示通知栏媒体卡片",
+  "@settingsPageSectionsSwitchRow11": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSub3": "歌词中文部分自动转换",
+  "@settingsPageSectionsSub3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "sourceAndTargetLanguage": "源语言 / 目标语言",
+  "@sourceAndTargetLanguage": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageDetectOpenAiModelsToast2": "请先填写 API 地址",
+  "@settingsPageDetectOpenAiModelsToast2": {
+    "description": "pages/settings_page.dart: _detectOpenAiModels"
+  },
+  "settingsPageSectionsSwitchRow12": "定时关闭后释放系统接口",
+  "@settingsPageSectionsSwitchRow12": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPagePlaybackShortcutRowSub": "播放器页获得焦点时生效",
+  "@settingsPagePlaybackShortcutRowSub": {
+    "description": "pages/settings_page.dart: _playbackShortcutRow"
+  },
+  "settingsPageAiModelInputHintText": "输入模型名或从列表选择",
+  "@settingsPageAiModelInputHintText": {
+    "description": "pages/settings_page.dart: _aiModelInput"
+  },
+  "settingsPageSectionsSub4": "防止后台播放被系统中断",
+  "@settingsPageSectionsSub4": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageStatusStatus": "已保存地址，开启后生效",
+  "@settingsPageStatusStatus": {
+    "description": "pages/settings_page.dart: status"
+  },
+  "settingsPageLockRowTitle": "{label} 歌词锁定",
+  "@settingsPageLockRowTitle": {
+    "description": "pages/settings_page.dart: _lockRow",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageDetectOpenAiModelsToast3": "模型列表获取失败：{e}",
+  "@settingsPageDetectOpenAiModelsToast3": {
+    "description": "pages/settings_page.dart: _detectOpenAiModels",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsToast3": "正在检测 DeepL…",
+  "@settingsPageSectionsToast3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow13": "优先进入包含效果音的目录",
+  "@settingsPageSectionsSwitchRow13": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsToast4": "关闭歌词库广播失败：{e}",
+  "@settingsPageSectionsToast4": {
+    "description": "pages/settings_page.dart: sections",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsToast5": "无法开启歌词库广播：{e}",
+  "@settingsPageSectionsToast5": {
+    "description": "pages/settings_page.dart: sections",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsSwitchRow14": "打开作品自动进入最佳目录",
+  "@settingsPageSectionsSwitchRow14": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsToast6": "DeepL 连接失败：{e}",
+  "@settingsPageSectionsToast6": {
+    "description": "pages/settings_page.dart: sections",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsSwitchRow15": "自动识别复制的 RJ 链接",
+  "@settingsPageSectionsSwitchRow15": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow16": "到点清除锁屏媒体卡片与通知",
+  "@settingsPageSectionsSwitchRow16": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow17": "启动后 3 秒请求更新服务",
+  "@settingsPageSectionsSwitchRow17": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsToast7": "DeepL 连接正常：{r}",
+  "@settingsPageSectionsToast7": {
+    "description": "pages/settings_page.dart: sections",
+    "placeholders": {
+      "r": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageOnVersionTapText3": "你不会真以为有开发者模式吧？",
+  "@settingsPageOnVersionTapText3": {
+    "description": "pages/settings_page.dart: _onVersionTap"
+  },
+  "settingsPageProxySettingsHelperText2": "开启 HTTP 代理后可编辑",
+  "@settingsPageProxySettingsHelperText2": {
+    "description": "pages/settings_page.dart: _proxySettings"
+  },
+  "settingsPageSectionsSwitchRow18": "拔出耳机或断开蓝牙时自动暂停",
+  "@settingsPageSectionsSwitchRow18": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow19": "与其他应用同时播放，互不打断",
+  "@settingsPageSectionsSwitchRow19": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow20": "播放时不在通知栏显示媒体卡片",
+  "@settingsPageSectionsSwitchRow20": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageAiModelInputHintText2": "例如 gpt-4o-mini",
+  "@settingsPageAiModelInputHintText2": {
+    "description": "pages/settings_page.dart: _aiModelInput"
+  },
+  "settingsPageSectionsSwitchRow21": "通知栏封面显示项目 logo",
+  "@settingsPageSectionsSwitchRow21": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageBuildText3": "确定重置（{count} 秒）",
+  "@settingsPageBuildText3": {
+    "description": "pages/settings_page.dart: build",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsSub5": "清除本机全部数据，恢复初始状态",
+  "@settingsPageSectionsSub5": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSub6": "5–60 秒，每次调整 5 秒",
+  "@settingsPageSectionsSub6": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageEditPlaybackShortcutToast": "该按键已用于{conflict}",
+  "@settingsPageEditPlaybackShortcutToast": {
+    "description": "pages/settings_page.dart: _editPlaybackShortcut",
+    "placeholders": {
+      "conflict": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageDetectOpenAiModelsFormatException": "响应未包含 data[].id",
+  "@settingsPageDetectOpenAiModelsFormatException": {
+    "description": "pages/settings_page.dart: _detectOpenAiModels"
+  },
+  "settingsPageSectionsInput": "API Key（本地服务可留空）",
+  "@settingsPageSectionsInput": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageConfirmResetText": "已重置：账号与全部本地数据已清除",
+  "@settingsPageConfirmResetText": {
+    "description": "pages/settings_page.dart: _confirmReset"
+  },
+  "settingsPageRequestBatteryIgnoreToast": "请在系统设置中允许「忽略电池优化」",
+  "@settingsPageRequestBatteryIgnoreToast": {
+    "description": "pages/settings_page.dart: _requestBatteryIgnore"
+  },
+  "settingsPageStatusStatus2": "已启用，请填写 HTTP 代理地址",
+  "@settingsPageStatusStatus2": {
+    "description": "pages/settings_page.dart: status"
+  },
+  "settingsPageMediaCacheLimitRowText2": "仅限制在线播放缓冲，不影响下载功能",
+  "@settingsPageMediaCacheLimitRowText2": {
+    "description": "pages/settings_page.dart: _mediaCacheLimitRow"
+  },
+  "settingsPageSectionsSwitchRow22": "关闭窗口时将停止后台运行并退出程序",
+  "@settingsPageSectionsSwitchRow22": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSub7": "已加入白名单，后台播放不受省电限制",
+  "@settingsPageSectionsSub7": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsInput2": "API 地址 (Base URL)",
+  "@settingsPageSectionsInput2": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsInput3": "DeepL 免费版 API Key",
+  "@settingsPageSectionsInput3": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSub8": "账号：{asmrUser}",
+  "@settingsPageSectionsSub8": {
+    "description": "pages/settings_page.dart: sections",
+    "placeholders": {
+      "asmrUser": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsSwitchRow23": "关闭后继续在后台播放，可从系统托盘恢复",
+  "@settingsPageSectionsSwitchRow23": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow24": "重启程序后恢复上次曲目，但从头开始播放",
+  "@settingsPageSectionsSwitchRow24": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSwitchRow25": "只读 API 服务 · 端口 2377",
+  "@settingsPageSectionsSwitchRow25": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageLockRowSub2": "已锁定：点击歌词不会响应，可在设置中解锁",
+  "@settingsPageLockRowSub2": {
+    "description": "pages/settings_page.dart: _lockRow"
+  },
+  "settingsPageStatusStatus3": "仅支持 HTTP 协议代理，对所有网络请求生效",
+  "@settingsPageStatusStatus3": {
+    "description": "pages/settings_page.dart: status"
+  },
+  "settingsPageSectionsSwitchRow26": "开启后封面位置显示项目 logo，不显示真实封面",
+  "@settingsPageSectionsSwitchRow26": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageDetectOpenAiModelsToast4": "已获取 {length} 个模型",
+  "@settingsPageDetectOpenAiModelsToast4": {
+    "description": "pages/settings_page.dart: _detectOpenAiModels",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageOnVersionTapToast": "再执行 {value} 步进入开发者模式",
+  "@settingsPageOnVersionTapToast": {
+    "description": "pages/settings_page.dart: _onVersionTap",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageStatusStatus4": "已启用：{trim}",
+  "@settingsPageStatusStatus4": {
+    "description": "pages/settings_page.dart: status",
+    "placeholders": {
+      "trim": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsInput4": "在 deepl.com 免费注册后获取（api-free）",
+  "@settingsPageSectionsInput4": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSub9": "Space / PageUp / PageDown / 方向键←→",
+  "@settingsPageSectionsSub9": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageAiModelInputHelperText": "已检测到 {length} 个模型",
+  "@settingsPageAiModelInputHelperText": {
+    "description": "pages/settings_page.dart: _aiModelInput",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageSectionsSub10": "Google / Microsoft 免费 · DeepL 免费 Key · OpenAI 兼容",
+  "@settingsPageSectionsSub10": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsInput5": "https://api.openai.com/v1 或 http://127.0.0.1:11434/v1",
+  "@settingsPageSectionsInput5": {
+    "description": "pages/settings_page.dart: sections"
+  },
+  "settingsPageSectionsSub11": "日语 → {translationTargetLabel}",
+  "@settingsPageSectionsSub11": {
+    "description": "pages/settings_page.dart: sections",
+    "placeholders": {
+      "translationTargetLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageNextKeyIdText": "当前按键：{shortcutLabel}\n\n按下新的单个按键",
+  "@settingsPageNextKeyIdText": {
+    "description": "pages/settings_page.dart: nextKeyId",
+    "placeholders": {
+      "shortcutLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPageBuildText4": "将清除本机全部数据，且不可恢复：\n\n· ASMR.ONE 账号与自建站点配置\n· 收藏 / 播放历史 / 歌单 / 黑名单\n· 翻译结果、均衡器、桌面歌词、定时关闭等全部设置\n\n请确认是否继续。",
+  "@settingsPageBuildText4": {
+    "description": "pages/settings_page.dart: build"
+  },
+  "mark": "标记",
+  "@mark": {
+    "description": "pages/work_page.dart: _markButton"
+  },
+  "confirm": "确定",
+  "@confirm": {
+    "description": "pages/work_page.dart: build"
+  },
+  "refresh": "刷新",
+  "@refresh": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageBuildLabel": "评论",
+  "@workPageBuildLabel": {
+    "description": "pages/work_page.dart: build"
+  },
+  "translate": "翻译",
+  "@translate": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageRefreshWorkToast": "已刷新",
+  "@workPageRefreshWorkToast": {
+    "description": "pages/work_page.dart: _refreshWork"
+  },
+  "workPageBuildTooltip": "上一张",
+  "@workPageBuildTooltip": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageBuildText": "已收藏",
+  "@workPageBuildText": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageBuildText2": "翻译中",
+  "@workPageBuildText2": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageBuildTooltip2": "下一张",
+  "@workPageBuildTooltip2": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageLanguageEditionsButtonText": "多语言",
+  "@workPageLanguageEditionsButtonText": {
+    "description": "pages/work_page.dart: _languageEditionsButton"
+  },
+  "workPageSimilarWorksSliversText": "相似作品",
+  "@workPageSimilarWorksSliversText": {
+    "description": "pages/work_page.dart: _similarWorksSlivers"
+  },
+  "workPageBuildText3": "曲目列表",
+  "@workPageBuildText3": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageConfirmedText": "删除标记",
+  "@workPageConfirmedText": {
+    "description": "pages/work_page.dart: confirmed"
+  },
+  "workPageConfirmedText2": "删除作品",
+  "@workPageConfirmedText2": {
+    "description": "pages/work_page.dart: confirmed"
+  },
+  "workPageRefreshWorkToast2": "刷新失败",
+  "@workPageRefreshWorkToast2": {
+    "description": "pages/work_page.dart: _refreshWork"
+  },
+  "workPageShowTextViewerTooltip": "切换编码",
+  "@workPageShowTextViewerTooltip": {
+    "description": "pages/work_page.dart: _showTextViewer"
+  },
+  "workPageBuildText4": "我的评论",
+  "@workPageBuildText4": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageAddToPlaylistText": "确认添加",
+  "@workPageAddToPlaylistText": {
+    "description": "pages/work_page.dart: _addToPlaylist"
+  },
+  "workPageBuildHintText": "写评论…",
+  "@workPageBuildHintText": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageBuildText5": "取消翻译",
+  "@workPageBuildText5": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageOkText": "加入黑名单",
+  "@workPageOkText": {
+    "description": "pages/work_page.dart: ok"
+  },
+  "workPageAddToPlaylistText2": "添加到歌单",
+  "@workPageAddToPlaylistText2": {
+    "description": "pages/work_page.dart: _addToPlaylist"
+  },
+  "workPageTranslateTitlesToast": "已取消翻译",
+  "@workPageTranslateTitlesToast": {
+    "description": "pages/work_page.dart: _translateTitles"
+  },
+  "workPageSelectedText": "选择 CV",
+  "@workPageSelectedText": {
+    "description": "pages/work_page.dart: selected"
+  },
+  "workPageBuildText6": "添加至歌单",
+  "@workPageBuildText6": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageBuildText7": "下载选中项目",
+  "@workPageBuildText7": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageOpenVideoChooserText": "选择打开方式",
+  "@workPageOpenVideoChooserText": {
+    "description": "pages/work_page.dart: _openVideoChooser"
+  },
+  "workPageOpenVideoChooserText2": "音频方式打开",
+  "@workPageOpenVideoChooserText2": {
+    "description": "pages/work_page.dart: _openVideoChooser"
+  },
+  "workPageSelectedText2": "切换翻译引擎",
+  "@workPageSelectedText2": {
+    "description": "pages/work_page.dart: selected"
+  },
+  "workPageTranslateTitlesToast2": "未知翻译引擎",
+  "@workPageTranslateTitlesToast2": {
+    "description": "pages/work_page.dart: _translateTitles"
+  },
+  "workPageTranslateTitlesFormatException": "翻译结果为空",
+  "@workPageTranslateTitlesFormatException": {
+    "description": "pages/work_page.dart: _translateTitles"
+  },
+  "workPageAllFilesRowText": "查看全部文件",
+  "@workPageAllFilesRowText": {
+    "description": "pages/work_page.dart: _allFilesRow"
+  },
+  "workPageDownloadSelectedToast": "已加入下载队列",
+  "@workPageDownloadSelectedToast": {
+    "description": "pages/work_page.dart: _downloadSelected"
+  },
+  "workPageAddToPlaylistText3": "请输入歌单名称",
+  "@workPageAddToPlaylistText3": {
+    "description": "pages/work_page.dart: _addToPlaylist"
+  },
+  "workPageOpenVideoChooserText3": "外部播放器打开",
+  "@workPageOpenVideoChooserText3": {
+    "description": "pages/work_page.dart: _openVideoChooser"
+  },
+  "workPageDeleteNotify": "删除失败：{e}",
+  "@workPageDeleteNotify": {
+    "description": "pages/work_page.dart: _delete",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageBuildLabel2": "添加到播放列表",
+  "@workPageBuildLabel2": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageSetProgressToast": "标记失败：{e}",
+  "@workPageSetProgressToast": {
+    "description": "pages/work_page.dart: _setProgress",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageBuildLabel3": "仅显示媒体文件",
+  "@workPageBuildLabel3": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageTreePlaceholderText": "该作品暂无曲目",
+  "@workPageTreePlaceholderText": {
+    "description": "pages/work_page.dart: _treePlaceholder"
+  },
+  "workPageTranslateTitlesToast3": "翻译失败：{e}",
+  "@workPageTranslateTitlesToast3": {
+    "description": "pages/work_page.dart: _translateTitles",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageRateWorkToast": "评分失败：{e}",
+  "@workPageRateWorkToast": {
+    "description": "pages/work_page.dart: _rateWork",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageApplyEncodingToast": "解码失败：{e}",
+  "@workPageApplyEncodingToast": {
+    "description": "pages/work_page.dart: applyEncoding",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageSubmitNotify": "保存失败：{e}",
+  "@workPageSubmitNotify": {
+    "description": "pages/work_page.dart: _submit",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageSimilarWorksSliversText2": "加载更多相似作品",
+  "@workPageSimilarWorksSliversText2": {
+    "description": "pages/work_page.dart: _similarWorksSlivers"
+  },
+  "workPageDownloadSelectedToast2": "曲目列表尚未加载",
+  "@workPageDownloadSelectedToast2": {
+    "description": "pages/work_page.dart: _downloadSelected"
+  },
+  "workPageClearRatingToast": "取消评分失败：{e}",
+  "@workPageClearRatingToast": {
+    "description": "pages/work_page.dart: _clearRating",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageRefreshWorkToast3": "已刷新本地下载记录",
+  "@workPageRefreshWorkToast3": {
+    "description": "pages/work_page.dart: _refreshWork"
+  },
+  "workPageDownloadSelectedToast3": "加入下载失败：{e}",
+  "@workPageDownloadSelectedToast3": {
+    "description": "pages/work_page.dart: _downloadSelected",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageSimilarWorksSliversText3": "已显示全部相似作品",
+  "@workPageSimilarWorksSliversText3": {
+    "description": "pages/work_page.dart: _similarWorksSlivers"
+  },
+  "workPageOpenLanguageEditionToast": "无法加载该语言版本",
+  "@workPageOpenLanguageEditionToast": {
+    "description": "pages/work_page.dart: _openLanguageEdition"
+  },
+  "workPageBuildToast": "收藏操作失败：{e}",
+  "@workPageBuildToast": {
+    "description": "pages/work_page.dart: build",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageConfirmedText3": "确定要删除标记吗？",
+  "@workPageConfirmedText3": {
+    "description": "pages/work_page.dart: confirmed"
+  },
+  "workPageSetProgressToast2": "取消标记失败：{e}",
+  "@workPageSetProgressToast2": {
+    "description": "pages/work_page.dart: _setProgress",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageBuildLabel4": "跳转 DLsite",
+  "@workPageBuildLabel4": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageAddToPlaylistToast": "请先勾选文件或文件夹",
+  "@workPageAddToPlaylistToast": {
+    "description": "pages/work_page.dart: _addToPlaylist"
+  },
+  "workPageBuildText8": "曲目列表（文件夹结构）",
+  "@workPageBuildText8": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageBuildLabel5": "跳转 asmr.one",
+  "@workPageBuildLabel5": {
+    "description": "pages/work_page.dart: build"
+  },
+  "workPageAddToPlaylistToast2": "已添加到「{name}」",
+  "@workPageAddToPlaylistToast2": {
+    "description": "pages/work_page.dart: _addToPlaylist",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageAddToServerPlaylistToast": "只能添加到自建播放列表",
+  "@workPageAddToServerPlaylistToast": {
+    "description": "pages/work_page.dart: _addToServerPlaylist"
+  },
+  "workPageOnMoreActionToast": "曲目列表加载中，请稍候",
+  "@workPageOnMoreActionToast": {
+    "description": "pages/work_page.dart: _onMoreAction"
+  },
+  "workPageTreePlaceholderText2": "该作品没有音频或视频文件",
+  "@workPageTreePlaceholderText2": {
+    "description": "pages/work_page.dart: _treePlaceholder"
+  },
+  "workPageAddToServerPlaylistToast2": "该作品缺少编号，无法添加",
+  "@workPageAddToServerPlaylistToast2": {
+    "description": "pages/work_page.dart: _addToServerPlaylist"
+  },
+  "workPageOpenReviewDialogToast": "该作品缺少编号，无法评价",
+  "@workPageOpenReviewDialogToast": {
+    "description": "pages/work_page.dart: _openReviewDialog"
+  },
+  "workPageDeleteSelectedLocalFilesToast": "所选项目中没有已下载文件",
+  "@workPageDeleteSelectedLocalFilesToast": {
+    "description": "pages/work_page.dart: _deleteSelectedLocalFiles"
+  },
+  "workPageDeleteSelectedLocalFilesToast2": "请先勾选要删除的本地文件",
+  "@workPageDeleteSelectedLocalFilesToast2": {
+    "description": "pages/work_page.dart: _deleteSelectedLocalFiles"
+  },
+  "workPageOnMoreActionToast2": "曲目加载失败，请刷新后重试",
+  "@workPageOnMoreActionToast2": {
+    "description": "pages/work_page.dart: _onMoreAction"
+  },
+  "workPageTreePlaceholderText3": "无网络连接，无法获取曲目列表",
+  "@workPageTreePlaceholderText3": {
+    "description": "pages/work_page.dart: _treePlaceholder"
+  },
+  "workPageBuildText9": "时长 {dur}",
+  "@workPageBuildText9": {
+    "description": "pages/work_page.dart: build",
+    "placeholders": {
+      "dur": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageEnginesEngines": "DeepL（免费版 Key）",
+  "@workPageEnginesEngines": {
+    "description": "pages/work_page.dart: engines"
+  },
+  "workPageEnginesEngines2": "OpenAI 兼容（可配置）",
+  "@workPageEnginesEngines2": {
+    "description": "pages/work_page.dart: engines"
+  },
+  "workPageCopyRjToast": "已复制 {rj}",
+  "@workPageCopyRjToast": {
+    "description": "pages/work_page.dart: _copyRj",
+    "placeholders": {
+      "rj": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageDownloadSelectedToast4": "请先勾选要下载的项目或文件夹",
+  "@workPageDownloadSelectedToast4": {
+    "description": "pages/work_page.dart: _downloadSelected"
+  },
+  "workPageAddToPlaylistToast3": "所选项目中没有可播放的音频文件",
+  "@workPageAddToPlaylistToast3": {
+    "description": "pages/work_page.dart: _addToPlaylist"
+  },
+  "workPageOnMoreActionToast3": "请先勾选需要听写翻译的媒体文件",
+  "@workPageOnMoreActionToast3": {
+    "description": "pages/work_page.dart: _onMoreAction"
+  },
+  "workPagePlayAsAudioToast": "SFW 模式下不能播放非全年龄作品",
+  "@workPagePlayAsAudioToast": {
+    "description": "pages/work_page.dart: _playAsAudio"
+  },
+  "workPageOpenLanguageEditionToast2": "SFW 模式下不能打开非全年龄作品",
+  "@workPageOpenLanguageEditionToast2": {
+    "description": "pages/work_page.dart: _openLanguageEdition"
+  },
+  "workPagePlayFilesToast": "暂无音频文件（文件流需登录后可用）",
+  "@workPagePlayFilesToast": {
+    "description": "pages/work_page.dart: _playFiles"
+  },
+  "workPageEnginesEngines3": "Google（免费，无需 Key）",
+  "@workPageEnginesEngines3": {
+    "description": "pages/work_page.dart: engines"
+  },
+  "workPageNodeRowToast": "已复制文件名：{title}",
+  "@workPageNodeRowToast": {
+    "description": "pages/work_page.dart: _nodeRow",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageDeleteSelectedLocalFilesToast3": "已删除 {deleted} 个本地文件",
+  "@workPageDeleteSelectedLocalFilesToast3": {
+    "description": "pages/work_page.dart: _deleteSelectedLocalFiles",
+    "placeholders": {
+      "deleted": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageTranslateTitlesToast4": "请先在设置中配置 API 地址与模型名",
+  "@workPageTranslateTitlesToast4": {
+    "description": "pages/work_page.dart: _translateTitles"
+  },
+  "workPageEnginesEngines4": "Microsoft（免费，无需 Key）",
+  "@workPageEnginesEngines4": {
+    "description": "pages/work_page.dart: engines"
+  },
+  "workPageOpenFileToast": "暂不支持查看该类型：{title}",
+  "@workPageOpenFileToast": {
+    "description": "pages/work_page.dart: _openFile",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageEnginesEngines5": "Index-Translate（官方接口）",
+  "@workPageEnginesEngines5": {
+    "description": "pages/work_page.dart: engines"
+  },
+  "workPageConfirmDeleteWorkToast": "删除失败，请关闭正在占用该作品的程序后重试",
+  "@workPageConfirmDeleteWorkToast": {
+    "description": "pages/work_page.dart: _confirmDeleteWork"
+  },
+  "workPageTranslateTitlesToast5": "正在翻译 {length} 行标题…",
+  "@workPageTranslateTitlesToast5": {
+    "description": "pages/work_page.dart: _translateTitles",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageTranslateTitlesToast6": "请先在设置中填写 DeepL 免费版 API Key",
+  "@workPageTranslateTitlesToast6": {
+    "description": "pages/work_page.dart: _translateTitles"
+  },
+  "workPageAddToPlaylistText4": "已选择 {length} 个音频文件",
+  "@workPageAddToPlaylistText4": {
+    "description": "pages/work_page.dart: _addToPlaylist",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageOnMoreActionToast4": "所选项目中没有可提交给 kikoeta-transl 的媒体文件",
+  "@workPageOnMoreActionToast4": {
+    "description": "pages/work_page.dart: _onMoreAction"
+  },
+  "workPageTranslateTitlesToast7": "翻译完成（标题 + {length} 个曲目）",
+  "@workPageTranslateTitlesToast7": {
+    "description": "pages/work_page.dart: _translateTitles",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageOkText2": "将标签「{t}」加入黑名单？\n加入后，含该标签的作品将从首页与搜索中过滤。",
+  "@workPageOkText2": {
+    "description": "pages/work_page.dart: ok",
+    "placeholders": {
+      "t": {
+        "type": "String"
+      }
+    }
+  },
+  "workPageConfirmedText4": "确定删除“{title}”的全部本地文件吗？此操作无法撤销。",
+  "@workPageConfirmedText4": {
+    "description": "pages/work_page.dart: confirmed",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "liked": "喜欢",
+  "@liked": {
+    "description": "services/api_service.dart: _systemPlaylistDisplayName"
+  },
+  "privatePlaylist": "私有",
+  "@privatePlaylist": {
+    "description": "services/api_service.dart: playlistPrivacyLabels"
+  },
+  "publicPlaylist": "公开",
+  "@publicPlaylist": {
+    "description": "services/api_service.dart: playlistPrivacyLabels"
+  },
+  "sharedByLink": "链接共享",
+  "@sharedByLink": {
+    "description": "services/api_service.dart: playlistPrivacyLabels"
+  },
+  "apiServiceMapPlaylistName": "未命名歌单",
+  "@apiServiceMapPlaylistName": {
+    "description": "services/api_service.dart: _mapPlaylist"
+  },
+  "apiServiceMapWorkVa": "CV. 未知",
+  "@apiServiceMapWorkVa": {
+    "description": "services/api_service.dart: _mapWork"
+  },
+  "apiServiceFetchWorkFormatException": "作品详情格式无效",
+  "@apiServiceFetchWorkFormatException": {
+    "description": "services/api_service.dart: fetchWork"
+  },
+  "apiServiceFetchPlaylistMetadataFormatException": "歌单详情格式无效",
+  "@apiServiceFetchPlaylistMetadataFormatException": {
+    "description": "services/api_service.dart: fetchPlaylistMetadata"
+  },
+  "apiServiceFetchAdvancedFilterEntriesValue": "不支持的高级筛选类型",
+  "@apiServiceFetchAdvancedFilterEntriesValue": {
+    "description": "services/api_service.dart: fetchAdvancedFilterEntries"
+  },
+  "apiServiceFetchAdvancedFilterEntriesFormatException": "高级筛选数据格式无效",
+  "@apiServiceFetchAdvancedFilterEntriesFormatException": {
+    "description": "services/api_service.dart: fetchAdvancedFilterEntries"
+  },
+  "apiServiceToggleFavoriteException": "该作品缺少编号，无法收藏",
+  "@apiServiceToggleFavoriteException": {
+    "description": "services/api_service.dart: toggleFavorite"
+  },
+  "apiServiceClearReviewRatingException": "该作品缺少编号，无法取消评分",
+  "@apiServiceClearReviewRatingException": {
+    "description": "services/api_service.dart: clearReviewRating"
+  },
+  "apiServiceClearReviewProgressException": "该作品缺少编号，无法取消标记",
+  "@apiServiceClearReviewProgressException": {
+    "description": "services/api_service.dart: clearReviewProgress"
+  },
+  "apiServiceDeleteReviewException": "该作品缺少编号，无法删除标记",
+  "@apiServiceDeleteReviewException": {
+    "description": "services/api_service.dart: deleteReview"
+  },
+  "search": "搜索",
+  "@search": {
+    "description": "services/clipboard_watcher.dart: _check"
+  },
+  "clipboardWatcherCheckText": "检测到 {rj}，点击搜索",
+  "@clipboardWatcherCheckText": {
+    "description": "services/clipboard_watcher.dart: _check",
+    "placeholders": {
+      "rj": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopLyricsOverlayEnsureWindowToNativeUtf16": "Kikoeta 桌面歌词",
+  "@desktopLyricsOverlayEnsureWindowToNativeUtf16": {
+    "description": "services/desktop_lyrics_overlay.dart: _ensureWindow"
+  },
+  "downloadServiceDownloadFileHttpException": "下载文件为空",
+  "@downloadServiceDownloadFileHttpException": {
+    "description": "services/download_service.dart: _downloadFile"
+  },
+  "downloadServiceRunStateError": "没有可下载的文件",
+  "@downloadServiceRunStateError": {
+    "description": "services/download_service.dart: _run"
+  },
+  "downloadServiceRunStateError2": "下载文件地址为空",
+  "@downloadServiceRunStateError2": {
+    "description": "services/download_service.dart: _run"
+  },
+  "downloadTransferDownloadToFileHttpException": "下载响应不完整",
+  "@downloadTransferDownloadToFileHttpException": {
+    "description": "services/download_transfer.dart: downloadToFile"
+  },
+  "downloadTransferDownloadToFileHttpException2": "下载分片长度发生变化",
+  "@downloadTransferDownloadToFileHttpException2": {
+    "description": "services/download_transfer.dart: downloadToFile"
+  },
+  "downloadTransferDownloadToFileHttpException3": "下载文件长度校验失败",
+  "@downloadTransferDownloadToFileHttpException3": {
+    "description": "services/download_transfer.dart: downloadToFile"
+  },
+  "downloadTransferDownloadToFileHttpException4": "下载响应的字节范围不匹配",
+  "@downloadTransferDownloadToFileHttpException4": {
+    "description": "services/download_transfer.dart: downloadToFile"
+  },
+  "downloadTransferDownloadToFileHttpException5": "下载响应超过声明的文件长度",
+  "@downloadTransferDownloadToFileHttpException5": {
+    "description": "services/download_transfer.dart: downloadToFile"
+  },
+  "downloadTransferDownloadToFileHttpException6": "下载响应使用了非原始字节编码",
+  "@downloadTransferDownloadToFileHttpException6": {
+    "description": "services/download_transfer.dart: downloadToFile"
+  },
+  "downloadTransferDownloadToFileHttpException7": "下载失败 HTTP {status}",
+  "@downloadTransferDownloadToFileHttpException7": {
+    "description": "services/download_transfer.dart: downloadToFile",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "ktServiceNormalizeEndpointFormatException": "连接地址格式应为 IP/域名:端口",
+  "@ktServiceNormalizeEndpointFormatException": {
+    "description": "services/kt_service.dart: normalizeEndpoint"
+  },
+  "ktServiceDecodeFormatException": "kikoeta-transl 返回了无效响应",
+  "@ktServiceDecodeFormatException": {
+    "description": "services/kt_service.dart: _decode"
+  },
+  "ktServiceNormalizeEndpointFormatException2": "请输入 kikoeta-transl 的 IP/域名与端口",
+  "@ktServiceNormalizeEndpointFormatException2": {
+    "description": "services/kt_service.dart: normalizeEndpoint"
+  },
+  "ktServiceErrorMessageText": "kikoeta-transl 请求失败（HTTP {statusCode}）",
+  "@ktServiceErrorMessageText": {
+    "description": "services/kt_service.dart: _errorMessage",
+    "placeholders": {
+      "statusCode": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryRemoteClientValidateWorkIdFormatException": "无效的作品号",
+  "@lyricsLibraryRemoteClientValidateWorkIdFormatException": {
+    "description": "services/lyrics_library_remote_client.dart: _validateWorkId"
+  },
+  "lyricsLibraryRemoteClientFetchWorksFormatException": "远程歌词库分页游标无效",
+  "@lyricsLibraryRemoteClientFetchWorksFormatException": {
+    "description": "services/lyrics_library_remote_client.dart: fetchWorks"
+  },
+  "lyricsLibraryRemoteClientFetchWorksFormatException2": "远程歌词库未提供作品列表",
+  "@lyricsLibraryRemoteClientFetchWorksFormatException2": {
+    "description": "services/lyrics_library_remote_client.dart: fetchWorks"
+  },
+  "lyricsLibraryRemoteClientFetchLyricsFormatException": "远程作品没有歌词文件列表",
+  "@lyricsLibraryRemoteClientFetchLyricsFormatException": {
+    "description": "services/lyrics_library_remote_client.dart: fetchLyrics"
+  },
+  "lyricsLibraryRemoteClientFetchLyricsFormatException2": "远程作品没有可用歌词文件",
+  "@lyricsLibraryRemoteClientFetchLyricsFormatException2": {
+    "description": "services/lyrics_library_remote_client.dart: fetchLyrics"
+  },
+  "lyricsLibraryRemoteClientGetJsonFormatException": "远程歌词库返回的数据格式无效",
+  "@lyricsLibraryRemoteClientGetJsonFormatException": {
+    "description": "services/lyrics_library_remote_client.dart: _getJson"
+  },
+  "lyricsLibraryRemoteClientNormalizeBaseUrlFormatException": "请输入有效的 HTTP 或 HTTPS 地址",
+  "@lyricsLibraryRemoteClientNormalizeBaseUrlFormatException": {
+    "description": "services/lyrics_library_remote_client.dart: normalizeBaseUrl"
+  },
+  "lyricsLibraryRemoteClientGetJsonHttpException": "远程歌词库返回 HTTP {statusCode}",
+  "@lyricsLibraryRemoteClientGetJsonHttpException": {
+    "description": "services/lyrics_library_remote_client.dart: _getJson",
+    "placeholders": {
+      "statusCode": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLibraryServiceExtractArchivePhase": "正在解压",
+  "@lyricsLibraryServiceExtractArchivePhase": {
+    "description": "services/lyrics_library_service.dart: _extractArchive"
+  },
+  "lyricsLibraryServiceCopyTreePhase": "正在复制",
+  "@lyricsLibraryServiceCopyTreePhase": {
+    "description": "services/lyrics_library_service.dart: _copyTree"
+  },
+  "lyricsLibraryServiceRemoveRemoteLibraryStateError": "该远程库尚未导入",
+  "@lyricsLibraryServiceRemoveRemoteLibraryStateError": {
+    "description": "services/lyrics_library_service.dart: removeRemoteLibrary"
+  },
+  "lyricsLibraryServiceSaveTranslatedLyricsArgumentError": "不支持的歌词格式",
+  "@lyricsLibraryServiceSaveTranslatedLyricsArgumentError": {
+    "description": "services/lyrics_library_service.dart: saveTranslatedLyrics"
+  },
+  "lyricsLibraryServiceSaveTranslatedLyricsArgumentError2": "文件中没有有效时间轴",
+  "@lyricsLibraryServiceSaveTranslatedLyricsArgumentError2": {
+    "description": "services/lyrics_library_service.dart: saveTranslatedLyrics"
+  },
+  "lyricsLibraryServiceImportRemoteWorkFormatException": "远程作品没有有效歌词文件",
+  "@lyricsLibraryServiceImportRemoteWorkFormatException": {
+    "description": "services/lyrics_library_service.dart: _importRemoteWork"
+  },
+  "lyricsLibraryServiceSaveTranslatedLyricsArgumentError3": "目标文件必须位于作品目录内",
+  "@lyricsLibraryServiceSaveTranslatedLyricsArgumentError3": {
+    "description": "services/lyrics_library_service.dart: saveTranslatedLyrics"
+  },
+  "lyricsLibraryServiceSetRemoteLibraryOrderArgumentError": "远程库列表已变化，请重新打开导入窗口",
+  "@lyricsLibraryServiceSetRemoteLibraryOrderArgumentError": {
+    "description": "services/lyrics_library_service.dart: setRemoteLibraryOrder"
+  },
+  "lyricsLibraryServiceSubscriptionStateError": "歌词导入进程异常: {message}",
+  "@lyricsLibraryServiceSubscriptionStateError": {
+    "description": "services/lyrics_library_service.dart: subscription",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "updateServiceShowUpdateDialogText": "不再提示",
+  "@updateServiceShowUpdateDialogText": {
+    "description": "services/update_service.dart: showUpdateDialog"
+  },
+  "updateServiceShowUpdateDialogText2": "跳转下载",
+  "@updateServiceShowUpdateDialogText2": {
+    "description": "services/update_service.dart: showUpdateDialog"
+  },
+  "updateServiceShowUpdateDialogText3": "发现新版本",
+  "@updateServiceShowUpdateDialogText3": {
+    "description": "services/update_service.dart: showUpdateDialog"
+  },
+  "updateServiceCheckManuallyText": "正在检查更新…",
+  "@updateServiceCheckManuallyText": {
+    "description": "services/update_service.dart: checkManually"
+  },
+  "updateServiceCheckError": "更新服务连接失败",
+  "@updateServiceCheckError": {
+    "description": "services/update_service.dart: check"
+  },
+  "updateServiceCheckManuallyToast": "当前已是最新版本",
+  "@updateServiceCheckManuallyToast": {
+    "description": "services/update_service.dart: checkManually"
+  },
+  "updateServiceShowUpdateDialogToast": "打开下载页面失败",
+  "@updateServiceShowUpdateDialogToast": {
+    "description": "services/update_service.dart: showUpdateDialog"
+  },
+  "updateServiceGetUpdateResponseStateError": "更新服务请求未执行",
+  "@updateServiceGetUpdateResponseStateError": {
+    "description": "services/update_service.dart: _getUpdateResponse"
+  },
+  "updateServiceParseReleaseResponseFormatException": "更新响应缺少版本信息",
+  "@updateServiceParseReleaseResponseFormatException": {
+    "description": "services/update_service.dart: _parseReleaseResponse"
+  },
+  "updateServiceCheckError2": "更新服务未返回有效版本信息",
+  "@updateServiceCheckError2": {
+    "description": "services/update_service.dart: check"
+  },
+  "updateServiceCheckError3": "无法连接更新服务或 GitHub",
+  "@updateServiceCheckError3": {
+    "description": "services/update_service.dart: check"
+  },
+  "updateServiceShowUpdateDialogText4": "最新版本：{version}\n当前版本：{currentVersion}",
+  "@updateServiceShowUpdateDialogText4": {
+    "description": "services/update_service.dart: showUpdateDialog",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "pause": "暂停",
+  "@pause": {
+    "description": "services/windows_tray_service.dart: _setContextMenu"
+  },
+  "quit": "退出",
+  "@quit": {
+    "description": "services/windows_tray_service.dart: _setContextMenu"
+  },
+  "windowsTrayServiceSetContextMenuLabel": "显示首页",
+  "@windowsTrayServiceSetContextMenuLabel": {
+    "description": "services/windows_tray_service.dart: _setContextMenu"
+  },
+  "sheetsShowSleepSheetSuffixText": "分钟",
+  "@sheetsShowSleepSheetSuffixText": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsBuildText": "应用",
+  "@sheetsBuildText": {
+    "description": "sheets.dart: build"
+  },
+  "sheetsShowSiteSheetField": "别名",
+  "@sheetsShowSiteSheetField": {
+    "description": "sheets.dart: showSiteSheet"
+  },
+  "sheetsShowSiteSheetField2": "地址",
+  "@sheetsShowSiteSheetField2": {
+    "description": "sheets.dart: showSiteSheet"
+  },
+  "account": "账号",
+  "@account": {
+    "description": "sheets.dart: showSiteSheet"
+  },
+  "sheetsPresetsPresets": "人声",
+  "@sheetsPresetsPresets": {
+    "description": "sheets.dart: presets"
+  },
+  "sheetsPresetsPresets2": "低音",
+  "@sheetsPresetsPresets2": {
+    "description": "sheets.dart: presets"
+  },
+  "sheetsPresetsPresets3": "平直",
+  "@sheetsPresetsPresets3": {
+    "description": "sheets.dart: presets"
+  },
+  "sheetsPresetsPresets4": "流行",
+  "@sheetsPresetsPresets4": {
+    "description": "sheets.dart: presets"
+  },
+  "sheetsPresetsPresets5": "摇滚",
+  "@sheetsPresetsPresets5": {
+    "description": "sheets.dart: presets"
+  },
+  "sheetsShowEqSheetText": "未启用",
+  "@sheetsShowEqSheetText": {
+    "description": "sheets.dart: showEqSheet"
+  },
+  "sheetsShowEqSheetText2": "已应用",
+  "@sheetsShowEqSheetText2": {
+    "description": "sheets.dart: showEqSheet"
+  },
+  "sheetsShowSleepSheetText": "取消定时",
+  "@sheetsShowSleepSheetText": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsShowSleepSheetText2": "开始定时",
+  "@sheetsShowSleepSheetText2": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "playbackComplete": "播放完毕",
+  "@playbackComplete": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsTimePickerText": "关闭时间",
+  "@sheetsTimePickerText": {
+    "description": "sheets.dart: _timePicker"
+  },
+  "sheetsShowSleepSheetLabel": "指定时间",
+  "@sheetsShowSleepSheetLabel": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsShowSleepSheetLabel2": "{m} 分钟",
+  "@sheetsShowSleepSheetLabel2": {
+    "description": "sheets.dart: showSleepSheet",
+    "placeholders": {
+      "m": {
+        "type": "String"
+      }
+    }
+  },
+  "sheetsShowSleepSheetLabel3": "N 分钟后",
+  "@sheetsShowSleepSheetLabel3": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsBuildTitle": "选择服务器",
+  "@sheetsBuildTitle": {
+    "description": "sheets.dart: build"
+  },
+  "sheetsShowEqSheetText3": "启用均衡器",
+  "@sheetsShowEqSheetText3": {
+    "description": "sheets.dart: showEqSheet"
+  },
+  "sheetsShowSiteSheetTitle": "编辑自建站点",
+  "@sheetsShowSiteSheetTitle": {
+    "description": "sheets.dart: showSiteSheet"
+  },
+  "sheetsBuildText2": "管理自建站点",
+  "@sheetsBuildText2": {
+    "description": "sheets.dart: build"
+  },
+  "sheetsShowSleepSheetHintText": "自定义分钟数",
+  "@sheetsShowSleepSheetHintText": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsBuildText3": "暂无自建站点",
+  "@sheetsBuildText3": {
+    "description": "sheets.dart: build"
+  },
+  "sheetsBuildText4": "选择自建站点",
+  "@sheetsBuildText4": {
+    "description": "sheets.dart: build"
+  },
+  "sheetsShowSiteSheetHint": "如：家庭 NAS",
+  "@sheetsShowSiteSheetHint": {
+    "description": "sheets.dart: showSiteSheet"
+  },
+  "sheetsBuildText5": "请先添加自建站点",
+  "@sheetsBuildText5": {
+    "description": "sheets.dart: build"
+  },
+  "sheetsShowOneConfigSheetTitle": "ASMR.ONE 账号",
+  "@sheetsShowOneConfigSheetTitle": {
+    "description": "sheets.dart: showOneConfigSheet"
+  },
+  "sheetsShowOneConfigSheetHint": "asmr.one 账号",
+  "@sheetsShowOneConfigSheetHint": {
+    "description": "sheets.dart: showOneConfigSheet"
+  },
+  "sheetsShowOneConfigSheetSub": "账号信息仅保存在本地（演示）",
+  "@sheetsShowOneConfigSheetSub": {
+    "description": "sheets.dart: showOneConfigSheet"
+  },
+  "sheetsShowSleepSheetText3": "当前播放列表播完后自动停止并关闭",
+  "@sheetsShowSleepSheetText3": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsShowSleepSheetText4": "剩余时间 · 到点后自动停止并退出",
+  "@sheetsShowSleepSheetText4": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsBuildSub": "官方服务或自建 Kikoeru 站点",
+  "@sheetsBuildSub": {
+    "description": "sheets.dart: build"
+  },
+  "sheetsShowEqSheetSub": "真 10 段 · ±12 dB · 全平台",
+  "@sheetsShowEqSheetSub": {
+    "description": "sheets.dart: showEqSheet"
+  },
+  "sheetsShowSleepSheetText5": "当前播放列表的内容播放完毕后自动停止并关闭",
+  "@sheetsShowSleepSheetText5": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsShowSleepSheetSub": "到点后停止播放并释放系统接口（锁屏卡片 / 通知全部清除）",
+  "@sheetsShowSleepSheetSub": {
+    "description": "sheets.dart: showSleepSheet"
+  },
+  "sheetsBuildLabel": "自定义配置（{length}）",
+  "@sheetsBuildLabel": {
+    "description": "sheets.dart: build",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackSeekSecondsControlBuildTooltip": "减少{label}秒数",
+  "@playbackSeekSecondsControlBuildTooltip": {
+    "description": "widgets/playback_seek_seconds_control.dart: build",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackSeekSecondsControlBuildTooltip2": "增加{label}秒数",
+  "@playbackSeekSecondsControlBuildTooltip2": {
+    "description": "widgets/playback_seek_seconds_control.dart: build",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "name": "名称",
+  "@name": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "description": "描述",
+  "@description": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "playlistPickerRowsMapEntry": "权限",
+  "@playlistPickerRowsMapEntry": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "language": "语言",
+  "@language": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "confirmAction": "确认",
+  "@confirmAction": {
+    "description": "widgets/playlist_picker.dart: copy"
+  },
+  "create": "新建",
+  "@create": {
+    "description": "widgets/playlist_picker.dart: build"
+  },
+  "playlistPickerShowEditorLabelText": "类型",
+  "@playlistPickerShowEditorLabelText": {
+    "description": "widgets/playlist_picker.dart: _showEditor"
+  },
+  "playlistPickerRowsMapEntry2": "创建人",
+  "@playlistPickerRowsMapEntry2": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "playlistPickerRowsMapEntry3": "更新时间",
+  "@playlistPickerRowsMapEntry3": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "playlistPickerReviewsItemName": "我的收藏",
+  "@playlistPickerReviewsItemName": {
+    "description": "widgets/playlist_picker.dart: _reviewsItem"
+  },
+  "playlistPickerRowsMapEntry4": "播放次数",
+  "@playlistPickerRowsMapEntry4": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "playlistPickerRowsMapEntry5": "作品数量",
+  "@playlistPickerRowsMapEntry5": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "playlistPickerCopyText": "歌单详情",
+  "@playlistPickerCopyText": {
+    "description": "widgets/playlist_picker.dart: copy"
+  },
+  "playlistPickerLinkLabelText": "分享链接",
+  "@playlistPickerLinkLabelText": {
+    "description": "widgets/playlist_picker.dart: link"
+  },
+  "playlistPickerCopyText2": "复制链接",
+  "@playlistPickerCopyText2": {
+    "description": "widgets/playlist_picker.dart: copy"
+  },
+  "playlistPickerRowsMapEntry6": "创建时间",
+  "@playlistPickerRowsMapEntry6": {
+    "description": "widgets/playlist_picker.dart: rows"
+  },
+  "playlistPickerBuildText": "切换播放列表",
+  "@playlistPickerBuildText": {
+    "description": "widgets/playlist_picker.dart: build"
+  },
+  "playlistPickerPlaylistItemTooltip": "移除播放列表",
+  "@playlistPickerPlaylistItemTooltip": {
+    "description": "widgets/playlist_picker.dart: _playlistItem"
+  },
+  "playlistPickerPlaylistItemTooltip2": "编辑播放列表",
+  "@playlistPickerPlaylistItemTooltip2": {
+    "description": "widgets/playlist_picker.dart: _playlistItem"
+  },
+  "playlistPickerShowEditorText": "创建播放列表",
+  "@playlistPickerShowEditorText": {
+    "description": "widgets/playlist_picker.dart: _showEditor"
+  },
+  "playlistPickerLinkText": "导入播放列表",
+  "@playlistPickerLinkText": {
+    "description": "widgets/playlist_picker.dart: link"
+  },
+  "playlistPickerOkText": "删除播放列表",
+  "@playlistPickerOkText": {
+    "description": "widgets/playlist_picker.dart: ok"
+  },
+  "playlistPickerRemoveLikedToast": "移除失败：{e}",
+  "@playlistPickerRemoveLikedToast": {
+    "description": "widgets/playlist_picker.dart: _removeLiked",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerCreatePlaylistToast": "创建失败：{e}",
+  "@playlistPickerCreatePlaylistToast": {
+    "description": "widgets/playlist_picker.dart: _createPlaylist",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerLoadSetState": "无法加载播放列表",
+  "@playlistPickerLoadSetState": {
+    "description": "widgets/playlist_picker.dart: _load"
+  },
+  "playlistPickerImportPlaylistToast": "无法识别播放列表链接",
+  "@playlistPickerImportPlaylistToast": {
+    "description": "widgets/playlist_picker.dart: _importPlaylist"
+  },
+  "playlistPickerReviewsItemSubtitle": "我的评价/收藏（所有作品）",
+  "@playlistPickerReviewsItemSubtitle": {
+    "description": "widgets/playlist_picker.dart: _reviewsItem"
+  },
+  "playlistPickerCreatePlaylistToast2": "已创建，但列表中未找到该播放列表",
+  "@playlistPickerCreatePlaylistToast2": {
+    "description": "widgets/playlist_picker.dart: _createPlaylist"
+  },
+  "playlistPickerImportPlaylistToast2": "已添加，但列表中暂未找到该播放列表",
+  "@playlistPickerImportPlaylistToast2": {
+    "description": "widgets/playlist_picker.dart: _importPlaylist"
+  },
+  "playlistPickerSubtitleSubtitle": "{worksCount} 个作品",
+  "@playlistPickerSubtitleSubtitle": {
+    "description": "widgets/playlist_picker.dart: subtitle",
+    "placeholders": {
+      "worksCount": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerLinkText2": "粘贴别人分享的播放列表链接，会收藏到我的播放列表。",
+  "@playlistPickerLinkText2": {
+    "description": "widgets/playlist_picker.dart: link"
+  },
+  "playlistPickerOkText2": "确定删除“{name}”吗？此操作无法撤销。",
+  "@playlistPickerOkText2": {
+    "description": "widgets/playlist_picker.dart: ok",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerOkText3": "确定从我的播放列表中移除“{name}”吗？",
+  "@playlistPickerOkText3": {
+    "description": "widgets/playlist_picker.dart: ok",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerSubtitleSubtitle2": "{worksCount} 个作品 · {replaceAll}",
+  "@playlistPickerSubtitleSubtitle2": {
+    "description": "widgets/playlist_picker.dart: subtitle",
+    "placeholders": {
+      "worksCount": {
+        "type": "String"
+      },
+      "replaceAll": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsFilterButtonTooltip": "筛选",
+  "@widgetsFilterButtonTooltip": {
+    "description": "widgets.dart: _filterButton"
+  },
+  "widgetsFilterButtonLabel": "仅字幕",
+  "@widgetsFilterButtonLabel": {
+    "description": "widgets.dart: _filterButton"
+  },
+  "allAges": "全年龄",
+  "@allAges": {
+    "description": "widgets.dart: build"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter": "排除语言",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter2": "搜索社团",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter2": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter3": "搜索声优",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter3": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsBuildBuilder": "AI歌词",
+  "@widgetsBuildBuilder": {
+    "description": "widgets.dart: build"
+  },
+  "widgetsBuildBuilder2": "远程歌词",
+  "@widgetsBuildBuilder2": {
+    "description": "widgets.dart: build"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter4": "筛选语言",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter4": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter5": "排除标签",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter5": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsBuildBuilder3": "本地歌词",
+  "@widgetsBuildBuilder3": {
+    "description": "widgets.dart: build"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter6": "排除社团",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter6": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter7": "排除声优",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter7": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsInputRowMessage": "高级搜索",
+  "@widgetsInputRowMessage": {
+    "description": "widgets.dart: _inputRow"
+  },
+  "widgetsHistoryPanelText": "搜索历史",
+  "@widgetsHistoryPanelText": {
+    "description": "widgets.dart: _historyPanel"
+  },
+  "widgetsBuildBuilder4": "在线歌词",
+  "@widgetsBuildBuilder4": {
+    "description": "widgets.dart: build"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter8": "搜索标签",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter8": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter9": "筛选年龄分级",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter9": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter10": "排除年龄分级",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter10": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsBuildText": "高级搜索参数",
+  "@widgetsBuildText": {
+    "description": "widgets.dart: build"
+  },
+  "widgetsHistoryPanelText2": "暂无搜索历史",
+  "@widgetsHistoryPanelText2": {
+    "description": "widgets.dart: _historyPanel"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter11": "包含低愿力标签",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter11": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter12": "排除低愿力标签",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter12": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter13": "筛选评分（大于）",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter13": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter14": "筛选销量（大于）",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter14": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter15": "筛选价格（大于）",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter15": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter16": "筛选作品时长（小于）",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter16": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsAdvancedSearchParametersAdvancedSearchParameter17": "筛选作品时长（大于）",
+  "@widgetsAdvancedSearchParametersAdvancedSearchParameter17": {
+    "description": "widgets.dart: advancedSearchParameters"
+  },
+  "widgetsHistoryPanelText3": "已删除「{value}」",
+  "@widgetsHistoryPanelText3": {
+    "description": "widgets.dart: _historyPanel",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsInputRowHintText": "搜索 RJ 号、作品名、声优…",
+  "@widgetsInputRowHintText": {
+    "description": "widgets.dart: _inputRow"
+  }
+}

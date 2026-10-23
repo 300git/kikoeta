@@ -3,6 +3,7 @@ import 'dart:io' show HttpClient;
 
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
+import '../l10n/strings.dart';
 
 const lyricsLibraryApiPath = 'api/lyrics-library/v1';
 
@@ -48,9 +49,8 @@ class RemoteLibraryFile {
 class LyricsLibraryRemoteClient {
   LyricsLibraryRemoteClient._();
 
-  static http.Client _newClient() => IOClient(
-    HttpClient()..connectionTimeout = const Duration(seconds: 10),
-  );
+  static http.Client _newClient() =>
+      IOClient(HttpClient()..connectionTimeout = const Duration(seconds: 10));
 
   static Uri normalizeBaseUrl(String value) {
     final input = value.trim();
@@ -61,7 +61,9 @@ class LyricsLibraryRemoteClient {
         uri.userInfo.isNotEmpty ||
         uri.hasQuery ||
         uri.hasFragment) {
-      throw const FormatException('请输入有效的 HTTP 或 HTTPS 地址');
+      throw FormatException(
+        appL10n.lyricsLibraryRemoteClientNormalizeBaseUrlFormatException,
+      );
     }
     return uri.replace(path: uri.path.replaceFirst(RegExp(r'/+$'), ''));
   }
@@ -83,14 +85,20 @@ class LyricsLibraryRemoteClient {
         ..headers['accept'] = 'application/json';
       final response = await activeClient.send(request).timeout(timeout);
       if (response.statusCode != 200) {
-        throw HttpException('远程歌词库返回 HTTP ${response.statusCode}');
+        throw HttpException(
+          appL10n.lyricsLibraryRemoteClientGetJsonHttpException(
+            (response.statusCode).toString(),
+          ),
+        );
       }
       final bytes = await http.ByteStream(
         response.stream.timeout(const Duration(seconds: 30)),
       ).toBytes();
       final decoded = jsonDecode(utf8.decode(bytes));
       if (decoded is! Map<String, dynamic>) {
-        throw const FormatException('远程歌词库返回的数据格式无效');
+        throw FormatException(
+          appL10n.lyricsLibraryRemoteClientGetJsonFormatException,
+        );
       }
       return decoded;
     } finally {
@@ -116,7 +124,9 @@ class LyricsLibraryRemoteClient {
         );
         final rawWorks = response['works'];
         if (rawWorks is! List) {
-          throw const FormatException('远程歌词库未提供作品列表');
+          throw FormatException(
+            appL10n.lyricsLibraryRemoteClientFetchWorksFormatException2,
+          );
         }
         works.addAll(_parseWorks(rawWorks));
         final next = response['nextCursor'];
@@ -124,7 +134,9 @@ class LyricsLibraryRemoteClient {
         if (next is! String ||
             !RegExp(r'^(?:RJ|VJ|BJ)\d+$').hasMatch(next) ||
             (cursor != null && next.compareTo(cursor) <= 0)) {
-          throw const FormatException('远程歌词库分页游标无效');
+          throw FormatException(
+            appL10n.lyricsLibraryRemoteClientFetchWorksFormatException,
+          );
         }
         cursor = next;
       } while (true);
@@ -181,7 +193,9 @@ class LyricsLibraryRemoteClient {
     final response = await _getJson(_uri(baseUrl, 'works/$id/lyrics'));
     final rawFiles = response['files'];
     if (rawFiles is! List) {
-      throw const FormatException('远程作品没有歌词文件列表');
+      throw FormatException(
+        appL10n.lyricsLibraryRemoteClientFetchLyricsFormatException,
+      );
     }
     final files = <RemoteLibraryFile>[];
     for (final raw in rawFiles.whereType<Map>()) {
@@ -200,14 +214,20 @@ class LyricsLibraryRemoteClient {
         // Ignore a malformed file while retaining other valid files.
       }
     }
-    if (files.isEmpty) throw const FormatException('远程作品没有可用歌词文件');
+    if (files.isEmpty) {
+      throw FormatException(
+        appL10n.lyricsLibraryRemoteClientFetchLyricsFormatException2,
+      );
+    }
     return files;
   }
 
   static String _validateWorkId(String value) {
     final id = value.trim().toUpperCase();
     if (!RegExp(r'^(?:RJ|VJ|BJ)\d+$').hasMatch(id)) {
-      throw const FormatException('无效的作品号');
+      throw FormatException(
+        appL10n.lyricsLibraryRemoteClientValidateWorkIdFormatException,
+      );
     }
     return id;
   }

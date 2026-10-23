@@ -9,6 +9,7 @@ import 'api_service.dart';
 import 'desktop_lyrics_overlay.dart';
 import 'download_service.dart';
 import 'player_service.dart';
+import '../l10n/strings.dart';
 
 class WindowsTrayService with TrayListener, WindowListener {
   WindowsTrayService._();
@@ -43,14 +44,20 @@ class WindowsTrayService with TrayListener, WindowListener {
     await trayManager.setContextMenu(
       Menu(
         items: [
-          MenuItem(key: 'show-home', label: '显示首页'),
+          MenuItem(
+            key: 'show-home',
+            label: appL10n.windowsTrayServiceSetContextMenuLabel,
+          ),
           MenuItem.checkbox(
             key: 'desktop-lyrics',
-            label: '桌面歌词',
+            label: appL10n.desktopLyrics,
             checked: _app.desktopLyricsOn,
           ),
-          MenuItem(key: 'toggle-playback', label: _app.playing ? '暂停' : '播放'),
-          MenuItem(key: 'exit', label: '退出'),
+          MenuItem(
+            key: 'toggle-playback',
+            label: _app.playing ? appL10n.pause : appL10n.play,
+          ),
+          MenuItem(key: 'exit', label: appL10n.quit),
         ],
       ),
     );

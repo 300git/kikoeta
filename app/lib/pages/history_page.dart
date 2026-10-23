@@ -5,6 +5,7 @@ import '../routes.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../l10n/strings.dart';
 
 class HistoryPage extends StatelessWidget {
   final AppState app;
@@ -12,7 +13,7 @@ class HistoryPage extends StatelessWidget {
 
   Work _entryWork(Map<String, dynamic> e) => Work(
     rj: e['rj'] as String? ?? '',
-    title: e['title'] as String? ?? '未知作品',
+    title: e['title'] as String? ?? appL10n.historyPageEntryWorkTitle,
     circle: e['circle'] as String? ?? '',
     va: '',
     age: Age.all,
@@ -32,10 +33,12 @@ class HistoryPage extends StatelessWidget {
             ? AppColors.dark
             : AppColors.light;
         final hiddenBySfw = app.sfwMode;
-        final list = hiddenBySfw ? const <Map<String, dynamic>>[] : app.playHistory;
+        final list = hiddenBySfw
+            ? const <Map<String, dynamic>>[]
+            : app.playHistory;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('播放历史'),
+            title: Text(context.l10n.playHistory),
             leading: const BackButton(),
             actions: [
               if (list.isNotEmpty)
@@ -44,7 +47,7 @@ class HistoryPage extends StatelessWidget {
                     app.clearPlayHistory();
                   },
                   child: Text(
-                    '清空',
+                    context.l10n.clear,
                     style: TextStyle(fontSize: 13, color: p.accent),
                   ),
                 ),
@@ -53,7 +56,9 @@ class HistoryPage extends StatelessWidget {
           body: list.isEmpty
               ? Center(
                   child: Text(
-                    hiddenBySfw ? 'SFW 模式下不显示播放历史' : '暂无播放历史',
+                    hiddenBySfw
+                        ? context.l10n.historyPageBuildText2
+                        : context.l10n.historyPageBuildText,
                     style: TextStyle(fontSize: 13, color: p.dim),
                   ),
                 )
@@ -207,8 +212,16 @@ class HistoryPage extends StatelessWidget {
     final sameDay =
         t.year == now.year && t.month == now.month && t.day == now.day;
     if (sameDay) {
-      return '今天 ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+      return appL10n.historyPageFmtTimeText(
+        (t.hour.toString().padLeft(2, '0')).toString(),
+        (t.minute.toString().padLeft(2, '0')).toString(),
+      );
     }
-    return '${t.month}月${t.day}日 ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    return appL10n.historyPageFmtTimeText2(
+      (t.month).toString(),
+      (t.day).toString(),
+      (t.hour.toString().padLeft(2, '0')).toString(),
+      (t.minute.toString().padLeft(2, '0')).toString(),
+    );
   }
 }

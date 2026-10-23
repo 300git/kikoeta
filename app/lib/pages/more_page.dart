@@ -10,6 +10,7 @@ import 'dictation_translation_page.dart';
 import '../routes.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 
 class MorePage extends StatefulWidget {
   final AppState app;
@@ -24,15 +25,16 @@ class _MorePageState extends State<MorePage> {
   bool _randomLoading = false;
 
   Future<void> _openRandomWork() async {
+    final l10n = context.l10n;
     if (_randomLoading) return;
     setState(() => _randomLoading = true);
     try {
       final work = await ApiService.fetchRandomWork(app);
       if (!mounted) return;
       if (work == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('当前条件下没有可播放的作品')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.morePageOpenRandomWorkText)),
+        );
         return;
       }
       Navigator.of(context).push(buildWorkRoute(app, work));
@@ -40,7 +42,7 @@ class _MorePageState extends State<MorePage> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('随心听加载失败，请稍后重试')));
+      ).showSnackBar(SnackBar(content: Text(l10n.morePageOpenRandomWorkText2)));
     } finally {
       if (mounted) setState(() => _randomLoading = false);
     }
@@ -57,13 +59,13 @@ class _MorePageState extends State<MorePage> {
         final server = app.customServer
             ? (app.customSites.isNotEmpty
                   ? app.customSites[app.customServerIdx].alias
-                  : '自建')
+                  : context.l10n.homePageServerLabelText)
             : 'asmr.one';
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 90),
           children: [
-            const Text(
-              '更多',
+            Text(
+              context.l10n.more,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 10),
@@ -98,7 +100,7 @@ class _MorePageState extends State<MorePage> {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '服务器：$server',
+                          context.l10n.morePageBuildText((server).toString()),
                           style: TextStyle(fontSize: 12, color: p.muted),
                         ),
                       ],
@@ -112,7 +114,7 @@ class _MorePageState extends State<MorePage> {
               _row(
                 context,
                 Icons.history,
-                '播放历史',
+                context.l10n.playHistory,
                 null,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => HistoryPage(app: app)),
@@ -121,7 +123,7 @@ class _MorePageState extends State<MorePage> {
               _row(
                 context,
                 Icons.queue_music,
-                '歌单',
+                context.l10n.morePageBuildRow,
                 null,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => PlaylistsPage(app: app)),
@@ -130,7 +132,7 @@ class _MorePageState extends State<MorePage> {
               _row(
                 context,
                 Icons.block_outlined,
-                '黑名单',
+                context.l10n.blacklist,
                 null,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => BlacklistPage(app: app)),
@@ -139,7 +141,7 @@ class _MorePageState extends State<MorePage> {
               _row(
                 context,
                 Icons.shuffle,
-                '随心听',
+                context.l10n.morePageBuildRow2,
                 null,
                 onTap: _openRandomWork,
                 trailing: _randomLoading
@@ -156,7 +158,7 @@ class _MorePageState extends State<MorePage> {
               _row(
                 context,
                 Icons.download_outlined,
-                '下载',
+                context.l10n.downloads,
                 null,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => DownloadPage(app: app)),
@@ -165,18 +167,16 @@ class _MorePageState extends State<MorePage> {
               _row(
                 context,
                 Icons.lyrics_outlined,
-                '歌词库',
+                context.l10n.lyricsLibrary,
                 null,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const LyricsLibraryPage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const LyricsLibraryPage()),
                 ),
               ),
               _row(
                 context,
                 Icons.graphic_eq,
-                '听写翻译',
+                context.l10n.dictationTranslationPageBuildText,
                 null,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -187,7 +187,7 @@ class _MorePageState extends State<MorePage> {
               _row(
                 context,
                 Icons.settings_outlined,
-                '设置',
+                context.l10n.settings,
                 null,
                 showBottomBorder: false,
                 onTap: () => Navigator.of(context).pushNamed('/settings'),

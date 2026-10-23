@@ -9,6 +9,7 @@ import '../services/media_tree.dart';
 import '../widgets/media_tree_sliver.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../l10n/strings.dart';
 
 class DownloadPage extends StatefulWidget {
   final AppState app;
@@ -98,10 +99,10 @@ class _DownloadPageState extends State<DownloadPage> {
         final visibleItems = items.take(_visibleCount).toList();
         return Scaffold(
           appBar: AppBar(
-            title: const Text('下载'),
+            title: Text(context.l10n.downloads),
             leading: _selecting
                 ? IconButton(
-                    tooltip: '退出多选',
+                    tooltip: context.l10n.exitSelection,
                     icon: const Icon(Icons.arrow_back),
                     onPressed: _exitSelection,
                   )
@@ -109,7 +110,7 @@ class _DownloadPageState extends State<DownloadPage> {
             actions: [
               if (_searching)
                 IconButton(
-                  tooltip: '关闭搜索',
+                  tooltip: context.l10n.downloadsPageBuildTooltip,
                   icon: const Icon(Icons.close),
                   onPressed: () => setState(() {
                     _searching = false;
@@ -119,18 +120,20 @@ class _DownloadPageState extends State<DownloadPage> {
                 )
               else
                 IconButton(
-                  tooltip: '搜索已下载作品',
+                  tooltip: context.l10n.downloadsPageBuildTooltip3,
                   icon: const Icon(Icons.search),
                   onPressed: () => setState(() => _searching = true),
                 ),
               if (_selecting) ...[
                 IconButton(
-                  tooltip: '删除选中作品',
+                  tooltip: context.l10n.downloadsPageBuildTooltip2,
                   icon: const Icon(Icons.delete_outline),
                   onPressed: _selected.isEmpty ? null : _deleteSelected,
                 ),
                 IconButton(
-                  tooltip: _selected.length == allItems.length ? '取消全选' : '全选',
+                  tooltip: _selected.length == allItems.length
+                      ? context.l10n.deselectAll
+                      : context.l10n.selectAll,
                   icon: Icon(
                     _selected.length == allItems.length
                         ? Icons.deselect
@@ -140,7 +143,9 @@ class _DownloadPageState extends State<DownloadPage> {
                 ),
               ],
               IconButton(
-                tooltip: _selecting ? '退出多选' : '多选',
+                tooltip: _selecting
+                    ? context.l10n.exitSelection
+                    : context.l10n.selectMultiple,
                 icon: Icon(_selecting ? Icons.close : Icons.checklist_outlined),
                 onPressed: _toggleSelection,
               ),
@@ -165,9 +170,11 @@ class _DownloadPageState extends State<DownloadPage> {
               ),
               const SizedBox(height: 16),
               if (items.isEmpty)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(top: 80),
-                  child: Center(child: Text('暂无下载音声')),
+                  child: Center(
+                    child: Text(context.l10n.downloadsPageBuildText2),
+                  ),
                 )
               else
                 LayoutBuilder(
@@ -222,7 +229,9 @@ class _DownloadPageState extends State<DownloadPage> {
                       onPressed: () => _loadMore(items.length),
                       icon: const Icon(Icons.expand_more, size: 18),
                       label: Text(
-                        '加载更多（${items.length - visibleItems.length}）',
+                        context.l10n.downloadsPageBuildText5(
+                          (items.length - visibleItems.length).toString(),
+                        ),
                       ),
                     ),
                   ),
@@ -279,7 +288,7 @@ class _DownloadPageState extends State<DownloadPage> {
                       autofocus: true,
                       style: TextStyle(fontSize: 14, color: p.text),
                       decoration: InputDecoration(
-                        hintText: '搜索已下载作品',
+                        hintText: context.l10n.downloadsPageBuildTooltip3,
                         hintStyle: TextStyle(fontSize: 14, color: p.dim),
                         border: InputBorder.none,
                         isDense: true,
@@ -338,7 +347,9 @@ class _DownloadProgressBanner extends StatelessWidget {
     final percent = item == null || item.currentFileTotal <= 0
         ? '--'
         : '${(progress * 100).round()}%';
-    final fileName = item?.currentPath?.split('/').last ?? '暂无正在下载的文件';
+    final fileName =
+        item?.currentPath?.split('/').last ??
+        context.l10n.downloadsPageFileNameFileName;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -412,11 +423,11 @@ class _VoiceCard extends StatelessWidget {
         ? AppColors.dark
         : AppColors.light;
     final status = switch (item.status) {
-      VoiceDownloadStatus.completed => '已完成',
+      VoiceDownloadStatus.completed => context.l10n.downloadsPageStatusStatus2,
       VoiceDownloadStatus.downloading => _progressText(item),
-      VoiceDownloadStatus.queued => '等待下载',
-      VoiceDownloadStatus.paused => '已暂停',
-      VoiceDownloadStatus.failed => '下载失败',
+      VoiceDownloadStatus.queued => context.l10n.downloadsPageStatusStatus5,
+      VoiceDownloadStatus.paused => context.l10n.downloadsPageStatusStatus3,
+      VoiceDownloadStatus.failed => context.l10n.downloadsPageStatusStatus4,
     };
     return Container(
       padding: const EdgeInsets.all(9),
@@ -483,11 +494,11 @@ class _VoiceCard extends StatelessWidget {
 }
 
 String _progressText(VoiceDownload item) {
-  if (item.totalBytes <= 0) return '下载中';
+  if (item.totalBytes <= 0) return appL10n.downloading;
   final percent = (item.downloadedBytes * 100 / item.totalBytes)
       .clamp(0, 100)
       .toStringAsFixed(0);
-  return '下载中 $percent%';
+  return appL10n.downloadsPageProgressTextText((percent).toString());
 }
 
 class DownloadFilesPage extends StatefulWidget {
@@ -593,17 +604,17 @@ class _DownloadFilesPageState extends State<DownloadFilesPage> {
         );
         return Scaffold(
           appBar: AppBar(
-            title: const Text('下载文件'),
+            title: Text(context.l10n.downloadsPageBuildText),
             leading: _selecting
                 ? IconButton(
-                    tooltip: '退出多选',
+                    tooltip: context.l10n.exitSelection,
                     icon: const Icon(Icons.arrow_back),
                     onPressed: _exitSelection,
                   )
                 : const BackButton(),
             actions: [
               IconButton(
-                tooltip: '开始/暂停全部',
+                tooltip: context.l10n.downloadsPageBuildTooltip4,
                 icon: Icon(
                   items.any(
                         (item) =>
@@ -617,12 +628,14 @@ class _DownloadFilesPageState extends State<DownloadFilesPage> {
               ),
               if (_selecting) ...[
                 IconButton(
-                  tooltip: '删除选中下载记录',
+                  tooltip: context.l10n.downloadsPageBuildTooltip5,
                   icon: const Icon(Icons.delete_outline),
                   onPressed: _selected.isEmpty ? null : _deleteSelected,
                 ),
                 IconButton(
-                  tooltip: _selected.length == totalFiles ? '取消全选' : '全选',
+                  tooltip: _selected.length == totalFiles
+                      ? context.l10n.deselectAll
+                      : context.l10n.selectAll,
                   icon: Icon(
                     _selected.length == totalFiles
                         ? Icons.deselect
@@ -632,14 +645,16 @@ class _DownloadFilesPageState extends State<DownloadFilesPage> {
                 ),
               ],
               IconButton(
-                tooltip: _selecting ? '退出多选' : '多选',
+                tooltip: _selecting
+                    ? context.l10n.exitSelection
+                    : context.l10n.selectMultiple,
                 icon: Icon(_selecting ? Icons.close : Icons.checklist_outlined),
                 onPressed: _toggleSelection,
               ),
             ],
           ),
           body: items.isEmpty
-              ? const Center(child: Text('暂无下载文件'))
+              ? Center(child: Text(context.l10n.downloadsPageBuildText4))
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
                   itemCount: rows.length,
@@ -813,16 +828,20 @@ class _DownloadFileRow extends StatelessWidget {
         item.currentPath == node.path &&
         item.status == VoiceDownloadStatus.downloading;
     final status = done
-        ? '已完成'
+        ? context.l10n.downloadsPageStatusStatus2
         : active
         ? item.currentFileTotal > 0
-              ? '下载中 ${(item.currentFileDownloaded * 100 / item.currentFileTotal).round()}%'
-              : '下载中'
+              ? context.l10n.downloadsPageStatusStatus6(
+                  ((item.currentFileDownloaded * 100 / item.currentFileTotal)
+                          .round())
+                      .toString(),
+                )
+              : context.l10n.downloading
         : item.pausedPaths.contains(node.path)
-        ? '已暂停'
+        ? context.l10n.downloadsPageStatusStatus3
         : item.status == VoiceDownloadStatus.failed
-        ? '下载失败'
-        : '等待中';
+        ? context.l10n.downloadsPageStatusStatus4
+        : context.l10n.downloadsPageStatusStatus;
     return InkWell(
       onTap: selecting
           ? onSelect
@@ -967,7 +986,11 @@ class _VoiceDetailPageState extends State<VoiceDetailPage> {
                                 ),
                                 const SizedBox(height: 7),
                                 Text(
-                                  '${item.work.rj}  $downloaded/${files.length} 个文件已下载',
+                                  context.l10n.downloadsPageBuildText6(
+                                    (item.work.rj).toString(),
+                                    (downloaded).toString(),
+                                    (files.length).toString(),
+                                  ),
                                   style: TextStyle(
                                     fontSize: 11.5,
                                     color: p.muted,
@@ -1009,7 +1032,7 @@ class _VoiceDetailPageState extends State<VoiceDetailPage> {
                       ],
                       const SizedBox(height: 18),
                       Text(
-                        '完整文件结构',
+                        context.l10n.downloadsPageBuildText3,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,

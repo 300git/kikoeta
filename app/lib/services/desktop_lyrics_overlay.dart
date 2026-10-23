@@ -10,6 +10,7 @@ import 'package:win32/win32.dart';
 
 import 'app_paths.dart';
 import 'settings_store.dart';
+import '../l10n/strings.dart';
 
 typedef _WndProcNative = IntPtr Function(IntPtr, Uint32, IntPtr, IntPtr);
 typedef _RemoveFontResourceExNative =
@@ -165,7 +166,8 @@ class DesktopLyricsOverlay {
     if (_hwnd != 0) return;
     final hInst = GetModuleHandle(nullptr);
     _classNamePtr = _className.toNativeUtf16();
-    _windowTitlePtr = 'Kikoeta 桌面歌词'.toNativeUtf16();
+    _windowTitlePtr = appL10n.desktopLyricsOverlayEnsureWindowToNativeUtf16
+        .toNativeUtf16();
     _wndProc = NativeCallable<_WndProcNative>.isolateLocal(
       _proc,
       exceptionalReturn: 0,

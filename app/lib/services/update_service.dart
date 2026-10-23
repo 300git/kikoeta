@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data.dart';
+import '../l10n/strings.dart';
 
 /// Update checker backed by the project update service.
 class UpdateService {
@@ -65,7 +66,7 @@ class UpdateService {
         (raw['html_url'] as String?)?.trim() ?? '',
       );
       if (parsedUrl?.isAbsolute != true) {
-        return const UpdateCheckResult(error: '更新服务未返回有效版本信息');
+        return UpdateCheckResult(error: appL10n.updateServiceCheckError2);
       }
       if (version.isEmpty || !isNewerVersion(version, currentVersion)) {
         return const UpdateCheckResult(upToDate: true);
@@ -75,9 +76,9 @@ class UpdateService {
       );
     } catch (e) {
       if (e is SocketException) {
-        return const UpdateCheckResult(error: '无法连接更新服务或 GitHub');
+        return UpdateCheckResult(error: appL10n.updateServiceCheckError3);
       }
-      return const UpdateCheckResult(error: '更新服务连接失败');
+      return UpdateCheckResult(error: appL10n.updateServiceCheckError);
     } finally {
       client.close(force: true);
       _checking = false;
@@ -96,7 +97,7 @@ class UpdateService {
         await Future<void>.delayed(const Duration(seconds: 1));
       }
     }
-    throw StateError('更新服务请求未执行');
+    throw StateError(appL10n.updateServiceGetUpdateResponseStateError);
   }
 
   static Future<Map<String, dynamic>> _getLatestRelease(
@@ -131,14 +132,20 @@ class UpdateService {
     if (raw is! Map<String, dynamic> ||
         raw['tag_name'] is! String ||
         raw['html_url'] is! String) {
-      throw const FormatException('更新响应缺少版本信息');
+      throw FormatException(
+        appL10n.updateServiceParseReleaseResponseFormatException,
+      );
     }
     return raw;
   }
 
   static Future<void> checkManually(BuildContext context, AppState app) async {
+    final l10n = context.l10n;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('正在检查更新…'), duration: Duration(seconds: 1)),
+      SnackBar(
+        content: Text(l10n.updateServiceCheckManuallyText),
+        duration: Duration(seconds: 1),
+      ),
     );
     final result = await check();
     if (!context.mounted) return;
@@ -147,7 +154,7 @@ class UpdateService {
     } else if (result.error != null) {
       _toast(context, result.error!);
     } else {
-      _toast(context, '当前已是最新版本');
+      _toast(context, l10n.updateServiceCheckManuallyToast);
     }
   }
 
@@ -156,11 +163,17 @@ class UpdateService {
     AppState app,
     UpdateInfo update,
   ) async {
+    final l10n = context.l10n;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('发现新版本'),
-        content: Text('最新版本：${update.version}\n当前版本：$currentVersion'),
+        title: Text(l10n.updateServiceShowUpdateDialogText3),
+        content: Text(
+          l10n.updateServiceShowUpdateDialogText4(
+            (update.version).toString(),
+            (currentVersion).toString(),
+          ),
+        ),
         actions: [
           SizedBox(
             width: double.infinity,
@@ -171,16 +184,17 @@ class UpdateService {
                     app.setUpdateIgnoredVersion(update.version);
                     Navigator.of(dialogContext).pop();
                   },
-                  child: const Text('不再提示'),
+                  child: Text(l10n.updateServiceShowUpdateDialogText),
                 ),
                 const Spacer(),
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('关闭'),
+                  child: Text(l10n.close),
                 ),
                 const SizedBox(width: 8),
                 FilledButton.icon(
                   onPressed: () async {
+                    final l10n = context.l10n;
                     final ok = await launchUrl(
                       update.downloadUrl,
                       mode: LaunchMode.externalApplication,
@@ -189,11 +203,11 @@ class UpdateService {
                       Navigator.of(dialogContext).pop();
                     }
                     if (!ok && context.mounted) {
-                      _toast(context, '打开下载页面失败');
+                      _toast(context, l10n.updateServiceShowUpdateDialogToast);
                     }
                   },
                   icon: const Icon(Icons.download_outlined, size: 17),
-                  label: const Text('跳转下载'),
+                  label: Text(l10n.updateServiceShowUpdateDialogText2),
                 ),
               ],
             ),

@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../data.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 
-const _typeLabels = {'rj': 'RJ号', 'circle': '社团', 'va': '声优', 'tag': '标签'};
+Map<String, String> get _typeLabels => {
+  'rj': appL10n.blacklistPageTypeLabelsTypeLabels,
+  'circle': appL10n.circle,
+  'va': appL10n.voiceActor,
+  'tag': appL10n.tag,
+};
 
 class BlacklistPage extends StatelessWidget {
   final AppState app;
@@ -18,87 +24,91 @@ class BlacklistPage extends StatelessWidget {
             ? AppColors.dark
             : AppColors.light;
         return Scaffold(
-      appBar: AppBar(
-        title: const Text('黑名单'),
-        leading: const BackButton(),
-        actions: [
-          TextButton(
-            onPressed: () => _addEntry(context),
-            child: Text('添加', style: TextStyle(fontSize: 13, color: p.accent)),
-          ),
-        ],
-      ),
-      body: app.blacklist.isEmpty
-          ? Center(
-              child: Text(
-                '暂无黑名单条目\n黑名单中的作品不会出现在首页与搜索',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: p.dim, height: 1.6),
+          appBar: AppBar(
+            title: Text(context.l10n.blacklist),
+            leading: const BackButton(),
+            actions: [
+              TextButton(
+                onPressed: () => _addEntry(context),
+                child: Text(
+                  context.l10n.add,
+                  style: TextStyle(fontSize: 13, color: p.accent),
+                ),
               ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-              itemCount: app.blacklist.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (ctx, i) {
-                final e = app.blacklist[i];
-                final type = e['type'] ?? 'rj';
-                final value = e['value'] ?? '';
-                return Container(
-                  padding: const EdgeInsets.fromLTRB(13, 11, 6, 11),
-                  decoration: BoxDecoration(
-                    color: p.surface,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: p.line),
+            ],
+          ),
+          body: app.blacklist.isEmpty
+              ? Center(
+                  child: Text(
+                    context.l10n.blacklistPageBuildText,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13, color: p.dim, height: 1.6),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: p.red.withValues(alpha: .12),
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                        child: Text(
-                          _typeLabels[type] ?? type,
-                          style: TextStyle(fontSize: 10.5, color: p.red),
-                        ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+                  itemCount: app.blacklist.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (ctx, i) {
+                    final e = app.blacklist[i];
+                    final type = e['type'] ?? 'rj';
+                    final value = e['value'] ?? '';
+                    return Container(
+                      padding: const EdgeInsets.fromLTRB(13, 11, 6, 11),
+                      decoration: BoxDecoration(
+                        color: p.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: p.line),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          value,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: p.red.withValues(alpha: .12),
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: Text(
+                              _typeLabels[type] ?? type,
+                              style: TextStyle(fontSize: 10.5, color: p.red),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              value,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => app.toggleBlacklist(type, value),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              size: 18,
+                              color: p.dim,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        onPressed: () => app.toggleBlacklist(type, value),
-                        icon: Icon(
-                          Icons.delete_outline,
-                          size: 18,
-                          color: p.dim,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
         );
       },
     );
   }
 
   Future<void> _addEntry(BuildContext context) async {
+    final l10n = context.l10n;
     final p = Theme.of(context).brightness == Brightness.dark
         ? AppColors.dark
         : AppColors.light;
@@ -109,7 +119,7 @@ class BlacklistPage extends StatelessWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
           backgroundColor: p.surface,
-          title: const Text('添加黑名单'),
+          title: Text(l10n.blacklistPageResultText),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,7 +143,7 @@ class BlacklistPage extends StatelessWidget {
                 autofocus: true,
                 style: TextStyle(fontSize: 13, color: p.text),
                 decoration: InputDecoration(
-                  hintText: '要屏蔽的 RJ 号 / 名称',
+                  hintText: l10n.blacklistPageResultHintText,
                   hintStyle: TextStyle(fontSize: 13, color: p.dim),
                   filled: true,
                   fillColor: p.surface2,
@@ -147,7 +157,7 @@ class BlacklistPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('取消'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () {
@@ -156,7 +166,7 @@ class BlacklistPage extends StatelessWidget {
                   Navigator.pop(ctx, {'type': type, 'value': v});
                 }
               },
-              child: const Text('添加'),
+              child: Text(l10n.add),
             ),
           ],
         ),

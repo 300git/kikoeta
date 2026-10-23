@@ -4,6 +4,7 @@ import 'data.dart';
 import 'services/player_service.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'l10n/strings.dart';
 
 Palette _p(BuildContext c) => Theme.of(c).brightness == Brightness.dark
     ? AppColors.dark
@@ -85,8 +86,8 @@ class _ServerSheetState extends State<_ServerSheet> {
   Widget build(BuildContext context) {
     return _sheetScaffold(
       context: context,
-      title: '选择服务器',
-      sub: '官方服务或自建 Kikoeru 站点',
+      title: context.l10n.sheetsBuildTitle,
+      sub: context.l10n.sheetsBuildSub,
       children: [
         Wrap(
           spacing: 8,
@@ -98,7 +99,9 @@ class _ServerSheetState extends State<_ServerSheet> {
               onTap: () => setState(() => _custom = false),
             ),
             Pill(
-              label: '自定义配置（${app.customSites.length}）',
+              label: context.l10n.sheetsBuildLabel(
+                (app.customSites.length).toString(),
+              ),
               selected: _custom,
               onTap: () => setState(() => _custom = true),
             ),
@@ -107,7 +110,7 @@ class _ServerSheetState extends State<_ServerSheet> {
         const SizedBox(height: 8),
         if (_custom) ...[
           Text(
-            '选择自建站点',
+            context.l10n.sheetsBuildText4,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -119,7 +122,10 @@ class _ServerSheetState extends State<_ServerSheet> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('暂无自建站点', style: TextStyle(fontSize: 12, color: p.dim)),
+                Text(
+                  context.l10n.sheetsBuildText3,
+                  style: TextStyle(fontSize: 12, color: p.dim),
+                ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () async {
@@ -127,7 +133,10 @@ class _ServerSheetState extends State<_ServerSheet> {
                     if (mounted) setState(() {});
                   },
                   icon: const Icon(Icons.add, size: 17),
-                  label: const Text('添加自建站点', style: TextStyle(fontSize: 13)),
+                  label: Text(
+                    context.l10n.settingsPageSectionsText9,
+                    style: TextStyle(fontSize: 13),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: p.accent,
                     side: BorderSide(color: p.accent.withValues(alpha: .5)),
@@ -205,16 +214,19 @@ class _ServerSheetState extends State<_ServerSheet> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('管理自建站点', style: TextStyle(fontSize: 13)),
+            child: Text(
+              context.l10n.sheetsBuildText2,
+              style: TextStyle(fontSize: 13),
+            ),
           ),
           const SizedBox(height: 6),
         ],
         ElevatedButton(
           onPressed: () {
             if (_custom && app.customSites.isEmpty) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('请先添加自建站点')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(context.l10n.sheetsBuildText5)),
+              );
               return;
             }
             app.applyServer(_custom, _idx);
@@ -228,8 +240,8 @@ class _ServerSheetState extends State<_ServerSheet> {
             ),
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
-          child: const Text(
-            '应用',
+          child: Text(
+            context.l10n.sheetsBuildText,
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
@@ -265,13 +277,36 @@ Future<void> showSiteSheet(
       padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
       child: _sheetScaffold(
         context: ctx,
-        title: isEdit ? '编辑自建站点' : '添加自建站点',
-        sub: '支持 IP+端口，如 http://192.168.1.100:3000',
+        title: isEdit
+            ? context.l10n.sheetsShowSiteSheetTitle
+            : context.l10n.settingsPageSectionsText9,
+        sub: context.l10n.loginPageBuildSiteConfigText5,
         children: [
-          _field(ctx, '别名', aliasCtrl, hint: '如：家庭 NAS'),
-          _field(ctx, '地址', urlCtrl, hint: 'http://192.168.1.100:3000'),
-          _field(ctx, '账号', userCtrl, hint: '站点登录账号'),
-          _field(ctx, '密码', passCtrl, hint: '站点密码', obscure: true),
+          _field(
+            ctx,
+            context.l10n.sheetsShowSiteSheetField,
+            aliasCtrl,
+            hint: context.l10n.sheetsShowSiteSheetHint,
+          ),
+          _field(
+            ctx,
+            context.l10n.sheetsShowSiteSheetField2,
+            urlCtrl,
+            hint: 'http://192.168.1.100:3000',
+          ),
+          _field(
+            ctx,
+            context.l10n.account,
+            userCtrl,
+            hint: context.l10n.loginPageBuildSiteConfigHint2,
+          ),
+          _field(
+            ctx,
+            context.l10n.password,
+            passCtrl,
+            hint: context.l10n.loginPageBuildSiteConfigHint,
+            obscure: true,
+          ),
           ElevatedButton(
             onPressed: () {
               final alias = aliasCtrl.text.trim();
@@ -282,9 +317,11 @@ Future<void> showSiteSheet(
                   url.isEmpty ||
                   user.isEmpty ||
                   pass.isEmpty) {
-                ScaffoldMessenger.of(
-                  ctx,
-                ).showSnackBar(const SnackBar(content: Text('请填写别名、地址、账号和密码')));
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(
+                    content: Text(context.l10n.loginPageSaveNewSiteToast),
+                  ),
+                );
                 return;
               }
               if (isEdit) {
@@ -317,8 +354,8 @@ Future<void> showSiteSheet(
               ),
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
-            child: const Text(
-              '保存',
+            child: Text(
+              context.l10n.save,
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
@@ -340,11 +377,22 @@ Future<void> showOneConfigSheet(BuildContext context, AppState app) {
       padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
       child: _sheetScaffold(
         context: ctx,
-        title: 'ASMR.ONE 账号',
-        sub: '账号信息仅保存在本地（演示）',
+        title: context.l10n.sheetsShowOneConfigSheetTitle,
+        sub: context.l10n.sheetsShowOneConfigSheetSub,
         children: [
-          _field(ctx, '账号', userCtrl, hint: 'asmr.one 账号'),
-          _field(ctx, '密码', passCtrl, hint: '密码', obscure: true),
+          _field(
+            ctx,
+            context.l10n.account,
+            userCtrl,
+            hint: context.l10n.sheetsShowOneConfigSheetHint,
+          ),
+          _field(
+            ctx,
+            context.l10n.password,
+            passCtrl,
+            hint: context.l10n.password,
+            obscure: true,
+          ),
           ElevatedButton(
             onPressed: () {
               app.saveAsmr(userCtrl.text.trim(), passCtrl.text);
@@ -358,8 +406,8 @@ Future<void> showOneConfigSheet(BuildContext context, AppState app) {
               ),
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
-            child: const Text(
-              '保存',
+            child: Text(
+              context.l10n.save,
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
@@ -373,12 +421,12 @@ Future<void> showOneConfigSheet(BuildContext context, AppState app) {
 Future<void> showEqSheet(BuildContext context, AppState app) {
   final p = _p(context);
   const hz = ['31', '62', '125', '250', '500', '1k', '2k', '4k', '8k', '16k'];
-  const presets = {
-    '平直': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    '流行': [1, 2, 4, 5, 4, 2, 0, -1, 2, 3],
-    '摇滚': [4, 3, 1, 2, 3, 1, 0, 2, 3, 5],
-    '低音': [7, 6, 4, 2, 1, 0, 0, 0, 0, 0],
-    '人声': [-1, 0, 1, 3, 5, 4, 2, 0, -1, -2],
+  final presets = {
+    context.l10n.sheetsPresetsPresets3: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    context.l10n.sheetsPresetsPresets4: [1, 2, 4, 5, 4, 2, 0, -1, 2, 3],
+    context.l10n.sheetsPresetsPresets5: [4, 3, 1, 2, 3, 1, 0, 2, 3, 5],
+    context.l10n.sheetsPresetsPresets2: [7, 6, 4, 2, 1, 0, 0, 0, 0, 0],
+    context.l10n.sheetsPresetsPresets: [-1, 0, 1, 3, 5, 4, 2, 0, -1, -2],
   };
   return showModalBottomSheet(
     context: context,
@@ -386,16 +434,16 @@ Future<void> showEqSheet(BuildContext context, AppState app) {
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setSheet) => _sheetScaffold(
         context: ctx,
-        title: '均衡器',
-        sub: '真 10 段 · ±12 dB · 全平台',
+        title: context.l10n.equalizer,
+        sub: context.l10n.sheetsShowEqSheetSub,
         children: [
           Row(
             children: [
               Icon(Icons.graphic_eq, size: 17, color: p.accent),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '启用均衡器',
+                  context.l10n.sheetsShowEqSheetText3,
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -490,7 +538,9 @@ Future<void> showEqSheet(BuildContext context, AppState app) {
               ),
               const Spacer(),
               Text(
-                app.eqOn ? '已应用' : '未启用',
+                app.eqOn
+                    ? context.l10n.sheetsShowEqSheetText2
+                    : context.l10n.sheetsShowEqSheetText,
                 style: TextStyle(
                   fontSize: 11,
                   color: app.eqOn ? p.green : p.dim,
@@ -516,8 +566,8 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
         final remain = app.sleepEndAt?.difference(DateTime.now()).inSeconds;
         return _sheetScaffold(
           context: ctx,
-          title: '定时关闭',
-          sub: '到点后停止播放并释放系统接口（锁屏卡片 / 通知全部清除）',
+          title: context.l10n.sleepTimer,
+          sub: context.l10n.sheetsShowSleepSheetSub,
           children: [
             if (app.sleepEndAt != null || app.sleepPlayEndArmed) ...[
               Container(
@@ -540,12 +590,12 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '剩余时间 · 到点后自动停止并退出',
+                        context.l10n.sheetsShowSleepSheetText4,
                         style: TextStyle(fontSize: 11, color: p.dim),
                       ),
                     ] else ...[
                       Text(
-                        '播放完毕',
+                        context.l10n.playbackComplete,
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
@@ -554,7 +604,7 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '当前播放列表播完后自动停止并关闭',
+                        context.l10n.sheetsShowSleepSheetText3,
                         style: TextStyle(fontSize: 11, color: p.dim),
                       ),
                     ],
@@ -567,7 +617,7 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
               spacing: 8,
               children: [
                 Pill(
-                  label: 'N 分钟后',
+                  label: context.l10n.sheetsShowSleepSheetLabel3,
                   selected: app.sleepMode == 'after',
                   onTap: () {
                     app.setSleepMode('after');
@@ -575,7 +625,7 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                   },
                 ),
                 Pill(
-                  label: '指定时间',
+                  label: context.l10n.sheetsShowSleepSheetLabel,
                   selected: app.sleepMode == 'at',
                   onTap: () {
                     app.setSleepMode('at');
@@ -583,7 +633,7 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                   },
                 ),
                 Pill(
-                  label: '播放完毕',
+                  label: context.l10n.playbackComplete,
                   selected: app.sleepMode == 'end',
                   onTap: () {
                     app.setSleepMode('end');
@@ -598,7 +648,9 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                 spacing: 8,
                 children: [10, 15, 30, 60].map((m) {
                   return Pill(
-                    label: '$m 分钟',
+                    label: context.l10n.sheetsShowSleepSheetLabel2(
+                      (m).toString(),
+                    ),
                     selected: app.sleepMin == m,
                     onTap: () {
                       app.sleepMin = m;
@@ -617,12 +669,12 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                       keyboardType: TextInputType.number,
                       style: TextStyle(fontSize: 13, color: p.text),
                       decoration: InputDecoration(
-                        hintText: '自定义分钟数',
+                        hintText: context.l10n.sheetsShowSleepSheetHintText,
                         hintStyle: TextStyle(fontSize: 12, color: p.dim),
                         isDense: true,
                         filled: true,
                         fillColor: p.surface2,
-                        suffixText: '分钟',
+                        suffixText: context.l10n.sheetsShowSleepSheetSuffixText,
                         suffixStyle: TextStyle(fontSize: 12, color: p.dim),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -658,7 +710,10 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text('确定', style: TextStyle(fontSize: 12.5)),
+                    child: Text(
+                      context.l10n.confirm,
+                      style: TextStyle(fontSize: 12.5),
+                    ),
                   ),
                 ],
               ),
@@ -669,7 +724,7 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Text(
-                  '当前播放列表的内容播放完毕后自动停止并关闭',
+                  context.l10n.sheetsShowSleepSheetText5,
                   style: TextStyle(fontSize: 12.5, color: p.dim),
                 ),
               ),
@@ -713,8 +768,8 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text(
-                '开始定时',
+              child: Text(
+                context.l10n.sheetsShowSleepSheetText2,
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -732,7 +787,10 @@ Future<void> showSleepSheet(BuildContext context, AppState app) {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('取消定时', style: TextStyle(fontSize: 13)),
+              child: Text(
+                context.l10n.sheetsShowSleepSheetText,
+                style: TextStyle(fontSize: 13),
+              ),
             ),
           ],
         );
@@ -745,7 +803,10 @@ Widget _timePicker(BuildContext context, AppState app, StateSetter setSheet) {
   final p = _p(context);
   return Row(
     children: [
-      Text('关闭时间', style: TextStyle(fontSize: 12, color: p.muted)),
+      Text(
+        context.l10n.sheetsTimePickerText,
+        style: TextStyle(fontSize: 12, color: p.muted),
+      ),
       const SizedBox(width: 10),
       Expanded(
         child: OutlinedButton.icon(

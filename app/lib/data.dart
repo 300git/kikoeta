@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'services/android_audio.dart';
+import 'l10n/app_language.dart';
 import 'services/player_service.dart';
 import 'services/settings_store.dart';
 
@@ -202,10 +203,14 @@ class PlaylistInfo {
 }
 
 class AppState extends ChangeNotifier {
-  AppState({void Function(String, String)? playbackSettingsWriter})
-    : _writePlaybackSetting = playbackSettingsWriter ?? SettingsStore.set;
+  AppState({
+    void Function(String, String)? playbackSettingsWriter,
+    void Function(String, String)? languageSettingsWriter,
+  }) : _writePlaybackSetting = playbackSettingsWriter ?? SettingsStore.set,
+       _writeLanguageSetting = languageSettingsWriter ?? SettingsStore.set;
 
   final void Function(String, String) _writePlaybackSetting;
+  final void Function(String, String) _writeLanguageSetting;
   Work? _savedPlaybackWork;
   List<MediaNode>? _savedPlaybackQueue;
   int _savedPlaybackQueueLength = -1;
@@ -353,7 +358,11 @@ class AppState extends ChangeNotifier {
 
   // 翻译引擎
   String engine = 'google'; // google / deepl / openai
-  String translationTarget = 'zh-CN'; // zh-CN / zh-TW / en
+  String translationTarget = 'zh-CN'; // ui / zh-CN / zh-TW / en
+  String get uiLanguage => AppLanguage.preference;
+  String get resolvedTranslationTarget => translationTarget == 'ui'
+      ? AppLanguage.translationTarget
+      : translationTarget;
   final List<String> openAiModels = [];
   final Map<String, String> aiConfig = {'base': '', 'model': '', 'key': ''};
   final Map<String, String> indexConfig = {
@@ -1187,9 +1196,13 @@ class AppState extends ChangeNotifier {
     }
     final dk = SettingsStore.get('deepl_key');
     if (dk != null) deeplKey = dk;
+    AppLanguage.setPreference(AppLanguage.system);
+    AppLanguage.setPreference(
+      SettingsStore.get('ui_language') ?? AppLanguage.system,
+    );
     final translationTarget = SettingsStore.get('translation_target');
     if (translationTarget != null &&
-        const ['zh-CN', 'zh-TW', 'en'].contains(translationTarget)) {
+        const ['ui', 'zh-CN', 'zh-TW', 'en'].contains(translationTarget)) {
       this.translationTarget = translationTarget;
     }
     final tray = SettingsStore.get('keep_tray_on_close');
@@ -1311,9 +1324,17 @@ class AppState extends ChangeNotifier {
   }
 
   void setTranslationTarget(String value) {
-    if (!const ['zh-CN', 'zh-TW', 'en'].contains(value)) return;
+    if (!const ['ui', 'zh-CN', 'zh-TW', 'en'].contains(value)) return;
     translationTarget = value;
-    SettingsStore.set('translation_target', value);
+    _writeLanguageSetting('translation_target', value);
+    notifyListeners();
+  }
+
+  void setUiLanguage(String value) {
+    if (!AppLanguage.selectablePreferences.contains(value)) return;
+    if (uiLanguage == value) return;
+    AppLanguage.setPreference(value);
+    _writeLanguageSetting('ui_language', value);
     notifyListeners();
   }
 
@@ -1854,6 +1875,8 @@ class AppState extends ChangeNotifier {
     lyricsLockedPortrait = false;
     lyricsLockedLandscape = false;
     engine = 'google';
+    AppLanguage.setPreference(AppLanguage.system);
+    translationTarget = 'zh-CN';
     aiConfig
       ..clear()
       ..addAll({'base': '', 'model': '', 'key': ''});

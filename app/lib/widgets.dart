@@ -14,6 +14,7 @@ import 'services/lyrics_library_service.dart';
 import 'services/player_service.dart';
 import 'smooth_scroll.dart';
 import 'theme.dart';
+import 'l10n/strings.dart';
 
 final List<List<Color>> coverGrads = [
   [const Color(0xFF3B82F6), const Color(0xFF6366F1)],
@@ -100,9 +101,7 @@ class _CoverArtState extends State<CoverArt> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            for (final c in colors) c.withValues(alpha: c.a * opacity),
-          ],
+          colors: [for (final c in colors) c.withValues(alpha: c.a * opacity)],
         ),
       ),
     );
@@ -116,9 +115,7 @@ class _CoverArtState extends State<CoverArt> {
         : RustImageProvider(work.coverUrl!);
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(radius),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(radius)),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -156,8 +153,7 @@ class _CoverArtState extends State<CoverArt> {
                           fit: StackFit.expand,
                           children: [
                             ?imageChild,
-                            if (v < 1)
-                              _gradientPlaceholder(g, opacity: 1 - v),
+                            if (v < 1) _gradientPlaceholder(g, opacity: 1 - v),
                           ],
                         ),
                       );
@@ -349,7 +345,7 @@ class AgeBadge extends StatelessWidget {
         ? AppColors.dark
         : AppColors.light;
     final (label, color) = switch (age) {
-      Age.all => ('全年龄', p.green),
+      Age.all => (context.l10n.allAges, p.green),
       Age.r15 => ('R15', p.orange),
       Age.r18 => ('R18', p.red),
     };
@@ -419,11 +415,20 @@ class _LyricsStatusBadgeState extends State<LyricsStatusBadge> {
       builder: (context, snapshot) {
         final localStatus = snapshot.data ?? LyricsLibraryStatus.none;
         final (label, color) = switch (localStatus) {
-          LyricsLibraryStatus.ai => ('AI歌词', p.accent),
-          LyricsLibraryStatus.online => ('远程歌词', p.orange),
-          LyricsLibraryStatus.local => ('本地歌词', p.orange),
+          LyricsLibraryStatus.ai => (
+            context.l10n.widgetsBuildBuilder,
+            p.accent,
+          ),
+          LyricsLibraryStatus.online => (
+            context.l10n.widgetsBuildBuilder2,
+            p.orange,
+          ),
+          LyricsLibraryStatus.local => (
+            context.l10n.widgetsBuildBuilder3,
+            p.orange,
+          ),
           LyricsLibraryStatus.none when widget.work.hasSubtitle => (
-            '在线歌词',
+            context.l10n.widgetsBuildBuilder4,
             p.green,
           ),
           LyricsLibraryStatus.none => ('', Colors.transparent),
@@ -719,7 +724,9 @@ class _ResponsiveGridState extends State<ResponsiveGrid>
                       if (i > start) const SizedBox(width: gap),
                       SizedBox(
                         width: tile,
-                        child: RepaintBoundary(child: widget.itemBuilder(ctx, i)),
+                        child: RepaintBoundary(
+                          child: widget.itemBuilder(ctx, i),
+                        ),
                       ),
                     ],
                   ],
@@ -906,25 +913,77 @@ class AdvancedSearchParameter {
   const AdvancedSearchParameter(this.token, this.description);
 }
 
-const advancedSearchParameters = <AdvancedSearchParameter>[
-  AdvancedSearchParameter(r'$tag:', '搜索标签'),
-  AdvancedSearchParameter(r'$tagw:', '包含低愿力标签'),
-  AdvancedSearchParameter(r'$circle:', '搜索社团'),
-  AdvancedSearchParameter(r'$va:', '搜索声优'),
-  AdvancedSearchParameter(r'$duration:', '筛选作品时长（大于）'),
-  AdvancedSearchParameter(r'$rate:', '筛选评分（大于）'),
-  AdvancedSearchParameter(r'$price:', '筛选价格（大于）'),
-  AdvancedSearchParameter(r'$sell:', '筛选销量（大于）'),
-  AdvancedSearchParameter(r'$age:', '筛选年龄分级'),
-  AdvancedSearchParameter(r'$lang:', '筛选语言'),
-  AdvancedSearchParameter(r'$-tag:', '排除标签'),
-  AdvancedSearchParameter(r'$-tagw:', '排除低愿力标签'),
-  AdvancedSearchParameter(r'$-duration:', '筛选作品时长（小于）'),
-  AdvancedSearchParameter(r'$-circle:', '排除社团'),
-  AdvancedSearchParameter(r'$-va:', '排除声优'),
-  AdvancedSearchParameter(r'$-age:', '排除年龄分级'),
-  AdvancedSearchParameter(r'$-lang:', '排除语言'),
-];
+List<AdvancedSearchParameter> get advancedSearchParameters =>
+    <AdvancedSearchParameter>[
+      AdvancedSearchParameter(
+        r'$tag:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter8,
+      ),
+      AdvancedSearchParameter(
+        r'$tagw:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter11,
+      ),
+      AdvancedSearchParameter(
+        r'$circle:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter2,
+      ),
+      AdvancedSearchParameter(
+        r'$va:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter3,
+      ),
+      AdvancedSearchParameter(
+        r'$duration:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter17,
+      ),
+      AdvancedSearchParameter(
+        r'$rate:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter13,
+      ),
+      AdvancedSearchParameter(
+        r'$price:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter15,
+      ),
+      AdvancedSearchParameter(
+        r'$sell:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter14,
+      ),
+      AdvancedSearchParameter(
+        r'$age:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter9,
+      ),
+      AdvancedSearchParameter(
+        r'$lang:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter4,
+      ),
+      AdvancedSearchParameter(
+        r'$-tag:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter5,
+      ),
+      AdvancedSearchParameter(
+        r'$-tagw:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter12,
+      ),
+      AdvancedSearchParameter(
+        r'$-duration:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter16,
+      ),
+      AdvancedSearchParameter(
+        r'$-circle:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter6,
+      ),
+      AdvancedSearchParameter(
+        r'$-va:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter7,
+      ),
+      AdvancedSearchParameter(
+        r'$-age:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter10,
+      ),
+      AdvancedSearchParameter(
+        r'$-lang:',
+        appL10n.widgetsAdvancedSearchParametersAdvancedSearchParameter,
+      ),
+    ];
 
 bool _isSearchTokenSeparator(String value, int index) {
   final code = value.codeUnitAt(index);
@@ -998,7 +1057,7 @@ class AdvancedSearchSuggestions extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
           child: Text(
-            '高级搜索参数',
+            context.l10n.widgetsBuildText,
             style: TextStyle(
               fontSize: 11,
               color: p.dim,
@@ -1314,7 +1373,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
                 focusNode: _focus,
                 style: TextStyle(fontSize: 14, color: p.text),
                 decoration: InputDecoration(
-                  hintText: '搜索 RJ 号、作品名、声优…',
+                  hintText: context.l10n.widgetsInputRowHintText,
                   hintStyle: TextStyle(fontSize: 14, color: p.dim),
                   border: InputBorder.none,
                   isDense: true,
@@ -1331,7 +1390,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
                 ),
                 child: TextFieldTapRegion(
                   child: Tooltip(
-                    message: '高级搜索',
+                    message: context.l10n.widgetsInputRowMessage,
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -1414,93 +1473,97 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '搜索历史',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: p.muted,
-                    ),
-                  ),
-                ),
-                if (app.history.isNotEmpty)
-                  GestureDetector(
-                    onTap: () => app.clearHistory(),
-                    child: Text(
-                      '清空',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: p.accent,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (app.history.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 26),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                  Row(
                     children: [
-                      Icon(
-                        Icons.search,
-                        size: 36,
-                        color: p.dim.withValues(alpha: .6),
+                      Expanded(
+                        child: Text(
+                          context.l10n.widgetsHistoryPanelText,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: p.muted,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '暂无搜索历史',
-                        style: TextStyle(fontSize: 13, color: p.dim),
-                      ),
+                      if (app.history.isNotEmpty)
+                        GestureDetector(
+                          onTap: () => app.clearHistory(),
+                          child: Text(
+                            context.l10n.clear,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: p.accent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
-                ),
-              )
-            else
-              Wrap(
-                spacing: 9,
-                runSpacing: 9,
-                children: app.history.map((value) {
-                  return GestureDetector(
-                    onTap: () {
-                      _ctrl.text = value;
-                      _submit(value);
-                    },
-                    onLongPress: () {
-                      app.removeHistory(value);
-                      ScaffoldMessenger.of(context)
-                        ..clearSnackBars()
-                        ..showSnackBar(
-                          SnackBar(
-                            content: Text('已删除「$value」'),
-                            duration: const Duration(milliseconds: 1600),
+                  const SizedBox(height: 8),
+                  if (app.history.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 26),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.search,
+                              size: 36,
+                              color: p.dim.withValues(alpha: .6),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              context.l10n.widgetsHistoryPanelText2,
+                              style: TextStyle(fontSize: 13, color: p.dim),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 9,
+                      runSpacing: 9,
+                      children: app.history.map((value) {
+                        return GestureDetector(
+                          onTap: () {
+                            _ctrl.text = value;
+                            _submit(value);
+                          },
+                          onLongPress: () {
+                            app.removeHistory(value);
+                            ScaffoldMessenger.of(context)
+                              ..clearSnackBars()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.l10n.widgetsHistoryPanelText3(
+                                      (value).toString(),
+                                    ),
+                                  ),
+                                  duration: const Duration(milliseconds: 1600),
+                                ),
+                              );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 13,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: p.surface,
+                              border: Border.all(color: p.line),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              value,
+                              style: TextStyle(fontSize: 12, color: p.muted),
+                            ),
                           ),
                         );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: p.surface,
-                        border: Border.all(color: p.line),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        value,
-                        style: TextStyle(fontSize: 12, color: p.muted),
-                      ),
+                      }).toList(),
                     ),
-                  );
-                }).toList(),
-              ),
                 ],
               ),
       ),
@@ -1513,16 +1576,14 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
       builder: (context, _) {
         final active = app.hasAgeFilter || app.subOnly;
         return PopupMenuButton<int>(
-          tooltip: '筛选',
+          tooltip: context.l10n.widgetsFilterButtonTooltip,
           // PopupMenuButton 内部自己包了 InkWell，不给 borderRadius 时悬停高亮是直角，
           // 会从按钮圆角缺口漏出一块方形灰影；与 child 的圆角保持一致
           borderRadius: BorderRadius.circular(15),
           onSelected: (v) {
             if (v == 20) {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => AdvancedFilterPage(app: app),
-                ),
+                MaterialPageRoute(builder: (_) => AdvancedFilterPage(app: app)),
               );
               return;
             }
@@ -1539,7 +1600,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
           ),
           color: p.surface,
           itemBuilder: (ctx) => [
-            _menuHead('年龄分级'),
+            _menuHead(context.l10n.ageRating),
             PopupMenuItem(
               value: 2,
               height: 44,
@@ -1566,7 +1627,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
               value: 0,
               height: 44,
               child: MenuItem(
-                label: '全年龄',
+                label: context.l10n.allAges,
                 selected: app.ageFilters.contains(0),
                 checkbox: true,
               ),
@@ -1576,7 +1637,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
               value: 10,
               height: 44,
               child: MenuItem(
-                label: '仅字幕',
+                label: context.l10n.widgetsFilterButtonLabel,
                 selected: app.subtitleFilter == SubtitleFilter.all,
                 checkbox: true,
                 indeterminate: app.subtitleFilter == SubtitleFilter.online,
@@ -1589,7 +1650,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
-                  '高级筛选',
+                  context.l10n.advancedFilterPageBuildText,
                   style: TextStyle(fontSize: 13, color: p.muted),
                 ),
               ),

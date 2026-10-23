@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 
 /// 登录页：未登录 one 站且未配置自建服务器时作为应用首页显示。
 /// 登录成功后 AppState.loginRequired 变为 false，自动切换进主界面。
@@ -62,10 +63,11 @@ class _LoginPageState extends State<LoginPage> {
 
   // ---------------- one 站登录 ----------------
   Future<void> _login() async {
+    final l10n = context.l10n;
     final user = _userCtrl.text.trim();
     final pass = _passCtrl.text;
     if (user.isEmpty || pass.isEmpty) {
-      _toast('请输入账号和密码');
+      _toast(l10n.loginPageLoginToast);
       return;
     }
     setState(() => _busy = true);
@@ -76,7 +78,11 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString().replaceAll('Exception: ', '').trim();
-      _toast('登录失败：${msg.isEmpty ? '请检查网络或账号密码' : msg}');
+      _toast(
+        l10n.loginPageLoginToast3(
+          (msg.isEmpty ? l10n.loginPageLoginToast2 : msg).toString(),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -87,18 +93,15 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('关于账号'),
-        content: const Text(
-          '本项目不提供任何注册服务。\n\n'
-          '账号与密码需要您自行获取，本项目不提供任何获取渠道。\n\n'
-          '您使用该账号在本应用中获取、播放的任何内容，其所有权与责任均归属内容提供方与账号持有人，本项目对此不承担任何责任。\n\n'
-          '账号信息仅保存在本地设备，不会上传到任何第三方服务器。',
+        title: Text(context.l10n.loginPageShowNoAccountText),
+        content: Text(
+          context.l10n.loginPageShowNoAccountText3,
           style: TextStyle(fontSize: 13.5, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('我知道了'),
+            child: Text(context.l10n.loginPageShowNoAccountText2),
           ),
         ],
       ),
@@ -106,6 +109,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _showProxyDialog() async {
+    final l10n = context.l10n;
     final controller = TextEditingController(text: app.httpProxyUrl);
     var enabled = app.httpProxyEnabled;
     try {
@@ -114,8 +118,8 @@ class _LoginPageState extends State<LoginPage> {
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setDialogState) => AlertDialog(
             backgroundColor: p.surface,
-            title: const Text(
-              '配置网络代理',
+            title: Text(
+              l10n.loginPageShowProxyDialogText,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             content: SizedBox(
@@ -127,9 +131,9 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Icon(Icons.vpn_lock_outlined, size: 20, color: p.accent),
                       const SizedBox(width: 10),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          '使用 HTTP 代理',
+                          l10n.loginPageShowProxyDialogText2,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -158,11 +162,11 @@ class _LoginPageState extends State<LoginPage> {
                       color: enabled ? p.text : p.dim,
                     ),
                     decoration: InputDecoration(
-                      labelText: '代理服务器',
+                      labelText: l10n.loginPageShowProxyDialogLabelText,
                       labelStyle: TextStyle(fontSize: 12, color: p.muted),
-                      hintText: '例如 http://代理地址:端口',
+                      hintText: l10n.loginPageShowProxyDialogHintText,
                       hintStyle: TextStyle(fontSize: 12, color: p.dim),
-                      helperText: '仅支持 HTTP 代理',
+                      helperText: l10n.loginPageShowProxyDialogHelperText,
                       helperStyle: TextStyle(fontSize: 11, color: p.dim),
                       prefixIcon: Icon(
                         Icons.lan_outlined,
@@ -195,16 +199,20 @@ class _LoginPageState extends State<LoginPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('取消', style: TextStyle(color: p.muted)),
+                child: Text(l10n.cancel, style: TextStyle(color: p.muted)),
               ),
               FilledButton(
                 onPressed: () {
                   app.setHttpProxyUrl(controller.text);
                   app.setHttpProxyEnabled(enabled);
                   Navigator.pop(ctx);
-                  _toast(enabled ? '网络代理已启用' : '网络代理已关闭');
+                  _toast(
+                    enabled
+                        ? l10n.loginPageShowProxyDialogToast
+                        : l10n.loginPageShowProxyDialogToast2,
+                  );
                 },
-                child: const Text('保存'),
+                child: Text(l10n.save),
               ),
             ],
           ),
@@ -219,7 +227,10 @@ class _LoginPageState extends State<LoginPage> {
     return OutlinedButton.icon(
       onPressed: _showProxyDialog,
       icon: const Icon(Icons.vpn_lock_outlined, size: 17),
-      label: const Text('配置网络代理', style: TextStyle(fontSize: 13)),
+      label: Text(
+        context.l10n.loginPageShowProxyDialogText,
+        style: TextStyle(fontSize: 13),
+      ),
       style: OutlinedButton.styleFrom(
         foregroundColor: p.muted,
         side: BorderSide(color: p.line),
@@ -238,12 +249,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _saveNewSite() async {
+    final l10n = context.l10n;
     final alias = _aliasCtrl.text.trim();
     final url = _urlCtrl.text.trim();
     final user = _siteUserCtrl.text.trim();
     final pass = _sitePassCtrl.text;
     if (alias.isEmpty || url.isEmpty || user.isEmpty || pass.isEmpty) {
-      _toast('请填写别名、地址、账号和密码');
+      _toast(l10n.loginPageSaveNewSiteToast);
       return;
     }
     setState(() => _savingSite = true);
@@ -304,20 +316,20 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 4),
                       Center(
                         child: Text(
-                          '登录 one 站账号',
+                          context.l10n.loginPageBuildLoginText4,
                           style: TextStyle(fontSize: 12, color: p.muted),
                         ),
                       ),
                       const SizedBox(height: 28),
                       _field(
                         _userCtrl,
-                        hint: 'one 站账号',
+                        hint: context.l10n.loginPageBuildLoginHint,
                         icon: Icons.person_outline,
                         textInputAction: TextInputAction.next,
                       ),
                       _field(
                         _passCtrl,
-                        hint: '密码',
+                        hint: context.l10n.password,
                         icon: Icons.lock_outline,
                         obscure: _obscure,
                         suffix: IconButton(
@@ -347,7 +359,7 @@ class _LoginPageState extends State<LoginPage> {
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           child: Text(
-                            '我没有账号',
+                            context.l10n.loginPageBuildLoginText2,
                             style: TextStyle(fontSize: 12, color: p.dim),
                           ),
                         ),
@@ -377,8 +389,8 @@ class _LoginPageState extends State<LoginPage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
-                                  '登 录',
+                              : Text(
+                                  context.l10n.loginPageBuildLoginText,
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
@@ -398,7 +410,10 @@ class _LoginPageState extends State<LoginPage> {
               child: OutlinedButton.icon(
                 onPressed: () => setState(() => _siteMode = true),
                 icon: const Icon(Icons.dns_outlined, size: 17),
-                label: const Text('配置自建站点', style: TextStyle(fontSize: 13)),
+                label: Text(
+                  context.l10n.loginPageBuildLoginText3,
+                  style: TextStyle(fontSize: 13),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: p.muted,
                   side: BorderSide(color: p.line),
@@ -430,7 +445,7 @@ class _LoginPageState extends State<LoginPage> {
               left: 8,
               child: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                tooltip: '返回登录',
+                tooltip: context.l10n.loginPageBuildSiteConfigTooltip,
                 onPressed: () => setState(() => _siteMode = false),
               ),
             ),
@@ -469,9 +484,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      const Center(
+                      Center(
                         child: Text(
-                          '配置自建站点',
+                          context.l10n.loginPageBuildLoginText3,
                           style: TextStyle(
                             fontSize: 21,
                             fontWeight: FontWeight.w800,
@@ -481,14 +496,14 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 4),
                       Center(
                         child: Text(
-                          '支持 IP+端口，如 http://192.168.1.100:3000',
+                          context.l10n.loginPageBuildSiteConfigText5,
                           style: TextStyle(fontSize: 12, color: p.muted),
                         ),
                       ),
                       if (app.customSites.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         Text(
-                          '已有站点',
+                          context.l10n.loginPageBuildSiteConfigText,
                           style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
@@ -575,8 +590,8 @@ class _LoginPageState extends State<LoginPage> {
                                 borderRadius: BorderRadius.circular(13),
                               ),
                             ),
-                            child: const Text(
-                              '使用该站点',
+                            child: Text(
+                              context.l10n.loginPageBuildSiteConfigText2,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -593,7 +608,7 @@ class _LoginPageState extends State<LoginPage> {
                                 horizontal: 10,
                               ),
                               child: Text(
-                                '添加新站点',
+                                context.l10n.loginPageBuildSiteConfigText3,
                                 style: TextStyle(fontSize: 12, color: p.dim),
                               ),
                             ),
@@ -606,7 +621,7 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                       _field(
                         _aliasCtrl,
-                        hint: '别名，如：家庭 NAS',
+                        hint: context.l10n.loginPageBuildSiteConfigHint3,
                         icon: Icons.label_outline,
                       ),
                       _field(
@@ -616,12 +631,12 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       _field(
                         _siteUserCtrl,
-                        hint: '站点登录账号',
+                        hint: context.l10n.loginPageBuildSiteConfigHint2,
                         icon: Icons.person_outline,
                       ),
                       _field(
                         _sitePassCtrl,
-                        hint: '站点密码',
+                        hint: context.l10n.loginPageBuildSiteConfigHint,
                         icon: Icons.lock_outline,
                         obscure: _sitePassObscure,
                         suffix: IconButton(
@@ -662,8 +677,8 @@ class _LoginPageState extends State<LoginPage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
-                                  '保存并进入',
+                              : Text(
+                                  context.l10n.loginPageBuildSiteConfigText4,
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
