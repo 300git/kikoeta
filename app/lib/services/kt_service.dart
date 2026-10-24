@@ -187,6 +187,9 @@ class KtService {
     await _postJson('/api/v1/jobs/$jobId/cancel', const {});
   }
 
+  Future<Map<String, dynamic>> preempt(String jobId) =>
+      _postJson('/api/v1/jobs/$jobId/preempt', const {});
+
   Future<Uint8List> download(String path) async {
     final response = await _client
         .get(_uri(path), headers: _headers())

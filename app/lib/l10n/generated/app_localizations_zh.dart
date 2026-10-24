@@ -12,10 +12,58 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appName => 'Kikoeta';
 
   @override
+  String get playbackShortcuts => '快捷键设置';
+
+  @override
+  String get dictationQueueTitle => '听写翻译队列';
+
+  @override
+  String get dictationQueueClear => '清空列表';
+
+  @override
+  String get dictationQueueEmpty => '暂无任务';
+
+  @override
+  String dictationQueueTracks(String count) {
+    return '$count 个音频';
+  }
+
+  @override
+  String dictationQueueActions(String name) {
+    return '你想对 $name 执行的操作';
+  }
+
+  @override
+  String get dictationQueueJump => '插队';
+
+  @override
+  String get dictationQueuePending => '待处理';
+
+  @override
+  String get dictationQueueRunning => '处理中';
+
+  @override
+  String get dictationQueueCompleted => '已完成';
+
+  @override
+  String get dictationQueueFailed => '失败';
+
+  @override
+  String get dictationQueueCancelled => '已取消';
+
+  @override
+  String get dictationQueueDrag => '拖动调整待处理顺序';
+
+  @override
+  String dictationQueueProcessing(String name) {
+    return '开始处理队列批次：$name';
+  }
+
+  @override
   String get invertSelection => '反选';
 
   @override
-  String get traditionalChinese => '繁体中文';
+  String get traditionalChinese => '繁體中文';
 
   @override
   String get home => '首页';

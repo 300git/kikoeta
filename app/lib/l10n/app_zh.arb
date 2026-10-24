@@ -1,11 +1,29 @@
 {
   "@@locale": "zh",
   "appName": "Kikoeta",
+  "playbackShortcuts": "快捷键设置",
+  "@playbackShortcuts": {"description": "播放设置中的快捷键子页面入口与标题"},
+  "dictationQueueTitle": "听写翻译队列",
+  "dictationQueueClear": "清空列表",
+  "dictationQueueEmpty": "暂无任务",
+  "dictationQueueTracks": "{count} 个音频",
+  "@dictationQueueTracks": {"placeholders": {"count": {"type": "String"}}},
+  "dictationQueueActions": "你想对 {name} 执行的操作",
+  "@dictationQueueActions": {"placeholders": {"name": {"type": "String"}}},
+  "dictationQueueJump": "插队",
+  "dictationQueuePending": "待处理",
+  "dictationQueueRunning": "处理中",
+  "dictationQueueCompleted": "已完成",
+  "dictationQueueFailed": "失败",
+  "dictationQueueCancelled": "已取消",
+  "dictationQueueDrag": "拖动调整待处理顺序",
+  "dictationQueueProcessing": "开始处理队列批次：{name}",
+  "@dictationQueueProcessing": {"placeholders": {"name": {"type": "String"}}},
   "invertSelection": "反选",
   "@invertSelection": {
     "description": "作品详情页：反转当前文件筛选范围内的勾选状态。"
   },
-  "traditionalChinese": "繁体中文",
+  "traditionalChinese": "繁體中文",
   "@traditionalChinese": {
     "description": "界面语言列表中的繁体中文选项，目前不可选。"
   },

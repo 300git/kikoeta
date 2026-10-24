@@ -8,6 +8,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data.dart';
 import '../services/api_service.dart';
 import '../services/kt_service.dart';
+import '../services/dictation_queue.dart';
+import '../widgets/dictation_queue_list.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../services/lyrics_library_service.dart';
 import '../services/settings_store.dart';
 import '../theme.dart';
@@ -32,34 +35,7 @@ class DictationTranslationPage extends StatefulWidget {
       _DictationTranslationPageState();
 }
 
-final Expando<_DictationSession> _dictationSessions = Expando();
-
-class _DictationSession extends ChangeNotifier {
-  Work? work;
-  List<MediaNode> tracks = const [];
-  bool automaticallyMatched = false;
-  final List<String> logs = [];
-  bool running = false;
-  bool cancelling = false;
-  String stage = appL10n.dictationTranslationPageInitStateText;
-  String? jobId;
-  KtService? activeService;
-  int finishedFiles = 0;
-  double stageFraction = 0;
-  int savedFiles = 0;
-
-  void update(void Function() change) {
-    change();
-    notifyListeners();
-  }
-
-  void appendLog(String message) {
-    if (message.trim().isEmpty) return;
-    logs.add(message.trim());
-    if (logs.length > 500) logs.removeRange(0, logs.length - 500);
-    notifyListeners();
-  }
-}
+final Expando<DictationQueue> _dictationSessions = Expando();
 
 class _DictationTranslationPageState extends State<DictationTranslationPage> {
   static const _localEndpoint = '127.0.0.1:2370';
@@ -67,13 +43,12 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
   late final TextEditingController _usernameController;
   late final TextEditingController _passwordController;
   late bool _useLocal;
-  late final _DictationSession _session;
+  late final DictationQueue _session;
   bool _testing = false;
   bool _obscurePassword = true;
   bool _syncing = false;
 
   AppState get app => widget.app;
-  Work? get work => widget.work;
   Palette get p => Theme.of(context).brightness == Brightness.dark
       ? AppColors.dark
       : AppColors.light;
@@ -81,25 +56,17 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
   @override
   void initState() {
     super.initState();
-    _session = _dictationSessions[widget.app] ??= _DictationSession();
-    if (!_session.running && widget.work != null && widget.tracks.isNotEmpty) {
-      final sameSelection =
-          _session.work?.rj == widget.work!.rj &&
-          _session.tracks.map((track) => track.path).join('\n') ==
-              widget.tracks.map((track) => track.path).join('\n');
-      _session
-        ..work = widget.work
-        ..automaticallyMatched = widget.automaticallyMatched
-        ..tracks = List.of(widget.tracks);
-      if (!sameSelection) {
-        _session
-          ..logs.clear()
-          ..stage = appL10n.dictationTranslationPageInitStateText
-          ..jobId = null
-          ..finishedFiles = 0
-          ..stageFraction = 0
-          ..savedFiles = 0;
-      }
+    _session = _dictationSessions[widget.app] ??= DictationQueue();
+    if (widget.work != null && widget.tracks.isNotEmpty) {
+      final token = ApiService.tokenFor(app, ApiService.resolveBase(app));
+      _session.enqueue(
+        work: widget.work!,
+        tracks: widget.tracks,
+        automaticallyMatched: widget.automaticallyMatched,
+        sourceHeaders: token == null || token.isEmpty
+            ? const {}
+            : {'Authorization': 'Bearer $token'},
+      );
     }
     _session.addListener(_onSessionChanged);
     _useLocal =
@@ -129,9 +96,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
     if (mounted) setState(() {});
   }
 
-  Work? get _work => _session.work ?? work;
-  List<MediaNode> get _tracks =>
-      _session.tracks.isNotEmpty ? _session.tracks : widget.tracks;
+  List<MediaNode> get _tracks => _session.tracks;
   String get _endpoint => _useLocal ? _localEndpoint : _networkController.text;
   double get _progress {
     if (_tracks.isEmpty) return 0;
@@ -200,44 +165,50 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
 
   Future<void> _start() async {
     final l10n = context.l10n;
-    if (_session.running) return;
-    final currentWork = _work;
-    if (currentWork == null) {
-      _toast(l10n.dictationTranslationPageStartToast2);
-      return;
-    }
-    if (_tracks.isEmpty) {
-      _toast(l10n.dictationTranslationPageStartToast3);
-      return;
-    }
-    final tracks = List<MediaNode>.of(_tracks);
-    final missing = tracks.where((track) {
-      final url = track.downloadUrl ?? track.url;
-      return url == null || url.isEmpty;
-    }).length;
-    if (missing > 0) {
-      _toast(l10n.dictationTranslationPageStartToast4((missing).toString()));
-      return;
-    }
-
+    if (_session.running || !_session.hasPending) return;
     KtService? service;
     try {
-      service = _service();
-      _session.activeService = service;
+      final connection = _service();
+      service = connection;
+      _session.activeService = connection;
       _persistConnection();
-      _session.update(() {
-        _session
-          ..running = true
-          ..cancelling = false
-          ..logs.clear()
-          ..jobId = null
-          ..stage = l10n.dictationTranslationPageStartUpdate6
-          ..finishedFiles = 0
-          ..stageFraction = 0
-          ..savedFiles = 0;
-      });
+      await _session.run((entry) => _processEntry(connection, entry, l10n));
+    } catch (error) {
+      _appendLog(l10n.dictationTranslationPageStartAppendLog(error.toString()));
+      _toast(l10n.dictationTranslationPageStartToast(error.toString()));
+    } finally {
+      service?.close();
+      _session.activeService = null;
+    }
+  }
+
+  // Connection and strings are captured before navigation can dispose this page.
+  Future<DictationQueueStatus> _processEntry(
+    KtService service,
+    DictationQueueEntry entry,
+    AppLocalizations l10n,
+  ) async {
+    final currentWork = entry.work;
+    final tracks = entry.tracks;
+    var submissionAttempted = false;
+    var terminalObserved = false;
+    _appendLog(l10n.dictationQueueProcessing(entry.label));
+    try {
+      if (tracks.isEmpty) {
+        throw FormatException(l10n.dictationTranslationPageStartToast3);
+      }
+      final missing = tracks.where((track) {
+        final url = track.downloadUrl ?? track.url;
+        return url == null || url.isEmpty;
+      }).length;
+      if (missing > 0) {
+        throw FormatException(
+          l10n.dictationTranslationPageStartToast4(missing.toString()),
+        );
+      }
       await service.health();
-      final token = ApiService.tokenFor(app, ApiService.resolveBase(app));
+      if (_session.stopRequested) return DictationQueueStatus.cancelled;
+      if (_session.preemptRequested) return DictationQueueStatus.pending;
       final sources = <KtSourceFile>[];
       for (var i = 0; i < tracks.length; i++) {
         final track = tracks[i];
@@ -245,12 +216,11 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
           KtSourceFile(
             url: track.downloadUrl ?? track.url!,
             name: ktUploadName(i, track.title),
-            headers: token == null || token.isEmpty
-                ? const {}
-                : {'Authorization': 'Bearer $token'},
+            headers: entry.sourceHeaders,
           ),
         );
       }
+      submissionAttempted = true;
       final created = await service.createJob(
         sources,
         cacheWorkId: currentWork.rj,
@@ -263,6 +233,11 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
         );
       }
       _session.jobId = jobId;
+      if (_session.stopRequested) {
+        await _cancelSubmittedJob(service, jobId, l10n);
+      } else if (_session.preemptRequested) {
+        await _preemptSubmittedJob(service, jobId, l10n);
+      }
       _appendLog(
         l10n.dictationTranslationPageStartAppendLog2(
           (jobId).toString(),
@@ -273,7 +248,11 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
         () => _session.stage = l10n.dictationTranslationPageStartUpdate2,
       );
 
-      var cursor = 0;
+      var cursor = (created['event_cursor'] as num?)?.toInt() ?? 0;
+      _session.update(() {
+        _session.finishedFiles =
+            (created['completed_files'] as num?)?.toInt() ?? 0;
+      });
       var closed = false;
       while (!closed) {
         final batch = await service.events(jobId, cursor);
@@ -281,6 +260,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
         closed = batch.closed;
         for (final event in batch.events) {
           _applyEvent(event);
+          if (event['type'] == 'job_done') closed = true;
         }
       }
 
@@ -288,20 +268,36 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
       final status = job['status']?.toString() ?? 'failed';
       if (status == 'completed' ||
           status == 'failed' ||
-          status == 'cancelled') {
+          status == 'cancelled' ||
+          status == 'paused') {
+        terminalObserved = true;
         _session.update(() {
           _session.stage = l10n.dictationTranslationPageStartUpdate5;
           if (status == 'completed') {
             _session.finishedFiles = tracks.length;
+          } else {
+            _session.finishedFiles =
+                (job['completed_files'] as num?)?.toInt() ??
+                _session.finishedFiles;
           }
           _session.stageFraction = 0;
         });
-        _session.savedFiles = await _saveOutputs(
-          service,
-          job,
-          currentWork,
-          tracks,
-        );
+        try {
+          _session.savedFiles = await _saveOutputs(
+            service,
+            job,
+            currentWork,
+            tracks,
+          );
+        } catch (error) {
+          // The backend checkpoint remains resumable even if writing an
+          // already finished lyric to the local library fails.
+          if (status != 'paused') rethrow;
+          _appendLog(
+            l10n.dictationTranslationPageStartAppendLog(error.toString()),
+          );
+          _toast(l10n.dictationTranslationPageStartToast(error.toString()));
+        }
         if (_session.savedFiles > 0) {
           _appendLog(
             l10n.dictationTranslationPageStartAppendLog3(
@@ -320,16 +316,15 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
         _session.update(
           () => _session.stage = l10n.dictationTranslationPageStartUpdate4,
         );
-        _toast(
-          l10n.dictationTranslationPageStartToast5(
-            (_session.savedFiles).toString(),
-            (currentWork.rj).toString(),
-          ),
-        );
+        return DictationQueueStatus.completed;
+      } else if (status == 'paused') {
+        _session.update(() => _session.stage = l10n.dictationQueuePending);
+        return DictationQueueStatus.pending;
       } else if (status == 'cancelled') {
         _session.update(
           () => _session.stage = l10n.dictationTranslationPageStartUpdate3,
         );
+        return DictationQueueStatus.cancelled;
       } else {
         throw Exception(
           job['error']?.toString().trim().isNotEmpty == true
@@ -338,21 +333,17 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
         );
       }
     } catch (error) {
-      _appendLog(
-        l10n.dictationTranslationPageStartAppendLog((error).toString()),
-      );
+      // A polling/submission error does not prove the backend stopped. Pause
+      // rather than submit another work while the first job may still run.
+      if (submissionAttempted && !terminalObserved) {
+        _session.stopRequested = true;
+      }
+      _appendLog(l10n.dictationTranslationPageStartAppendLog(error.toString()));
       _session.update(
         () => _session.stage = l10n.dictationTranslationPageStartUpdate,
       );
-      _toast(l10n.dictationTranslationPageStartToast((error).toString()));
-    } finally {
-      service?.close();
-      _session.activeService = null;
-      _session.update(() {
-        _session
-          ..running = false
-          ..cancelling = false;
-      });
+      _toast(l10n.dictationTranslationPageStartToast(error.toString()));
+      return DictationQueueStatus.failed;
     }
   }
 
@@ -364,6 +355,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
   ) async {
     final rawResults = job['results'];
     if (rawResults is! List) return 0;
+    final files = job['files'];
     var saved = 0;
     for (
       var index = 0;
@@ -372,6 +364,10 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
     ) {
       final raw = rawResults[index];
       if (raw is! Map || raw['status'] != 'done') continue;
+      final trackIndex =
+          (raw['file_index'] as num?)?.toInt() ??
+          (files is List ? files.indexOf(raw['path']) : index);
+      if (trackIndex < 0 || trackIndex >= tracks.length) continue;
       final urls = raw['download_urls'];
       if (urls is! List || urls.isEmpty) continue;
       String? lrcUrl;
@@ -389,7 +385,10 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
       final content = utf8.decode(bytes, allowMalformed: true);
       await LyricsLibraryService.instance.saveTranslatedLyrics(
         workId: currentWork.rj,
-        relativePath: ktLyricsRelativePath(currentWork.rj, tracks[index].path),
+        relativePath: ktLyricsRelativePath(
+          currentWork.rj,
+          tracks[trackIndex].path,
+        ),
         content: content,
       );
       saved++;
@@ -428,18 +427,93 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
     _session.appendLog(message);
   }
 
-  Future<void> _cancel() async {
+  Future<void> _jumpEntry(DictationQueueEntry entry) async {
     final l10n = context.l10n;
+    if (!_session.jumpAhead(entry)) return;
     final service = _session.activeService;
     final jobId = _session.jobId;
-    if (service == null || jobId == null || _session.cancelling) return;
-    _session.update(() => _session.cancelling = true);
+    if (service != null && jobId != null) {
+      await _preemptSubmittedJob(service, jobId, l10n);
+    }
+  }
+
+  Future<void> _preemptSubmittedJob(
+    KtService service,
+    String jobId,
+    AppLocalizations l10n,
+  ) async {
+    if (_session.jobId != jobId ||
+        !_session.preemptRequested ||
+        _session.preempting ||
+        _session.stopRequested) {
+      return;
+    }
+    final revision = _session.runRevision;
+    _session.update(() => _session.preempting = true);
+    try {
+      await service.preempt(jobId);
+    } catch (error) {
+      if (_session.jobId != jobId || _session.runRevision != revision) return;
+      _session.update(() {
+        _session.preemptRequested = false;
+        _session.preempting = false;
+      });
+      _toast(l10n.dictationTranslationPageStartToast(error.toString()));
+    }
+  }
+
+  Future<void> _deleteEntry(DictationQueueEntry entry) async {
+    if (entry.status == DictationQueueStatus.running) {
+      await _cancel(deleteOnFinish: true);
+    } else {
+      _session.remove(entry);
+    }
+  }
+
+  Future<void> _clearQueue() async {
+    final current = _session.current;
+    _session.clear();
+    if (current?.status == DictationQueueStatus.running) {
+      await _cancel(deleteOnFinish: true);
+    }
+  }
+
+  Future<void> _cancel({bool deleteOnFinish = false}) async {
+    final l10n = context.l10n;
+    final service = _session.activeService;
+    if (!_session.running || service == null) return;
+    if (_session.cancelling) {
+      if (deleteOnFinish) _session.update(() => _session.deleteOnFinish = true);
+      return;
+    }
+    _session.update(() {
+      _session.stopRequested = true;
+      _session.cancelling = true;
+      _session.deleteOnFinish = deleteOnFinish;
+    });
+    final jobId = _session.jobId;
+    if (jobId != null) await _cancelSubmittedJob(service, jobId, l10n);
+  }
+
+  Future<void> _cancelSubmittedJob(
+    KtService service,
+    String jobId,
+    AppLocalizations l10n,
+  ) async {
+    final revision = _session.runRevision;
     try {
       await service.cancel(jobId);
-      _appendLog(l10n.dictationTranslationPageCancelAppendLog);
+      if (_session.jobId == jobId && _session.runRevision == revision) {
+        _appendLog(l10n.dictationTranslationPageCancelAppendLog);
+      }
     } catch (error) {
-      _toast(l10n.dictationTranslationPageCancelToast((error).toString()));
-      _session.update(() => _session.cancelling = false);
+      if (_session.jobId != jobId || _session.runRevision != revision) return;
+      _toast(l10n.dictationTranslationPageCancelToast(error.toString()));
+      _session.update(() {
+        _session.cancelling = false;
+        _session.stopRequested = false;
+        _session.deleteOnFinish = false;
+      });
     }
   }
 
@@ -593,10 +667,11 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       _workCard(),
-      const SizedBox(height: 14),
-      _progressCard(),
-      const SizedBox(height: 14),
-      _logCard(),
+      if (_session.current != null) ...[
+        const SizedBox(height: 14),
+        _progressCard(),
+      ],
+      if (_session.logs.isNotEmpty) ...[const SizedBox(height: 14), _logCard()],
     ],
   );
 
@@ -812,93 +887,45 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
   );
 
   Widget _workCard() {
-    final currentWork = _work;
-    if (currentWork == null) {
+    final clearButton = TextButton.icon(
+      onPressed: _session.entries.isEmpty ? null : _clearQueue,
+      icon: const Icon(Icons.playlist_remove_outlined, size: 18),
+      label: Text(context.l10n.dictationQueueClear),
+      style: TextButton.styleFrom(
+        foregroundColor: p.muted,
+        textStyle: const TextStyle(fontFamily: kAppFontFamily, fontSize: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        minimumSize: const Size(0, 36),
+      ),
+    );
+    if (_session.entries.isEmpty) {
       return _card(
-        title: context.l10n.dictationTranslationPageWorkCardTitle,
+        title: context.l10n.dictationQueueTitle,
         icon: Icons.library_music_outlined,
+        action: clearButton,
         children: [
-          Text(
-            context.l10n.dictationTranslationPageWorkCardText4,
-            style: TextStyle(color: p.muted, height: 1.5),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                context.l10n.dictationQueueEmpty,
+                style: TextStyle(color: p.dim, fontSize: 13),
+              ),
+            ),
           ),
         ],
       );
     }
     return _card(
-      title: context.l10n.dictationTranslationPageWorkCardTitle2,
+      title: context.l10n.dictationQueueTitle,
       icon: Icons.library_music_outlined,
+      action: clearButton,
       children: [
-        Text(
-          currentWork.title,
-          style: TextStyle(
-            color: p.text,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+        DictationQueueList(
+          queue: _session,
+          onDelete: _deleteEntry,
+          onJump: _jumpEntry,
         ),
-        const SizedBox(height: 6),
-        Text(
-          context.l10n.dictationTranslationPageWorkCardText5(
-            (currentWork.rj).toString(),
-            (_tracks.length).toString(),
-          ),
-          style: TextStyle(color: p.muted, fontSize: 12),
-        ),
-        const SizedBox(height: 8),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 230),
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: _tracks.length,
-            itemBuilder: (_, index) {
-              final track = _tracks[index];
-              return ListTile(
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 2,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                tileColor: index.isEven ? p.surface2 : null,
-                leading: Icon(
-                  Icons.audio_file_outlined,
-                  size: 20,
-                  color: p.accent,
-                ),
-                titleTextStyle: TextStyle(
-                  fontFamily: kAppFontFamily,
-                  color: p.text,
-                  fontSize: 13,
-                ),
-                subtitleTextStyle: TextStyle(
-                  fontFamily: kAppFontFamily,
-                  color: p.dim,
-                  fontSize: 11.5,
-                ),
-                title: Text(
-                  track.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(
-                  track.path,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              );
-            },
-          ),
-        ),
-        if (_session.automaticallyMatched) ...[
-          const SizedBox(height: 8),
-          Text(
-            context.l10n.dictationAutoSelectionHint,
-            style: TextStyle(color: p.muted, fontSize: 12, height: 1.5),
-          ),
-        ],
         const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
@@ -916,10 +943,8 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
               ),
             ),
             onPressed: _session.running
-                ? (_session.cancelling || _session.jobId == null
-                      ? null
-                      : _cancel)
-                : (_syncing || _tracks.isEmpty ? null : _start),
+                ? (_session.cancelling ? null : _cancel)
+                : (_syncing || !_session.hasPending ? null : _start),
             icon: Icon(
               _session.running ? Icons.stop_circle_outlined : Icons.graphic_eq,
             ),
@@ -1023,6 +1048,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
     required String title,
     required IconData icon,
     required List<Widget> children,
+    Widget? action,
   }) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
@@ -1047,6 +1073,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
                 ),
               ),
             ),
+            ?action,
           ],
         ),
         const SizedBox(height: 14),

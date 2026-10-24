@@ -152,7 +152,7 @@ void main() {
         entries.where((entry) => entry.enabled).map((entry) => entry.value),
         ['zh-CN'],
       );
-      for (final label in ['繁体中文', '日本語', 'English', 'Русский']) {
+      for (final label in ['繁體中文', '日本語', 'English', 'Русский']) {
         expect(find.text(label), findsOneWidget);
       }
       await tester.tap(find.text('English'));

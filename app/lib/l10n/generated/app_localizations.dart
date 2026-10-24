@@ -103,6 +103,90 @@ abstract class AppLocalizations {
   /// **'Kikoeta'**
   String get appName;
 
+  /// 播放设置中的快捷键子页面入口与标题
+  ///
+  /// In zh, this message translates to:
+  /// **'快捷键设置'**
+  String get playbackShortcuts;
+
+  /// No description provided for @dictationQueueTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'听写翻译队列'**
+  String get dictationQueueTitle;
+
+  /// No description provided for @dictationQueueClear.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空列表'**
+  String get dictationQueueClear;
+
+  /// No description provided for @dictationQueueEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无任务'**
+  String get dictationQueueEmpty;
+
+  /// No description provided for @dictationQueueTracks.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个音频'**
+  String dictationQueueTracks(String count);
+
+  /// No description provided for @dictationQueueActions.
+  ///
+  /// In zh, this message translates to:
+  /// **'你想对 {name} 执行的操作'**
+  String dictationQueueActions(String name);
+
+  /// No description provided for @dictationQueueJump.
+  ///
+  /// In zh, this message translates to:
+  /// **'插队'**
+  String get dictationQueueJump;
+
+  /// No description provided for @dictationQueuePending.
+  ///
+  /// In zh, this message translates to:
+  /// **'待处理'**
+  String get dictationQueuePending;
+
+  /// No description provided for @dictationQueueRunning.
+  ///
+  /// In zh, this message translates to:
+  /// **'处理中'**
+  String get dictationQueueRunning;
+
+  /// No description provided for @dictationQueueCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已完成'**
+  String get dictationQueueCompleted;
+
+  /// No description provided for @dictationQueueFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get dictationQueueFailed;
+
+  /// No description provided for @dictationQueueCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消'**
+  String get dictationQueueCancelled;
+
+  /// No description provided for @dictationQueueDrag.
+  ///
+  /// In zh, this message translates to:
+  /// **'拖动调整待处理顺序'**
+  String get dictationQueueDrag;
+
+  /// No description provided for @dictationQueueProcessing.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始处理队列批次：{name}'**
+  String dictationQueueProcessing(String name);
+
   /// 作品详情页：反转当前文件筛选范围内的勾选状态。
   ///
   /// In zh, this message translates to:
@@ -112,7 +196,7 @@ abstract class AppLocalizations {
   /// 界面语言列表中的繁体中文选项，目前不可选。
   ///
   /// In zh, this message translates to:
-  /// **'繁体中文'**
+  /// **'繁體中文'**
   String get traditionalChinese;
 
   /// main.dart: scaffold

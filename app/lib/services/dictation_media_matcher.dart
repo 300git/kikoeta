@@ -61,6 +61,42 @@ class DictationMediaMatcher {
   static final _soundOnly = RegExp(
     r'^(?:作品)?bgm$|^(?:se|効果音|效果音|音效)素材$|^効果音集$',
   );
+  static final _noSpeech = RegExp(
+    r'(?:无|無)(?:人[声聲]|对白|對白|台[词詞]|语音|語音)|'
+    r'(?:ボイス|人声|人聲|セリフ|台詞)[ _-]*(?:なし|無し?|off|カット)|'
+    r'(?:^|[ _\[【(（])声(?:なし|無し?|off)|'
+    r'(?<![a-z])(?:no[ _-]*(?:voice|vocals?|speech|dialogue)|non[ _-]*(?:voice|vocal)|'
+    r'(?:voice|vocals?|speech|dialogue)[ _-]*off)(?![a-z])|'
+    r'(?:環境音|环境音|雨音|波音|心音|寝息|呼吸音|吐息|耳かき|耳舐め)(?:する)?(?:のみ|だけ)|'
+    r'(?:纯|純)(?:环境音|環境音|音效)',
+  );
+  static final _pureSound = RegExp(
+    r'^(?:(?:tr(?:ack)?|ex|トラック)?\d+)?'
+    r'(?:寝息|呼吸音|吐息|環境音|环境音|雨音|波音|焚き火|bgm)'
+    r'(?:\d+|ループ|loop)?$|の寝息(?:ループ|loop)?$',
+  );
+  static final _pureBonusSound = RegExp(
+    r'^(?:(?:tr(?:ack)?|ex|トラック)?\d+)?(?:耳かき|耳舐め)(?:\d+)?$',
+  );
+  static final _materialFolder = RegExp(r'音源|素材');
+  static final _soundMaterialClip = RegExp(
+    r'^(?:優しい)?(?:鼻息)?(?:耳舐め|耳かき|フェラ)(?:[_ -][^\s]+)+$',
+  );
+  static final _speechLabel = RegExp(
+    r'ボイス|セリフ|台詞|囁き|ささやき|会話|对白|對白|台词|语音|語音|'
+    r'(?<![a-z])(?:voice|speech|dialogue)(?![a-z])',
+  );
+  static final _earlyEdition = RegExp(
+    r'(?:(?:早期|初期|先行)(?:購入|購買|购买|购入)?|初回(?:限定)?)'
+    r'(?:特典(?:付き|付|同梱))?(?:版|ver(?:sion)?\.?)|初版|'
+    r'(?<![a-z])(?:early|first)[ _-]*(?:purchase[ _-]*)?(?:edition|version|release|ver\.?)(?![a-z])',
+  );
+  static final _earlyBonus = RegExp(r'(?:早期|初期|初回)(?:購入|購買|购买|购入)?特典');
+  static final _regularEdition = RegExp(
+    r'(?:通常|普通|常规|常規|标准|標準)(?:版|ver(?:sion)?\.?)|'
+    r'(?<![a-z])(?:regular|standard|normal)[ _-]*(?:edition|version|ver\.?)(?![a-z])',
+  );
+  static final _editionHearts = RegExp(r'^[♡♥❤]*$');
   static final _combined = RegExp(
     r'通し|ぶっ通し|連結|一括|全パート|全編|フルバージョン|full[ _-]*track',
   );
@@ -108,6 +144,10 @@ class DictationMediaMatcher {
     final excluded = List<bool>.filled(index.rows.length, false);
     final bonuses = List<bool>.filled(index.rows.length, false);
     final bits = List<int>.filled(index.rows.length, 0);
+    final earlyEditions = List<bool>.filled(index.rows.length, false);
+    final speechless = List<bool>.filled(index.rows.length, false);
+    final soundMaterials = List<bool>.filled(index.rows.length, false);
+    final spokenScopes = List<bool>.filled(index.rows.length, false);
     final languages = <int, int>{};
     final languageSiblings = <int, Set<int>>{};
     final winners = <String, _Candidate>{};
@@ -115,6 +155,12 @@ class DictationMediaMatcher {
       final node = row.node;
       final parent = row.parentIndex;
       final name = _widthFold(node.title);
+      if (!node.isDir && (!_media.hasMatch(name) || !hasSource(node))) continue;
+      final early =
+          (parent != null && earlyEditions[parent]) ||
+          _earlyEdition.hasMatch(name) ||
+          _earlyBonus.hasMatch(name);
+      final stem = node.isDir ? name : name.replaceFirst(_media, '');
       final bitDepth =
           int.tryParse(_bitDepth.firstMatch(name)?.group(1) ?? '') ??
           (name.contains('ハイレゾ') ? 24 : (parent == null ? 0 : bits[parent]));
@@ -122,6 +168,24 @@ class DictationMediaMatcher {
       final rank = _rank(name, inheritedRank);
       final bonus =
           (parent != null && bonuses[parent]) || _bonus.hasMatch(name);
+      final material =
+          (parent != null && soundMaterials[parent]) ||
+          (node.isDir && _materialFolder.hasMatch(name));
+      final spoken =
+          (parent != null && spokenScopes[parent]) ||
+          (node.isDir && (_speechLabel.hasMatch(name) || _talk.hasMatch(name)));
+      final compactStem = _compact(stem);
+      final noSpeech =
+          (parent != null && speechless[parent]) ||
+          _noSpeech.hasMatch(stem) ||
+          _pureSound.hasMatch(compactStem) ||
+          (bonus && !spoken && _pureBonusSound.hasMatch(compactStem)) ||
+          (!node.isDir &&
+              material &&
+              !spoken &&
+              _soundMaterialClip.hasMatch(stem) &&
+              !_talk.hasMatch(stem) &&
+              !_speechLabel.hasMatch(stem));
       final blocked =
           (parent != null && excluded[parent]) ||
           _promo.hasMatch(name) ||
@@ -141,14 +205,15 @@ class DictationMediaMatcher {
         excluded[row.index] = blocked;
         bonuses[row.index] = bonus;
         bits[row.index] = bitDepth;
+        earlyEditions[row.index] = early;
+        speechless[row.index] = noSpeech;
+        soundMaterials[row.index] = material;
+        spokenScopes[row.index] = spoken;
         continue;
       }
-      if (!_media.hasMatch(name) ||
-          (blocked && !_talk.hasMatch(name)) ||
-          !hasSource(node)) {
+      if (noSpeech || (blocked && !_talk.hasMatch(name))) {
         continue;
       }
-      final stem = name.replaceFirst(_media, '');
       final titleKey = _titleKey(stem, bitDepth);
       // Empty/format-only titles cannot establish identity (e.g. MP3.mp3).
       final scope = parent == null ? '' : scopes[parent];
@@ -163,6 +228,7 @@ class DictationMediaMatcher {
       final candidate = _Candidate(
         node,
         rank,
+        early,
         bonus,
         row.index,
         scope,
@@ -310,6 +376,8 @@ class DictationMediaMatcher {
   }
 
   static String _stripVersions(String name) => name
+      .replaceAll(_earlyEdition, '')
+      .replaceAll(_regularEdition, '')
       .replaceAll(_reducedTag, '')
       .replaceAll(_partialTag, '')
       .replaceAll(_offTag, '')
@@ -323,6 +391,7 @@ class DictationMediaMatcher {
     // Some publishers distribute the main no-SE edition as a numbered bonus.
     if (name.contains('本編')) key = key.replaceAll(_bonusNumber, '');
     key = _compact(key.replaceAll(_quality, '').replaceFirst(_ordinal, ''));
+    if (_editionHearts.hasMatch(key)) return '';
     if (key == 'main' || key == '差分') return '';
     return key;
   }
@@ -352,6 +421,7 @@ class DictationMediaMatcher {
 class _Candidate {
   final MediaNode node;
   final int rank;
+  final bool early;
   final bool bonus;
   final int order;
   final String scope;
@@ -360,6 +430,7 @@ class _Candidate {
   const _Candidate(
     this.node,
     this.rank,
+    this.early,
     this.bonus,
     this.order,
     this.scope,
@@ -368,6 +439,7 @@ class _Candidate {
   );
 
   bool preferredTo(_Candidate other) {
+    if (early != other.early) return early;
     if (rank != other.rank) return rank > other.rank;
     // Dictation caches source media: prefer small compressed audio over PCM.
     const formats = [

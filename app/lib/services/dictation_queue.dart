@@ -1,0 +1,195 @@
+import 'dart:collection';
+
+import 'package:flutter/foundation.dart';
+
+import '../data.dart';
+import '../l10n/strings.dart';
+import 'kt_service.dart';
+
+enum DictationQueueStatus { pending, running, completed, failed, cancelled }
+
+class DictationQueueEntry {
+  final Work work;
+  final List<MediaNode> tracks;
+  final bool automaticallyMatched;
+  final String label;
+  final Map<String, String> sourceHeaders;
+  DictationQueueStatus _status = DictationQueueStatus.pending;
+
+  DictationQueueEntry._({
+    required this.work,
+    required List<MediaNode> tracks,
+    required this.automaticallyMatched,
+    required this.label,
+    required Map<String, String> sourceHeaders,
+  }) : tracks = List.unmodifiable(tracks),
+       sourceHeaders = Map.unmodifiable(sourceHeaders);
+
+  DictationQueueStatus get status => _status;
+}
+
+/// Display order is newest first; execution takes the last pending entry.
+/// Owned by the app session so navigating away does not stop the queue.
+class DictationQueue extends ChangeNotifier {
+  final List<DictationQueueEntry> _entries = [];
+  final Map<String, int> _nextBatch = {};
+  int pendingRevision = 0;
+  late final entries = UnmodifiableListView(_entries);
+  DictationQueueEntry? current;
+  final List<String> logs = [];
+  bool running = false;
+  bool cancelling = false;
+  bool stopRequested = false;
+  bool deleteOnFinish = false;
+  bool preemptRequested = false;
+  bool preempting = false;
+  int runRevision = 0;
+  String stage = appL10n.dictationTranslationPageInitStateText;
+  String? jobId;
+  KtService? activeService;
+  int finishedFiles = 0;
+  double stageFraction = 0;
+  int savedFiles = 0;
+
+  bool get hasPending =>
+      _entries.any((e) => e.status == DictationQueueStatus.pending);
+  List<MediaNode> get tracks => current?.tracks ?? const [];
+
+  DictationQueueEntry enqueue({
+    required Work work,
+    required List<MediaNode> tracks,
+    bool automaticallyMatched = false,
+    Map<String, String> sourceHeaders = const {},
+  }) {
+    final id = work.rj.toUpperCase();
+    final batch = _nextBatch[id] ?? 0;
+    _nextBatch[id] = batch + 1;
+    final entry = DictationQueueEntry._(
+      work: work,
+      tracks: tracks,
+      automaticallyMatched: automaticallyMatched,
+      label: batch == 0 ? work.rj : '${work.rj}-$batch',
+      sourceHeaders: sourceHeaders,
+    );
+    _entries.insert(0, entry);
+    pendingRevision++;
+    notifyListeners();
+    return entry;
+  }
+
+  /// Both identities must still be pending when a drag finishes. A job may
+  /// have started, or another page may have imported a batch during the drag.
+  void reorder(DictationQueueEntry entry, DictationQueueEntry target) {
+    if (entry.status != DictationQueueStatus.pending ||
+        target.status != DictationQueueStatus.pending ||
+        !_entries.contains(entry) ||
+        !_entries.contains(target)) {
+      return;
+    }
+    final targetIndex = _entries.indexOf(target);
+    _entries.remove(entry);
+    _entries.insert(targetIndex, entry);
+    pendingRevision++;
+    notifyListeners();
+  }
+
+  bool canJump(DictationQueueEntry entry) =>
+      entry.status == DictationQueueStatus.pending &&
+      _entries.contains(entry) &&
+      !cancelling;
+
+  /// The last pending entry executes next. The processor returns the current
+  /// batch to pending only after the backend confirms it has paused.
+  bool jumpAhead(DictationQueueEntry entry) {
+    if (!canJump(entry)) return false;
+    _entries.remove(entry);
+    _entries.add(entry);
+    if (current?.status == DictationQueueStatus.running) {
+      preemptRequested = true;
+    }
+    pendingRevision++;
+    notifyListeners();
+    return true;
+  }
+
+  bool remove(DictationQueueEntry entry) {
+    if (entry.status == DictationQueueStatus.running) return false;
+    if (!_entries.remove(entry)) return false;
+    if (entry.status == DictationQueueStatus.pending) pendingRevision++;
+    if (identical(current, entry)) current = null;
+    notifyListeners();
+    return true;
+  }
+
+  /// Keep the active entry visible until its cancellation has finished.
+  void clear() {
+    final hadPending = hasPending;
+    _entries.removeWhere(
+      (entry) => entry.status != DictationQueueStatus.running,
+    );
+    if (hadPending) pendingRevision++;
+    if (current?.status != DictationQueueStatus.running) current = null;
+    notifyListeners();
+  }
+
+  Future<void> run(
+    Future<DictationQueueStatus> Function(DictationQueueEntry) process,
+  ) async {
+    if (running || !hasPending) return;
+    running = true;
+    stopRequested = false;
+    logs.clear();
+    try {
+      while (!stopRequested && hasPending) {
+        final entry = _entries.lastWhere(
+          (e) => e.status == DictationQueueStatus.pending,
+        );
+        current = entry;
+        runRevision++;
+        entry._status = DictationQueueStatus.running;
+        pendingRevision++;
+        jobId = null;
+        cancelling = false;
+        deleteOnFinish = false;
+        preemptRequested = false;
+        preempting = false;
+        finishedFiles = 0;
+        stageFraction = 0;
+        savedFiles = 0;
+        stage = appL10n.dictationTranslationPageStartUpdate6;
+        notifyListeners();
+        try {
+          entry._status = await process(entry);
+        } catch (_) {
+          entry._status = DictationQueueStatus.failed;
+          rethrow;
+        } finally {
+          if (deleteOnFinish) remove(entry);
+        }
+        if (entry.status == DictationQueueStatus.cancelled) {
+          stopRequested = true;
+        }
+        notifyListeners();
+      }
+    } finally {
+      running = false;
+      cancelling = false;
+      preemptRequested = false;
+      preempting = false;
+      jobId = null;
+      notifyListeners();
+    }
+  }
+
+  void update(void Function() change) {
+    change();
+    notifyListeners();
+  }
+
+  void appendLog(String message) {
+    if (message.trim().isEmpty) return;
+    logs.add(message.trim());
+    if (logs.length > 500) logs.removeRange(0, logs.length - 500);
+    notifyListeners();
+  }
+}

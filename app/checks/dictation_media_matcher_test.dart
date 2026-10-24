@@ -22,14 +22,12 @@ MediaNode folder(String name, List<MediaNode> children) =>
 List<MediaNode> select(List<MediaNode> roots) =>
     DictationMediaMatcher.select(MediaTreeIndex(roots));
 
-List<Map<String, dynamic>> samples() =>
+List<Map<String, dynamic>> samples([
+  String fixture = 'dictation_media_samples.json.gz',
+]) =>
     (jsonDecode(
               utf8.decode(
-                gzip.decode(
-                  File(
-                    'checks/fixtures/dictation_media_samples.json.gz',
-                  ).readAsBytesSync(),
-                ),
+                gzip.decode(File('checks/fixtures/$fixture').readAsBytesSync()),
               ),
             )
             as List)
@@ -50,6 +48,202 @@ List<MediaNode> tree(List raw, [String parent = '']) => raw.map((value) {
 }).toList();
 
 void main() {
+  test('RJ01716786 keeps nine clean main tracks and seven spoken bonuses', () {
+    final raw =
+        jsonDecode(
+              utf8.decode(
+                gzip.decode(
+                  File(
+                    'checks/fixtures/RJ01716786-tracks.json.gz',
+                  ).readAsBytesSync(),
+                ),
+              ),
+            )
+            as List;
+    final chosen = select(tree(raw));
+    expect(chosen.length, 16);
+    expect(chosen.where((n) => n.path.startsWith('本編/mp3/mp3SEなし/')).length, 9);
+    expect(chosen.where((n) => n.path.startsWith('特典/mp3/')).length, 7);
+    expect(chosen.any((n) => n.path.startsWith('とぉっても素敵な音源')), isFalse);
+    expect(chosen.any((n) => n.title.contains('フリートーク')), isTrue);
+    expect(chosen.every((n) => n.title.endsWith('.mp3')), isTrue);
+  });
+
+  test(
+    'sound-material actions are excluded without swallowing voiced scenes',
+    () {
+      expect(
+        select([
+          folder('音源素材', [
+            file('フェラ_役A.mp3'),
+            file('耳舐め_役B_右.wav'),
+            file('優しい鼻息耳舐め_役B_両耳.mp3'),
+            file('耳舐め_役B_フリートーク.mp3'),
+            file('耳舐め_役B_セリフあり.mp3'),
+            file('01_フェラ_正片.mp3'),
+            folder('特典囁きボイス', [file('耳舐め_役B_右.mp3'), file('EX05_耳舐め1.wav')]),
+          ]),
+          folder('特典', [file('耳舐め 出せ.wav'), file('耳かき_おやすみ.mp3')]),
+          file('耳舐め_声優B.mp3'),
+        ]).map((n) => n.title),
+        [
+          '耳舐め_役B_フリートーク.mp3',
+          '耳舐め_役B_セリフあり.mp3',
+          '01_フェラ_正片.mp3',
+          '耳舐め_役B_右.mp3',
+          'EX05_耳舐め1.wav',
+          '耳舐め 出せ.wav',
+          '耳かき_おやすみ.mp3',
+          '耳舐め_声優B.mp3',
+        ],
+      );
+    },
+  );
+
+  test('RJ01680559 chooses eight early-purchase MP3s including its bonus', () {
+    final raw =
+        jsonDecode(
+              utf8.decode(
+                gzip.decode(
+                  File(
+                    'checks/fixtures/RJ01680559-tracks.json.gz',
+                  ).readAsBytesSync(),
+                ),
+              ),
+            )
+            as List;
+    final chosen = select(tree(raw));
+    expect(chosen.length, 8);
+    expect(
+      chosen.every(
+        (node) =>
+            node.path.startsWith('♡早期購入版♡/') && node.title.endsWith('.mp3'),
+      ),
+      isTrue,
+    );
+    expect(chosen.where((node) => node.title.startsWith('特典トラック')).length, 1);
+    expect(
+      select(tree(raw.reversed.toList())).map((n) => n.path).toSet(),
+      chosen.map((n) => n.path).toSet(),
+    );
+  });
+
+  test('early editions precede regular editions and fill missing chapters', () {
+    final chosen = select([
+      folder('♥通常版♥', [file('通常版/01_挨拶_no-se.mp3'), file('通常版/02_追加.mp3')]),
+      folder('♡早期購入版♡', [
+        file('早期版/01_挨拶.wav'),
+        folder('特典', [file('早期版/特典/01_独立内容.mp3')]),
+      ]),
+    ]);
+    expect(chosen.map((n) => n.path), [
+      '通常版/02_追加.mp3',
+      '早期版/01_挨拶.wav',
+      '早期版/特典/01_独立内容.mp3',
+    ]);
+  });
+
+  test('filename edition labels and first-print bonuses retain identity', () {
+    for (final early in ['早期版', '初回限定版', '初期購入版', 'early edition']) {
+      expect(
+        select([file('01_挨拶_通常版.mp3'), file('01_挨拶_$early.mp3')]).single.title,
+        '01_挨拶_$early.mp3',
+      );
+    }
+    expect(
+      select([
+        folder('初期購買特典', [file('01_独立内容.mp3')]),
+        file('01_独立内容.mp3'),
+      ]).length,
+      2,
+    );
+  });
+
+  test(
+    'speechless labels and pure sleep sounds are excluded before ranking',
+    () {
+      final chosen = select([
+        folder('无人声助眠赠品', [file('01_雨声.mp3'), file('Free Talk.wav')]),
+        folder('ボイスなし', [file('01.wav')]),
+        file('特典_no_voice.mp3'),
+        file('EX02_寝息ループ.wav'),
+        file('09.寝息.mp3'),
+        file('01 吐息1.wav'),
+        file('EX05_耳舐め1.wav'),
+        file('EX01_耳かきのみ.mp3'),
+        file('01_環境音のみ.wav'),
+        file('01_お嬢様の耳かき.mp3'),
+        file('1 耳かき.mp3'),
+        file('04 ぱふぱふ囁き(無声音).wav'),
+        file('09 耳舐め 出せ.wav'),
+        file('おやすみボイス.wav'),
+        file('睡眠用囁き.mp3'),
+      ]);
+      expect(chosen.map((n) => n.title), [
+        '01_お嬢様の耳かき.mp3',
+        '1 耳かき.mp3',
+        '04 ぱふぱふ囁き(無声音).wav',
+        '09 耳舐め 出せ.wav',
+        'おやすみボイス.wav',
+        '睡眠用囁き.mp3',
+      ]);
+    },
+  );
+
+  test(
+    'fresh 100 random-work trees replay separately from the original set',
+    () {
+      final works = samples('dictation_media_samples_20261024.json.gz');
+      expect(works.length, 100);
+      expect(works.map((w) => w['id']).toSet().length, 100);
+      expect(
+        works
+            .map((w) => w['id'])
+            .toSet()
+            .intersection(samples().map((w) => w['id']).toSet()),
+        isEmpty,
+      );
+      final output = <Map<String, dynamic>>[];
+      final byId = <int, List<MediaNode>>{};
+      for (final work in works) {
+        final index = MediaTreeIndex(tree(work['tree']));
+        final chosen = DictationMediaMatcher.select(index);
+        byId[work['id']] = chosen;
+        expect(chosen.map((n) => n.path).toSet().length, chosen.length);
+        expect(chosen.every((n) => index.files.contains(n)), isTrue);
+        DictationMediaMatcher.select(index); // Warm up before timing.
+        final timings = <int>[];
+        for (var i = 0; i < 7; i++) {
+          final watch = Stopwatch()..start();
+          DictationMediaMatcher.select(index);
+          watch.stop();
+          timings.add(watch.elapsedMicroseconds);
+        }
+        timings.sort();
+        output.add({
+          'id': work['id'],
+          'nodes': index.rows.length,
+          'files': index.files.length,
+          'medianMicros': timings[3],
+          'selected': chosen.map((n) => n.path).toList(),
+        });
+      }
+      expect(byId[1629016]!.length, 13); // Separately labeled breathing track.
+      expect(byId[280509]!.length, 8); // Excludes only 09.寝息.
+      expect(byId[1206897]!.length, 30); // Six pure-sound bonus clips.
+      expect(byId[1206897]!.any((n) => n.title.contains('無声音')), isTrue);
+      expect(byId[1206897]!.any((n) => n.title.contains('耳舐め 出せ')), isTrue);
+      expect(byId[319990]!.length, 12); // Main ear-cleaning scene survives.
+      expect(byId[1415066]!.any((n) => n.path.contains('初期購買特典')), isTrue);
+      const auditPath = String.fromEnvironment('DICTATION_EARLY_AUDIT_OUTPUT');
+      if (auditPath.isNotEmpty) {
+        File(
+          auditPath,
+        ).writeAsStringSync(const JsonEncoder.withIndent('  ').convert(output));
+      }
+    },
+  );
+
   test('duration tolerance cannot chain different recordings together', () {
     final roots = [
       folder('繁體中文', [file('繁體中文/01_第一段.mp3', duration: 60)]),
@@ -420,7 +614,10 @@ void main() {
     expect(byId[1344348]!.length, 5); // Four formats/editions, no samples/CM.
     expect(byId[406695]!.length, 7); // No-SE main packaged as a bonus.
     expect(byId[1181073]!.length, 9); // Eight clean tracks plus PR talk.
-    expect(byId[1209877]!.length, 11); // Nine clean tracks plus two EX tracks.
+    expect(
+      byId[1209877]!.length,
+      9,
+    ); // Excludes ear-cleaning-only and breathing loops.
     expect(byId[1393120]!.length, 5); // NOSE, regular and partial SE editions.
     expect(byId[1396305]!.length, 5); // Prefix markers in otherwise flat tree.
     expect(byId[1115505]!.length, 9); // Eight main tracks plus bonus audio.

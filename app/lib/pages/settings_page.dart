@@ -773,47 +773,18 @@ class _SettingsPageState extends State<SettingsPage> {
                       onChanged: app.setPlaybackSeekForwardSeconds,
                     ),
                   ),
-                  _playbackShortcutRow(
-                    icon: Icons.play_circle_outline,
-                    title: context.l10n.settingsPageSectionsTitle14,
-                    action: 'toggle',
-                    keyId: app.playbackToggleShortcutKey,
-                    onChanged: app.setPlaybackToggleShortcutKey,
-                  ),
-                  _playbackShortcutRow(
-                    icon: Icons.skip_previous_outlined,
-                    title: context.l10n.settingsPageSectionsTitle9,
-                    action: 'previous',
-                    keyId: app.playbackPreviousShortcutKey,
-                    onChanged: app.setPlaybackPreviousShortcutKey,
-                  ),
-                  _playbackShortcutRow(
-                    icon: Icons.skip_next_outlined,
-                    title: context.l10n.settingsPageSectionsTitle11,
-                    action: 'next',
-                    keyId: app.playbackNextShortcutKey,
-                    onChanged: app.setPlaybackNextShortcutKey,
-                  ),
-                  _playbackShortcutRow(
-                    icon: Icons.fast_rewind,
-                    title: context.l10n.settingsPageSectionsTitle6,
-                    action: 'seek_backward',
-                    keyId: app.playbackSeekBackwardShortcutKey,
-                    onChanged: app.setPlaybackSeekBackwardShortcutKey,
-                  ),
-                  _playbackShortcutRow(
-                    icon: Icons.fast_forward,
-                    title: context.l10n.settingsPageSectionsTitle7,
-                    action: 'seek_forward',
-                    keyId: app.playbackSeekForwardShortcutKey,
-                    onChanged: app.setPlaybackSeekForwardShortcutKey,
-                  ),
                   _row(
-                    icon: Icons.restart_alt_outlined,
-                    title: context.l10n.settingsPageSectionsTitle13,
-                    sub: context.l10n.settingsPageSectionsSub9,
-                    trailing: Icon(Icons.refresh, size: 18, color: p.dim),
-                    onTap: app.resetPlaybackShortcutKeys,
+                    icon: Icons.keyboard_outlined,
+                    title: context.l10n.playbackShortcuts,
+                    trailing: Icon(Icons.chevron_right, size: 20, color: p.dim),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => SettingsPage(
+                          app: app,
+                          sectionKey: 'playback_shortcuts',
+                        ),
+                      ),
+                    ),
                   ),
                   if (Platform.isAndroid) ...[
                     _switchRow(
@@ -1146,6 +1117,57 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ]),
               ),
+              _section(
+                'playback_shortcuts',
+                context.l10n.playbackShortcuts,
+                _group([
+                  _playbackShortcutRow(
+                    icon: Icons.play_circle_outline,
+                    title: context.l10n.settingsPageSectionsTitle14,
+                    action: 'toggle',
+                    keyId: app.playbackToggleShortcutKey,
+                    onChanged: app.setPlaybackToggleShortcutKey,
+                  ),
+                  _playbackShortcutRow(
+                    icon: Icons.skip_previous_outlined,
+                    title: context.l10n.settingsPageSectionsTitle9,
+                    action: 'previous',
+                    keyId: app.playbackPreviousShortcutKey,
+                    onChanged: app.setPlaybackPreviousShortcutKey,
+                  ),
+                  _playbackShortcutRow(
+                    icon: Icons.skip_next_outlined,
+                    title: context.l10n.settingsPageSectionsTitle11,
+                    action: 'next',
+                    keyId: app.playbackNextShortcutKey,
+                    onChanged: app.setPlaybackNextShortcutKey,
+                  ),
+                  _playbackShortcutRow(
+                    icon: Icons.fast_rewind,
+                    title: context.l10n.settingsPageSectionsTitle6,
+                    action: 'seek_backward',
+                    keyId: app.playbackSeekBackwardShortcutKey,
+                    onChanged: app.setPlaybackSeekBackwardShortcutKey,
+                  ),
+                  _playbackShortcutRow(
+                    icon: Icons.fast_forward,
+                    title: context.l10n.settingsPageSectionsTitle7,
+                    action: 'seek_forward',
+                    keyId: app.playbackSeekForwardShortcutKey,
+                    onChanged: app.setPlaybackSeekForwardShortcutKey,
+                  ),
+                  _row(
+                    icon: Icons.restart_alt_outlined,
+                    title: context.l10n.settingsPageSectionsTitle13,
+                    sub: context.l10n.settingsPageSectionsSub9,
+                    trailing: Icon(Icons.refresh, size: 18, color: p.dim),
+                    onTap: app.resetPlaybackShortcutKeys,
+                    showDivider: false,
+                  ),
+                ]),
+                rootVisible: false,
+                rootEntry: false,
+              ),
             ];
             // Keep the detailed settings pages as a single readable column.
             // The root page follows the same wide two-column treatment as the
@@ -1201,6 +1223,7 @@ class _SettingsPageState extends State<SettingsPage> {
     'translation' => context.l10n.languageAndTranslation,
     'lyrics_desktop' => context.l10n.settingsPageSectionsSection6,
     'playback' => context.l10n.play,
+    'playback_shortcuts' => context.l10n.playbackShortcuts,
     'tracks' => context.l10n.settingsPageSectionsSection,
     'privacy' => context.l10n.settingsPageSectionTitleText,
     'other' => context.l10n.settingsPageSectionsSection2,
