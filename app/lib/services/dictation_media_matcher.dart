@@ -64,6 +64,33 @@ class DictationMediaMatcher {
   static final _combined = RegExp(
     r'通し|ぶっ通し|連結|一括|全パート|全編|フルバージョン|full[ _-]*track',
   );
+  static const _languageNames = {
+    '日本語': 0,
+    '日文': 0,
+    '日语': 0,
+    '日語': 0,
+    'japanese': 0,
+    'ja': 0,
+    'jp': 0,
+    '简体中文': 1,
+    '簡體中文': 1,
+    '简体': 1,
+    '簡體': 1,
+    'zhcn': 1,
+    'zhhans': 1,
+    'simplifiedchinese': 1,
+    '繁體中文': 2,
+    '繁体中文': 2,
+    '繁體': 2,
+    '繁体': 2,
+    'zhtw': 2,
+    'zhhant': 2,
+    'traditionalchinese': 2,
+  };
+  static final _chapter = RegExp(
+    r'^(?:(?:tr(?:ack)?|トラック|音轨|音軌)[ _.-]*)?(\d+)(?=$|[^a-z0-9])',
+  );
+  static final _prefixedChapter = RegExp(r'^[a-z]+\d+[_-](\d+)(?=$|[^a-z0-9])');
 
   /// Large collections run off the UI isolate on Flutter's native platforms.
   static Future<List<MediaNode>> selectForDictation(
@@ -81,6 +108,8 @@ class DictationMediaMatcher {
     final excluded = List<bool>.filled(index.rows.length, false);
     final bonuses = List<bool>.filled(index.rows.length, false);
     final bits = List<int>.filled(index.rows.length, 0);
+    final languages = <int, int>{};
+    final languageSiblings = <int, Set<int>>{};
     final winners = <String, _Candidate>{};
     for (final row in index.rows) {
       final node = row.node;
@@ -99,6 +128,11 @@ class DictationMediaMatcher {
           _soundOnly.hasMatch(_compact(name));
       if (node.isDir) {
         final scope = _folderKey(name);
+        final language = _languageNames[scope];
+        if (language != null) {
+          languages[row.index] = language;
+          (languageSiblings[parent ?? -1] ??= {}).add(language);
+        }
         final parentScope = parent == null ? '' : scopes[parent];
         scopes[row.index] = scope.isEmpty
             ? parentScope
@@ -162,6 +196,7 @@ class DictationMediaMatcher {
           parts.$1 >= 2 &&
           (parts.$2 - item.node.duration).abs() <= parts.$1 + 2;
     });
+    _deduplicateLanguages(selected, index, scopes, languages, languageSiblings);
     selected.sort((a, b) => a.order.compareTo(b.order));
     return selected.map((item) => item.node).toList();
   }
@@ -169,6 +204,92 @@ class DictationMediaMatcher {
   static bool hasSource(MediaNode node) =>
       (node.downloadUrl?.isNotEmpty ?? false) ||
       (node.url?.isNotEmpty ?? false);
+
+  /// Translated filenames cannot share a title key. Only explicit sibling
+  /// language editions may instead share a numbered chapter + duration key.
+  /// Unknown scopes, unnumbered files and ambiguous chapter numbers survive.
+  static void _deduplicateLanguages(
+    List<_Candidate> selected,
+    MediaTreeIndex index,
+    List<String> scopes,
+    Map<int, int> languages,
+    Map<int, Set<int>> siblings,
+  ) {
+    if (!siblings.values.any((codes) => codes.length >= 2)) return;
+
+    final editions = List<({int group, int language, String prefix})?>.filled(
+      index.rows.length,
+      null,
+    );
+    for (final row in index.rows) {
+      final parent = row.parentIndex;
+      final language = languages[row.index];
+      editions[row.index] =
+          language != null && siblings[parent ?? -1]!.length >= 2
+          ? (group: parent ?? -1, language: language, prefix: scopes[row.index])
+          : (parent == null ? null : editions[parent]);
+    }
+    final groups = <(int, String, String), List<_Candidate>>{};
+    for (final item in selected) {
+      final edition = editions[item.order];
+      if (edition == null || item.node.duration <= 0) continue;
+      final title = _widthFold(item.node.title);
+      final chapter =
+          (_chapter.firstMatch(title) ?? _prefixedChapter.firstMatch(title))
+              ?.group(1);
+      if (chapter == null) continue;
+      final number = int.tryParse(chapter);
+      if (number == null) continue;
+      final relativeScope = item.scope.substring(edition.prefix.length);
+      final key = (edition.group, relativeScope, number.toString());
+      (groups[key] ??= []).add(item);
+    }
+    final removed = <int>{};
+    for (final group in groups.values) {
+      final codes = <int>{};
+      // Two candidates with the same number in one language may be different
+      // scenes/parts. Do not guess which one corresponds to another language.
+      if (group.any((item) => !codes.add(editions[item.order]!.language))) {
+        continue;
+      }
+      group.sort((a, b) => a.node.duration.compareTo(b.node.duration));
+      final kept = <({int minDuration, int maxDuration, _Candidate winner})>[];
+      for (final item in group) {
+        final duration = item.node.duration;
+        final duplicate = kept.indexWhere(
+          (other) =>
+              duration >= other.maxDuration - 1 &&
+              duration <= other.minDuration + 1,
+        );
+        if (duplicate < 0) {
+          kept.add((
+            minDuration: duration,
+            maxDuration: duration,
+            winner: item,
+          ));
+          continue;
+        }
+        final bucket = kept[duplicate];
+        final other = bucket.winner;
+        final preferred =
+            item.preferredTo(other) ||
+            (!other.preferredTo(item) &&
+                editions[item.order]!.language <
+                    editions[other.order]!.language);
+        removed.add(preferred ? other.order : item.order);
+        kept[duplicate] = (
+          minDuration: duration < bucket.minDuration
+              ? duration
+              : bucket.minDuration,
+          maxDuration: duration > bucket.maxDuration
+              ? duration
+              : bucket.maxDuration,
+          winner: preferred ? item : other,
+        );
+      }
+    }
+    selected.removeWhere((item) => removed.contains(item.order));
+  }
 
   static int _rank(String name, int inherited) {
     final partial = _partialOff.hasMatch(name);
