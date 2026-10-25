@@ -9,6 +9,7 @@ import 'lyrics_library_page.dart';
 import 'dictation_translation_page.dart';
 import '../routes.dart';
 import '../services/api_service.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
 
@@ -61,7 +62,7 @@ class _MorePageState extends State<MorePage> {
                   ? app.customSites[app.customServerIdx].alias
                   : context.l10n.homePageServerLabelText)
             : 'asmr.one';
-        return ListView(
+        return SmoothListView(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 90),
           children: [
             Text(

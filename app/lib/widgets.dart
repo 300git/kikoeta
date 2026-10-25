@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'data.dart';
@@ -651,8 +650,8 @@ class Pill extends StatelessWidget {
 /// 按可用宽度自适应列数的网格（竖屏约 2 列，横屏/宽窗自动增加）。
 /// 行式懒加载：仅构建可视行，滚出视口的卡片会被回收，
 /// 每张卡片包一层 RepaintBoundary 隔离重绘。
-/// 鼠标滚轮由 [SmoothWheelDriver] 接管为逐帧缓动（见 smooth_scroll.dart）。
-class ResponsiveGrid extends StatefulWidget {
+/// 鼠标滚轮由 [SmoothWheelScope] 接管为逐帧缓动（见 smooth_scroll.dart）。
+class ResponsiveGrid extends StatelessWidget {
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
   final EdgeInsetsGeometry padding;
@@ -670,67 +669,33 @@ class ResponsiveGrid extends StatefulWidget {
   });
 
   @override
-  State<ResponsiveGrid> createState() => _ResponsiveGridState();
-}
-
-class _ResponsiveGridState extends State<ResponsiveGrid>
-    with SingleTickerProviderStateMixin {
-  final ScrollController _controller = ScrollController();
-  late final SmoothWheelDriver _wheel = SmoothWheelDriver(
-    vsync: this,
-    controller: _controller,
-  );
-
-  @override
-  void dispose() {
-    _wheel.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onPointerSignal(PointerSignalEvent event) {
-    _wheel.handle(event);
-  }
-
-  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (ctx, c) {
-        final cols = (c.maxWidth / widget.maxTileWidth).floor().clamp(2, 8);
+        final cols = (c.maxWidth / maxTileWidth).floor().clamp(2, 8);
         const gap = 13.0;
         final tile = (c.maxWidth - gap * (cols - 1)) / cols;
-        final rows = (widget.itemCount + cols - 1) ~/ cols;
-        return ListView.builder(
-          controller: _controller,
-          padding: widget.padding,
-          physics: widget.physics,
+        final rows = (itemCount + cols - 1) ~/ cols;
+        return SmoothListView.builder(
+          padding: padding,
+          physics: physics,
           itemCount: rows,
           itemBuilder: (ctx, r) {
             final start = r * cols;
-            final end = start + cols > widget.itemCount
-                ? widget.itemCount
-                : start + cols;
-            // Listener 必须放在滚动内容这一层：命中路径由内向外派发，
-            // 先注册 pointer signal 的一方生效，才能抢在内建 Scrollable 之前。
-            return Listener(
-              behavior: HitTestBehavior.opaque,
-              onPointerSignal: _onPointerSignal,
-              child: Padding(
-                padding: EdgeInsets.only(top: r == 0 ? 0 : gap),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var i = start; i < end; i++) ...[
-                      if (i > start) const SizedBox(width: gap),
-                      SizedBox(
-                        width: tile,
-                        child: RepaintBoundary(
-                          child: widget.itemBuilder(ctx, i),
-                        ),
-                      ),
-                    ],
+            final end = start + cols > itemCount ? itemCount : start + cols;
+            return Padding(
+              padding: EdgeInsets.only(top: r == 0 ? 0 : gap),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = start; i < end; i++) ...[
+                    if (i > start) const SizedBox(width: gap),
+                    SizedBox(
+                      width: tile,
+                      child: RepaintBoundary(child: itemBuilder(ctx, i)),
+                    ),
                   ],
-                ),
+                ],
               ),
             );
           },
@@ -1067,7 +1032,7 @@ class AdvancedSearchSuggestions extends StatelessWidget {
         ),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 320),
-          child: ListView.separated(
+          child: SmoothListView.separated(
             shrinkWrap: true,
             itemCount: suggestions.length,
             separatorBuilder: (_, _) => Divider(height: 1, color: p.line),
@@ -1463,7 +1428,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
     ).isNotEmpty;
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxH),
-      child: SingleChildScrollView(
+      child: SmoothSingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(13, 10, 13, 14),
         child: showAdvancedSuggestions
             ? AdvancedSearchSuggestions(

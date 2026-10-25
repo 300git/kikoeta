@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
 
@@ -45,7 +46,7 @@ class BlacklistPage extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: p.dim, height: 1.6),
                   ),
                 )
-              : ListView.separated(
+              : SmoothListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
                   itemCount: app.blacklist.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),

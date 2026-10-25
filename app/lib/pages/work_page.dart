@@ -14,6 +14,7 @@ import '../services/download_service.dart';
 import '../services/dictation_media_matcher.dart';
 import '../services/media_selection.dart';
 import '../services/media_tree.dart';
+import '../smooth_scroll.dart';
 import '../src/rust/api/kikoeru_api.dart';
 import '../src/rust/api/textcodec.dart';
 import '../src/rust/api/translate.dart';
@@ -725,7 +726,7 @@ class _WorkPageState extends State<WorkPage> {
                 ),
               ),
               Flexible(
-                child: ListView.separated(
+                child: SmoothListView.separated(
                   shrinkWrap: true,
                   padding: const EdgeInsets.only(bottom: 8),
                   itemCount: _languageEditions.length,
@@ -1342,7 +1343,7 @@ class _WorkPageState extends State<WorkPage> {
                   ),
                   const Divider(height: 1),
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: SmoothSingleChildScrollView(
                       padding: const EdgeInsets.all(16),
                       child: SelectableText(
                         text,
@@ -1970,7 +1971,7 @@ class _WorkPageState extends State<WorkPage> {
       ),
       body: Stack(
         children: [
-          CustomScrollView(
+          SmoothCustomScrollView(
             controller: _pageScroll,
             slivers: [
               SliverPadding(
@@ -2560,7 +2561,7 @@ class _WorkPageState extends State<WorkPage> {
                 ),
                 const SizedBox(height: 12),
                 Flexible(
-                  child: SingleChildScrollView(
+                  child: SmoothSingleChildScrollView(
                     child: LayoutBuilder(
                       builder: (context, constraints) => Wrap(
                         spacing: 8,

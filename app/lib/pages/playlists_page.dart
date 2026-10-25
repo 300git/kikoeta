@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data.dart';
 import '../routes.dart';
 import '../services/api_service.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
 
@@ -49,7 +50,7 @@ class PlaylistsPage extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: p.dim),
                   ),
                 )
-              : ListView.separated(
+              : SmoothListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
                   itemCount: app.playlists.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -348,188 +349,195 @@ class PlaylistDetailPage extends StatelessWidget {
                       ),
                     ),
                     Expanded(
-                      child: ReorderableListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 40),
-                        itemCount: entries.length,
-                        // 所有平台统一用长按拖动（默认在桌面端会显示拖动手柄）
-                        buildDefaultDragHandles: false,
-                        proxyDecorator: (child, index, animation) => Material(
-                          elevation: 6,
-                          color: p.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          child: child,
-                        ),
-                        onReorderItem: (oldIndex, newIndex) =>
-                            app.reorderPlaylist(name, oldIndex, newIndex),
-                        itemBuilder: (ctx, i) {
-                          final e = entries[i];
-                          final work = _workFor(e);
-                          // 只有标题行可以拖动，用来调整作品之间的顺序。
-                          final header = Row(
-                            children: [
-                              Expanded(
-                                child: InkWell(
-                                  onTap: e.rj.isEmpty
-                                      ? null
-                                      : () => Navigator.of(
-                                          ctx,
-                                        ).push(buildWorkRoute(app, work)),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        e.rj.isEmpty ? e.title : e.rj,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      if (e.title.isNotEmpty && e.title != e.rj)
-                                        Text(
-                                          e.title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            color: p.dim,
-                                          ),
-                                        ),
-                                    ],
+                      child: SmoothCustomScrollView(
+                        slivers: [
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 40),
+                            sliver: SliverReorderableList(
+                              itemCount: entries.length,
+                              // 每个条目自己挂拖动监听（桌面直接拖、移动端长按拖），
+                              // SliverReorderableList 不生成默认拖动手柄。
+                              proxyDecorator: (child, index, animation) =>
+                                  Material(
+                                    elevation: 6,
+                                    color: p.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: child,
                                   ),
-                                ),
-                              ),
-                              Text(
-                                context.l10n.playlistsPageHeaderText(
-                                  (e.tracks.length).toString(),
-                                ),
-                                style: TextStyle(fontSize: 11, color: p.dim),
-                              ),
-                              const SizedBox(width: 4),
-                              Tooltip(
-                                message:
-                                    context.l10n.playlistsPageHeaderMessage,
-                                child: Icon(
-                                  Icons.drag_indicator,
-                                  size: 17,
-                                  color: p.dim,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () =>
-                                    app.removeFromPlaylist(name, i),
-                                icon: Icon(
-                                  Icons.delete_outline,
-                                  size: 18,
-                                  color: p.dim,
-                                ),
-                                visualDensity: VisualDensity.compact,
-                                tooltip:
-                                    context.l10n.playlistsPageHeaderTooltip,
-                              ),
-                            ],
-                          );
-                          final headerDrag = isDesktop
-                              ? ReorderableDragStartListener(
-                                  index: i,
-                                  child: header,
-                                )
-                              : ReorderableDelayedDragStartListener(
-                                  index: i,
-                                  child: header,
-                                );
-                          return Column(
-                            key: ObjectKey(e),
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              headerDrag,
-                              const SizedBox(height: 4),
-                              // 媒体行各自可拖动，调整作品内音频的播放顺序。
-                              ReorderableListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: EdgeInsets.zero,
-                                itemCount: e.tracks.length,
-                                buildDefaultDragHandles: false,
-                                onReorderItem: (oldIndex, newIndex) =>
-                                    app.reorderPlaylistTrack(
-                                      name,
-                                      i,
-                                      oldIndex,
-                                      newIndex,
-                                    ),
-                                itemBuilder: (ctx, j) {
-                                  final track = e.tracks[j];
-                                  final row = InkWell(
-                                    onTap: () =>
-                                        _playTrack(ctx, entries, e, track),
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        12,
-                                        8,
-                                        4,
-                                        8,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.music_note_outlined,
-                                            size: 17,
-                                            color: p.accent,
-                                          ),
-                                          const SizedBox(width: 9),
-                                          Expanded(
-                                            child: Text(
-                                              track.title,
+                              onReorderItem: (oldIndex, newIndex) =>
+                                  app.reorderPlaylist(name, oldIndex, newIndex),
+                              itemBuilder: (ctx, i) {
+                                final e = entries[i];
+                                final work = _workFor(e);
+                                // 只有标题行可以拖动，用来调整作品之间的顺序。
+                                final header = Row(
+                                  children: [
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: e.rj.isEmpty
+                                            ? null
+                                            : () => Navigator.of(
+                                                ctx,
+                                              ).push(buildWorkRoute(app, work)),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              e.rj.isEmpty ? e.title : e.rj,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 12.5,
-                                                color: p.text,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w800,
                                               ),
                                             ),
-                                          ),
-                                          if (track.url == null)
-                                            Icon(
-                                              Icons.cloud_off_outlined,
-                                              size: 15,
-                                              color: p.dim,
-                                            ),
-                                          const SizedBox(width: 4),
-                                          Tooltip(
-                                            message: context
-                                                .l10n
-                                                .playlistsPageRowMessage,
-                                            child: Icon(
-                                              Icons.drag_indicator,
-                                              size: 15,
-                                              color: p.dim,
-                                            ),
-                                          ),
-                                        ],
+                                            if (e.title.isNotEmpty && e.title != e.rj)
+                                              Text(
+                                                e.title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  color: p.dim,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  );
-                                  return isDesktop
-                                      ? ReorderableDragStartListener(
-                                          key: ObjectKey(track),
-                                          index: j,
-                                          child: row,
-                                        )
-                                      : ReorderableDelayedDragStartListener(
-                                          key: ObjectKey(track),
-                                          index: j,
-                                          child: row,
+                                    Text(
+                                      context.l10n.playlistsPageHeaderText(
+                                        (e.tracks.length).toString(),
+                                      ),
+                                      style: TextStyle(fontSize: 11, color: p.dim),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Tooltip(
+                                      message:
+                                          context.l10n.playlistsPageHeaderMessage,
+                                      child: Icon(
+                                        Icons.drag_indicator,
+                                        size: 17,
+                                        color: p.dim,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () =>
+                                          app.removeFromPlaylist(name, i),
+                                      icon: Icon(
+                                        Icons.delete_outline,
+                                        size: 18,
+                                        color: p.dim,
+                                      ),
+                                      visualDensity: VisualDensity.compact,
+                                      tooltip:
+                                          context.l10n.playlistsPageHeaderTooltip,
+                                    ),
+                                  ],
+                                );
+                                final headerDrag = isDesktop
+                                    ? ReorderableDragStartListener(
+                                        index: i,
+                                        child: header,
+                                      )
+                                    : ReorderableDelayedDragStartListener(
+                                        index: i,
+                                        child: header,
+                                      );
+                                return Column(
+                                  key: ObjectKey(e),
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    headerDrag,
+                                    const SizedBox(height: 4),
+                                    // 媒体行各自可拖动，调整作品内音频的播放顺序。
+                                    ReorderableListView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      padding: EdgeInsets.zero,
+                                      itemCount: e.tracks.length,
+                                      buildDefaultDragHandles: false,
+                                      onReorderItem: (oldIndex, newIndex) =>
+                                          app.reorderPlaylistTrack(
+                                            name,
+                                            i,
+                                            oldIndex,
+                                            newIndex,
+                                          ),
+                                      itemBuilder: (ctx, j) {
+                                        final track = e.tracks[j];
+                                        final row = InkWell(
+                                          onTap: () =>
+                                              _playTrack(ctx, entries, e, track),
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              12,
+                                              8,
+                                              4,
+                                              8,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.music_note_outlined,
+                                                  size: 17,
+                                                  color: p.accent,
+                                                ),
+                                                const SizedBox(width: 9),
+                                                Expanded(
+                                                  child: Text(
+                                                    track.title,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 12.5,
+                                                      color: p.text,
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (track.url == null)
+                                                  Icon(
+                                                    Icons.cloud_off_outlined,
+                                                    size: 15,
+                                                    color: p.dim,
+                                                  ),
+                                                const SizedBox(width: 4),
+                                                Tooltip(
+                                                  message: context
+                                                      .l10n
+                                                      .playlistsPageRowMessage,
+                                                  child: Icon(
+                                                    Icons.drag_indicator,
+                                                    size: 15,
+                                                    color: p.dim,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         );
-                                },
-                              ),
-                              if (i != entries.length - 1)
-                                Divider(height: 18, color: p.line),
-                            ],
-                          );
-                        },
+                                        return isDesktop
+                                            ? ReorderableDragStartListener(
+                                                key: ObjectKey(track),
+                                                index: j,
+                                                child: row,
+                                              )
+                                            : ReorderableDelayedDragStartListener(
+                                                key: ObjectKey(track),
+                                                index: j,
+                                                child: row,
+                                              );
+                                      },
+                                    ),
+                                    if (i != entries.length - 1)
+                                      Divider(height: 18, color: p.line),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

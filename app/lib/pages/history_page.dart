@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data.dart';
 import '../routes.dart';
 import '../services/api_service.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../l10n/strings.dart';
@@ -62,7 +63,7 @@ class HistoryPage extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: p.dim),
                   ),
                 )
-              : ListView.separated(
+              : SmoothListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
                   itemCount: list.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'data.dart';
 import 'services/player_service.dart';
+import 'smooth_scroll.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import 'l10n/strings.dart';
@@ -18,7 +19,7 @@ Widget _sheetScaffold({
 }) {
   final p = _p(context);
   return SafeArea(
-    child: SingleChildScrollView(
+    child: SmoothSingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(18, 8, 18, 22),
       child: Column(
         mainAxisSize: MainAxisSize.min,

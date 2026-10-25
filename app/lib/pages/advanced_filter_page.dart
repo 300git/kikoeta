@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data.dart';
 import '../services/api_service.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
 
@@ -235,7 +236,7 @@ class _AdvancedFilterPageState extends State<AdvancedFilterPage> {
             : constraints.maxWidth >= 480
             ? 2
             : 1;
-        return GridView.builder(
+        return SmoothGridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
           itemCount: values.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

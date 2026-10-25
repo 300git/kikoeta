@@ -13,6 +13,7 @@ import '../widgets/dictation_queue_list.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../services/lyrics_library_service.dart';
 import '../services/settings_store.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
 
@@ -632,7 +633,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
       body: SafeArea(
         top: false,
         child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
+          builder: (context, constraints) => SmoothSingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
             child: Align(
               alignment: Alignment.topCenter,
@@ -1027,7 +1028,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: p.line),
         ),
-        child: SingleChildScrollView(
+        child: SmoothSingleChildScrollView(
           reverse: true,
           child: SelectableText(
             _session.logs.isEmpty

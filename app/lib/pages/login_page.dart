@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data.dart';
 import '../services/api_service.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
 
@@ -280,7 +281,7 @@ class _LoginPageState extends State<LoginPage> {
         child: Stack(
           children: [
             Center(
-              child: SingleChildScrollView(
+              child: SmoothSingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 24,
@@ -450,7 +451,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             Center(
-              child: SingleChildScrollView(
+              child: SmoothSingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 24,

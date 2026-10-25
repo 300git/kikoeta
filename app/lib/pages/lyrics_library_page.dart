@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../services/lyrics_folder_import.dart';
 import '../services/lyrics_library_service.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../l10n/strings.dart';
@@ -569,7 +570,7 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
             height: 420,
             child: files.isEmpty
                 ? Center(child: Text(l10n.lyricsLibraryPageShowFilesText))
-                : ListView.builder(
+                : SmoothListView.builder(
                     itemCount: files.length,
                     itemBuilder: (_, i) => ListTile(
                       leading: const Icon(Icons.lyrics_outlined),
@@ -831,7 +832,7 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
                           }
                           return false;
                         },
-                        child: GridView.builder(
+                        child: SmoothGridView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
@@ -1338,7 +1339,7 @@ class _LyricsLibraryImportDialogState
               ),
             ],
           )
-        : SingleChildScrollView(
+        : SmoothSingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

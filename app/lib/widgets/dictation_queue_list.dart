@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/strings.dart';
 import '../services/dictation_queue.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 
 class DictationQueueList extends StatefulWidget {
@@ -101,7 +102,7 @@ class _DictationQueueListState extends State<DictationQueueList> {
   Widget _tracks(BuildContext context, DictationQueueEntry entry) =>
       ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 230),
-        child: ListView.builder(
+        child: SmoothListView.builder(
           key: PageStorageKey('dictation-tracks-${entry.label}'),
           primary: false,
           shrinkWrap: true,
@@ -312,7 +313,7 @@ class _DictationQueueListState extends State<DictationQueueList> {
         .toList();
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 360),
-      child: CustomScrollView(
+      child: SmoothCustomScrollView(
         primary: false,
         // Small queues size to their contents; larger queues keep a lazy viewport.
         shrinkWrap: queue.entries.length <= 3,

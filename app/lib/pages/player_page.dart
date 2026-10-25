@@ -21,6 +21,7 @@ import '../services/sleep_timer.dart';
 import '../src/rust/api/textcodec.dart';
 import '../src/rust/api/textconv.dart';
 import '../sheets.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../l10n/strings.dart';
@@ -1160,7 +1161,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     final edgeSpace = math.max(viewportHeight * .5, 40.0);
     return NotificationListener<ScrollNotification>(
       onNotification: _handleLyricScrollNotification,
-      child: SingleChildScrollView(
+      child: SmoothSingleChildScrollView(
         controller: _lyricScroll,
         child: Column(
           children: [
@@ -1592,7 +1593,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                         style: TextStyle(fontSize: 13, color: p.dim),
                       ),
                     )
-                  : ListView.builder(
+                  : SmoothListView.builder(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       itemCount: app.queue.length,
                       itemBuilder: (ctx, i) {
@@ -2237,7 +2238,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
               ),
               Divider(height: 1, color: p.line),
               Flexible(
-                child: ListView(
+                child: SmoothListView(
                   shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   children: [
@@ -2388,7 +2389,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
       context: context,
       showDragHandle: true,
       builder: (ctx) => SafeArea(
-        child: ListView.builder(
+        child: SmoothListView.builder(
           shrinkWrap: true,
           itemCount: files.length,
           itemBuilder: (_, i) => ListTile(

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../data.dart';
 import '../services/api_service.dart';
+import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../l10n/strings.dart';
@@ -173,7 +174,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
         title: Text(l10n.playlistPickerCopyText),
         content: SizedBox(
           width: 420,
-          child: SingleChildScrollView(
+          child: SmoothSingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +237,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
           ),
           content: SizedBox(
             width: 420,
-            child: SingleChildScrollView(
+            child: SmoothSingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -775,7 +776,7 @@ class _PlaylistPickerSheetState extends State<_PlaylistPickerSheet> {
               )
             else
               Flexible(
-                child: ListView(
+                child: SmoothListView(
                   shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   children: [

@@ -6,6 +6,7 @@ import '../data.dart';
 import '../routes.dart';
 import '../services/download_service.dart';
 import '../services/media_tree.dart';
+import '../smooth_scroll.dart';
 import '../widgets/media_tree_sliver.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -151,7 +152,7 @@ class _DownloadPageState extends State<DownloadPage> {
               ),
             ],
           ),
-          body: ListView(
+          body: SmoothListView(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
             children: [
               if (_searching)
@@ -655,7 +656,7 @@ class _DownloadFilesPageState extends State<DownloadFilesPage> {
           ),
           body: items.isEmpty
               ? Center(child: Text(context.l10n.downloadsPageBuildText4))
-              : ListView.builder(
+              : SmoothListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
                   itemCount: rows.length,
                   itemBuilder: (context, index) {
@@ -950,7 +951,7 @@ class _VoiceDetailPageState extends State<VoiceDetailPage> {
             title: Text(item.work.rj),
             leading: const BackButton(),
           ),
-          body: CustomScrollView(
+          body: SmoothCustomScrollView(
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),

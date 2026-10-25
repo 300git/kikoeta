@@ -16,6 +16,7 @@ import '../services/lyrics_library_service.dart';
 import '../services/player_service.dart';
 import '../services/theme_reveal.dart';
 import '../services/update_service.dart';
+import '../smooth_scroll.dart';
 import '../src/rust/api/translate.dart';
 import '../sheets.dart';
 import '../theme.dart';
@@ -1198,7 +1199,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: sections,
                   );
-            return SingleChildScrollView(
+            return SmoothSingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 16,
                 _sectionKey == null ? 4 : 8,
