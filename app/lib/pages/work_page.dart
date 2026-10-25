@@ -2224,7 +2224,7 @@ class _WorkPageState extends State<WorkPage> {
                       children: [
                         ...work.tags.map(
                           (t) => _tagChip(
-                            t,
+                            work.tagLabel(t, Localizations.localeOf(context)),
                             gray: work.grayTags.contains(t),
                             onTap: () => _searchAndBack(t),
                             onLongPress: () => _blacklistTag(t),
@@ -2815,7 +2815,9 @@ class _WorkPageState extends State<WorkPage> {
         backgroundColor: p.surface,
         title: Text(l10n.workPageOkText),
         content: Text(
-          l10n.workPageOkText2((t).toString()),
+          l10n.workPageOkText2(
+            work.tagLabel(t, Localizations.localeOf(context)),
+          ),
           style: TextStyle(fontSize: 13.5, color: p.text, height: 1.5),
         ),
         actions: [

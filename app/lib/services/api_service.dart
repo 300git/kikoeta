@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show Locale;
 
 import 'package:flutter/foundation.dart';
 
@@ -7,6 +8,7 @@ import '../src/rust/api/kikoeru_api.dart';
 import '../src/rust/api/simple.dart';
 import '../src/rust/api/textcodec.dart';
 import '../l10n/strings.dart';
+import '../l10n/tag_names.dart';
 
 /// 一页作品 + 服务端分页信息（用于 hasMore 判断）
 class WorksPage {
@@ -29,12 +31,17 @@ class AdvancedFilterEntry {
   final String id;
   final String name;
   final int count;
+  final Map<String, String> tagNames;
 
   const AdvancedFilterEntry({
     required this.id,
     required this.name,
     required this.count,
+    this.tagNames = const {},
   });
+
+  String label(Locale locale) =>
+      TagNames.display(name, locale, translations: tagNames);
 }
 
 /// asmr.one API 客户端（网络请求统一由 Rust 核心执行）。
@@ -93,6 +100,7 @@ class ApiService {
           id: value['id']?.toString() ?? name,
           name: name,
           count: count,
+          tagNames: kind == 'tags' ? TagNames.fromApi(value) : const {},
         ),
       );
     }
@@ -438,8 +446,10 @@ class ApiService {
     return <int>{};
   }
 
-  static Future<String> checkHealth(AppState app, String base) async {
-    return apiHealth(base: base);
+  static Future<int> checkHealth(AppState app, String base) async {
+    final timer = Stopwatch()..start();
+    await apiHealth(base: base);
+    return timer.elapsedMilliseconds;
   }
 
   /// one 站已弃用但仍保留的系统歌单：接口返回的内部名映射为中文显示名。
@@ -1566,6 +1576,7 @@ class ApiService {
         .join(' / ');
     final tags = <String>[];
     final grayTags = <String>[];
+    final tagNames = <String, Map<String, String>>{};
     for (final t in ((m['tags'] as List?) ?? const [])) {
       final name = (t as Map)['name'] as String? ?? '';
       if (name.isEmpty) continue;
@@ -1579,6 +1590,8 @@ class ApiService {
           1;
       if (status >= 2) continue;
       tags.add(name);
+      final names = TagNames.fromApi(t);
+      if (names.isNotEmpty) tagNames[name] = names;
       if (status == 0) grayTags.add(name);
     }
     final circle =
@@ -1603,6 +1616,7 @@ class ApiService {
       ),
       tags: tags,
       grayTags: grayTags,
+      tagNames: tagNames,
       grad: i % 8,
       coverUrl:
           m['mainCoverUrl'] as String? ??

@@ -16,7 +16,7 @@ void main() {
   tearDown(() => AppLanguage.setPreference(AppLanguage.system));
 
   test(
-    'system default falls back to the available simplified Chinese resources',
+    'system locales resolve supported languages and fall back to English',
     () {
       expect(AppLanguage.preference, 'system');
       expect(AppLanguage.localeOverride, isNull);
@@ -24,18 +24,18 @@ void main() {
         Locale('en', 'US'),
         Locale('ru'),
         Locale('ja'),
-        Locale('zh', 'TW'),
       ]) {
         final resolved = AppLanguage.resolveLocale([locale]);
         final strings = lookupAppLocalizations(resolved);
-        expect(strings.languageAndTranslation, '语言与翻译');
-        expect(strings.simplifiedChinese, '简体中文');
+        expect(strings.languageAndTranslation, 'Language and translation');
+        expect(strings.confirm, 'Confirm');
       }
-      expect(AppLanguage.resolveLocale([]), const Locale('zh', 'CN'));
+      expect(AppLanguage.resolveLocale([]), const Locale('en'));
       expect(
-        AppLocalizations.supportedLocales.every((l) => l.languageCode == 'zh'),
-        isTrue,
+        AppLanguage.resolveLocale([const Locale('zh', 'CN')]),
+        const Locale('zh', 'CN'),
       );
+      expect(AppLocalizations.supportedLocales.first, const Locale('en'));
     },
   );
 
@@ -50,7 +50,7 @@ void main() {
       var notifications = 0;
       app.addListener(() => notifications++);
 
-      for (final value in ['en', 'ru', 'ja', 'zh-TW', 'invalid']) {
+      for (final value in ['ru', 'ja', 'zh-TW', 'invalid']) {
         app.setUiLanguage(value);
       }
       expect(saved, isEmpty);
@@ -61,18 +61,30 @@ void main() {
       expect(notifications, 1);
       app.setUiLanguage('zh-CN');
       expect(notifications, 1);
+      app.setUiLanguage('en');
+      expect(app.uiLanguage, 'en');
+      expect(saved, {'ui_language': 'en'});
+      expect(AppLanguage.localeOverride, const Locale('en'));
+      expect(
+        AppLanguage.resolveLocale([const Locale('zh', 'CN')]),
+        const Locale('en'),
+      );
+      expect(appL10n.confirm, 'Confirm');
+      expect(notifications, 2);
+      app.setUiLanguage('en');
+      expect(notifications, 2);
     },
   );
 
   test(
     'background import workers can read localized progress messages',
     () async {
-      expect(await Isolate.run(() => appL10n.confirm), '确定');
+      expect(await Isolate.run(() => appL10n.confirm), 'Confirm');
     },
   );
 
   testWidgets(
-    'follow UI resolves the effective language instead of the unsupported system locale',
+    'follow UI resolves English and follows explicit language changes',
     (tester) async {
       tester.binding.platformDispatcher.localesTestValue = const [
         Locale('en', 'US'),
@@ -86,9 +98,11 @@ void main() {
       app.setTranslationTarget('ui');
       expect(saved['translation_target'], 'ui');
       expect(app.translationTarget, 'ui');
-      expect(app.resolvedTranslationTarget, 'zh-CN');
+      expect(app.resolvedTranslationTarget, 'en');
       app.setUiLanguage('zh-CN');
       expect(app.resolvedTranslationTarget, 'zh-CN');
+      app.setUiLanguage('en');
+      expect(app.resolvedTranslationTarget, 'en');
       app.setTranslationTarget('en');
       expect(app.resolvedTranslationTarget, 'en');
       app.setTranslationTarget('zh-TW');
@@ -119,7 +133,7 @@ void main() {
   }
 
   testWidgets(
-    'language menu is first and only simplified Chinese is selectable',
+    'language menu enables beta English and switches between English and Chinese',
     (tester) async {
       final saved = <String, String>{};
       final app = AppState(
@@ -127,14 +141,14 @@ void main() {
       );
       addTearDown(app.dispose);
       await showSettings(tester, app);
-      expect(find.text('语言与翻译'), findsOneWidget);
+      expect(find.text('Language and translation'), findsOneWidget);
       expect(
-        tester.getTopLeft(find.text('界面语言')).dy,
-        lessThan(tester.getTopLeft(find.text('翻译引擎')).dy),
+        tester.getTopLeft(find.text('Interface language')).dy,
+        lessThan(tester.getTopLeft(find.text('Translation engine')).dy),
       );
-      expect(find.text('跟随系统'), findsOneWidget);
+      expect(find.text('Follow system'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('界面语言'));
+      await tester.tap(find.byTooltip('Interface language'));
       await tester.pumpAndSettle();
       final entries = tester
           .widgetList<PopupMenuItem<String>>(find.byType(PopupMenuItem<String>))
@@ -150,23 +164,62 @@ void main() {
       ]);
       expect(
         entries.where((entry) => entry.enabled).map((entry) => entry.value),
-        ['zh-CN'],
+        ['system', 'zh-CN', 'en'],
       );
-      for (final label in ['繁體中文', '日本語', 'English', 'Русский']) {
+      for (final label in ['繁體中文', '日本語', 'English (beta)', 'Русский']) {
         expect(find.text(label), findsOneWidget);
       }
-      await tester.tap(find.text('English'));
+      await tester.tap(find.text('English (beta)'));
       await tester.pumpAndSettle();
-      expect(app.uiLanguage, 'system');
-      expect(saved, isEmpty);
+      expect(app.uiLanguage, 'en');
+      expect(saved['ui_language'], 'en');
+      expect(find.text('English (beta)'), findsOneWidget);
+      expect(find.text('Language and translation'), findsOneWidget);
+      await tester.tap(find.byTooltip('Interface language'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('简体中文'));
       await tester.pumpAndSettle();
       expect(app.uiLanguage, 'zh-CN');
       expect(saved['ui_language'], 'zh-CN');
       expect(find.text('简体中文'), findsOneWidget);
+      expect(find.text('语言与翻译'), findsOneWidget);
+      await tester.tap(find.byTooltip('界面语言'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('English (beta)'));
+      await tester.pumpAndSettle();
+      expect(app.uiLanguage, 'en');
+      expect(find.text('Language and translation'), findsOneWidget);
+      tester.binding.platformDispatcher.localesTestValue = const [
+        Locale('zh', 'CN'),
+      ];
+      addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+      await tester.tap(find.byTooltip('Interface language'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Follow system'));
+      await tester.pumpAndSettle();
+      expect(app.uiLanguage, 'system');
+      expect(saved['ui_language'], 'system');
+      expect(AppLanguage.localeOverride, isNull);
+      expect(find.text('跟随系统'), findsOneWidget);
+      expect(find.text('语言与翻译'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('English language settings fit a phone viewport', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final app = AppState(languageSettingsWriter: (_, _) {});
+    addTearDown(app.dispose);
+    app.setUiLanguage('en');
+    await showSettings(tester, app);
+    await tester.tap(find.byTooltip('Interface language'));
+    await tester.pumpAndSettle();
+    expect(find.text('English (beta)'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'translation menu offers follow UI and retains explicit targets',
@@ -176,6 +229,7 @@ void main() {
         languageSettingsWriter: (key, value) => saved[key] = value,
       );
       addTearDown(app.dispose);
+      app.setUiLanguage('zh-CN');
       await showSettings(tester, app);
       await tester.tap(find.byTooltip('翻译目标语言'));
       await tester.pumpAndSettle();

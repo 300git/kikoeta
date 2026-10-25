@@ -9,12 +9,14 @@ class DictationQueueList extends StatefulWidget {
   final DictationQueue queue;
   final ValueChanged<DictationQueueEntry> onDelete;
   final ValueChanged<DictationQueueEntry>? onJump;
+  final ValueChanged<DictationQueueEntry>? onRetry;
 
   const DictationQueueList({
     super.key,
     required this.queue,
     required this.onDelete,
     this.onJump,
+    this.onRetry,
   });
 
   @override
@@ -99,48 +101,64 @@ class _DictationQueueListState extends State<DictationQueueList> {
     DictationQueueStatus.cancelled => p.dim,
   };
 
-  Widget _tracks(BuildContext context, DictationQueueEntry entry) =>
-      ConstrainedBox(
+  Widget _track(DictationQueueEntry entry, int index) {
+    final track = entry.tracks[index];
+    return ListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+      minLeadingWidth: 24,
+      horizontalTitleGap: 10,
+      leading: Icon(Icons.audio_file_outlined, color: p.dim, size: 17),
+      title: Text(
+        track.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontFamily: kAppFontFamily,
+          color: p.text,
+          fontSize: 12.5,
+        ),
+      ),
+      subtitle: track.path == track.title
+          ? null
+          : Text(
+              track.path,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: kAppFontFamily,
+                color: p.dim,
+                fontSize: 11,
+              ),
+            ),
+    );
+  }
+
+  Widget _tracks(BuildContext context, DictationQueueEntry entry) {
+    if (queue.entries.length == 1) {
+      return ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 230),
         child: SmoothListView.builder(
           key: PageStorageKey('dictation-tracks-${entry.label}'),
           primary: false,
           shrinkWrap: true,
           itemCount: entry.tracks.length,
-          itemBuilder: (context, index) {
-            final track = entry.tracks[index];
-            return ListTile(
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-              minLeadingWidth: 24,
-              horizontalTitleGap: 10,
-              leading: Icon(Icons.audio_file_outlined, color: p.dim, size: 17),
-              title: Text(
-                track.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: kAppFontFamily,
-                  color: p.text,
-                  fontSize: 12.5,
-                ),
-              ),
-              subtitle: track.path == track.title
-                  ? null
-                  : Text(
-                      track.path,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: kAppFontFamily,
-                        color: p.dim,
-                        fontSize: 11,
-                      ),
-                    ),
-            );
-          },
+          itemBuilder: (_, index) => _track(entry, index),
         ),
       );
+    }
+    // The queue owns scrolling for expanded batches. Build these rows only
+    // when ExpansionTile mounts its children, without a second viewport/bar.
+    return Builder(
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var index = 0; index < entry.tracks.length; index++)
+            _track(entry, index),
+        ],
+      ),
+    );
+  }
 
   Widget _entry(
     BuildContext context,
@@ -181,6 +199,22 @@ class _DictationQueueListState extends State<DictationQueueList> {
             ),
           ),
         ),
+        if (entry.status == DictationQueueStatus.failed)
+          TextButton(
+            onPressed: widget.onRetry == null
+                ? null
+                : () => widget.onRetry!(entry),
+            style: TextButton.styleFrom(
+              foregroundColor: p.muted,
+              textStyle: const TextStyle(
+                fontFamily: kAppFontFamily,
+                fontSize: 12,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 36),
+            ),
+            child: Text(context.l10n.retry),
+          ),
       ],
     );
     final subtitle = Padding(

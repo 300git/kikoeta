@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'services/android_audio.dart';
 import 'services/audio_effects.dart';
 import 'l10n/app_language.dart';
+import 'l10n/tag_names.dart';
 import 'services/player_service.dart';
 import 'services/settings_store.dart';
 
@@ -40,6 +41,7 @@ class Work {
   final String releaseDate;
   final List<String> tags;
   final List<String> grayTags; // 低愿力标签（需投票，显示为灰色）
+  final Map<String, Map<String, String>> tagNames;
   final int grad; // 封面渐变索引
   final String? coverUrl;
   final bool hasSubtitle;
@@ -70,6 +72,7 @@ class Work {
     this.releaseDate = '',
     required this.tags,
     this.grayTags = const [],
+    this.tagNames = const {},
     required this.grad,
     this.coverUrl,
     this.hasSubtitle = false,
@@ -81,6 +84,9 @@ class Work {
     this.progress,
     this.reviewText,
   });
+
+  String tagLabel(String name, Locale locale) =>
+      TagNames.display(name, locale, translations: tagNames[name]);
 }
 
 /// 作品媒体树节点（文件夹 / 文件）
@@ -586,6 +592,7 @@ class AppState extends ChangeNotifier {
           'releaseDate': w.releaseDate,
           'tags': w.tags,
           'grayTags': w.grayTags,
+          'tagNames': w.tagNames,
           'grad': w.grad,
           'coverUrl': w.coverUrl,
           'hasSubtitle': w.hasSubtitle,
@@ -691,6 +698,7 @@ class AppState extends ChangeNotifier {
           releaseDate: wm['releaseDate'] as String? ?? '',
           tags: List<String>.from((wm['tags'] as List?) ?? const []),
           grayTags: List<String>.from((wm['grayTags'] as List?) ?? const []),
+          tagNames: TagNames.fromJson(wm['tagNames']),
           grad: (wm['grad'] as int?) ?? 0,
           coverUrl: wm['coverUrl'] as String?,
           hasSubtitle: (wm['hasSubtitle'] as bool?) ?? false,
@@ -890,6 +898,7 @@ class AppState extends ChangeNotifier {
       'coverUrl': w.coverUrl,
       'tags': w.tags,
       'grayTags': w.grayTags,
+      'tagNames': w.tagNames,
       'at': DateTime.now().millisecondsSinceEpoch,
     });
     if (playHistory.length > 50) {

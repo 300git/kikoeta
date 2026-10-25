@@ -95,7 +95,14 @@ class _AdvancedFilterPageState extends State<AdvancedFilterPage> {
     final values = _entries[_tab.kind] ?? const <AdvancedFilterEntry>[];
     if (query.isEmpty) return values;
     return values
-        .where((entry) => entry.name.toLowerCase().contains(query))
+        .where(
+          (entry) =>
+              entry.name.toLowerCase().contains(query) ||
+              entry
+                  .label(Localizations.localeOf(context))
+                  .toLowerCase()
+                  .contains(query),
+        )
         .toList();
   }
 
@@ -337,7 +344,7 @@ class _FilterEntryTile extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  entry.name,
+                  entry.label(Localizations.localeOf(context)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

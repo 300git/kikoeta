@@ -474,7 +474,13 @@ class WorkCard extends StatelessWidget {
         ? AppColors.dark
         : AppColors.light;
     final tags = work.tags
-        .map((t) => _TagMini(t, p, gray: work.grayTags.contains(t)))
+        .map(
+          (t) => _TagMini(
+            work.tagLabel(t, Localizations.localeOf(context)),
+            p,
+            gray: work.grayTags.contains(t),
+          ),
+        )
         .toList();
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,

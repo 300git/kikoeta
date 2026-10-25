@@ -177,6 +177,46 @@ class KtService {
   Future<Map<String, dynamic>> job(String jobId) =>
       _getJson('/api/v1/jobs/$jobId');
 
+  /// Reconcile a previous attempt before submitting again. A client-side
+  /// polling or save error does not imply that the KT task itself failed.
+  Future<Map<String, dynamic>> startOrRecoverJob(
+    List<KtSourceFile> files, {
+    String? existingJobId,
+    String? cacheWorkId,
+    List<String> cacheTrackPaths = const [],
+  }) async {
+    if (existingJobId != null) {
+      Map<String, dynamic>? previous;
+      try {
+        previous = await job(existingJobId);
+      } on KtServiceException catch (error) {
+        if (error.statusCode != 404) rethrow;
+      }
+      if (previous != null) {
+        switch (previous['status']) {
+          case 'paused':
+            return resume(existingJobId);
+          case 'queued':
+          case 'running':
+          case 'pausing':
+          case 'cancelling':
+          case 'completed':
+            return previous;
+          case 'failed':
+          case 'cancelled':
+            break;
+          default:
+            throw FormatException(appL10n.ktServiceDecodeFormatException);
+        }
+      }
+    }
+    return createJob(
+      files,
+      cacheWorkId: cacheWorkId,
+      cacheTrackPaths: cacheTrackPaths,
+    );
+  }
+
   Future<KtEventsBatch> events(String jobId, int cursor) async {
     final body = await _getJson('/api/v1/jobs/$jobId/events?after=$cursor');
     final raw = body['events'];

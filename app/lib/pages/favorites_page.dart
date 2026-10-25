@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -20,6 +22,7 @@ String favoritesWorkSignature(Work w) => [
   w.releaseDate,
   w.tags.join(','),
   w.grayTags.join(','),
+  jsonEncode(w.tagNames),
   w.coverUrl ?? '',
   w.hasSubtitle ? '1' : '0',
   w.apiId?.toString() ?? '',

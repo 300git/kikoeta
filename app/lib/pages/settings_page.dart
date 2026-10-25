@@ -23,6 +23,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import '../widgets/playback_seek_seconds_control.dart';
 import '../l10n/strings.dart';
+import '../l10n/app_language.dart';
 
 class SettingsPage extends StatefulWidget {
   final AppState app;
@@ -45,7 +46,7 @@ class _SettingsPageState extends State<SettingsPage> {
     0xFFFFA726,
   ];
 
-  final Map<String, String> _health = {};
+  final Map<String, AsyncSnapshot<int>> _health = {};
   final Map<String, String> _loginStatus = {};
   // 电池优化白名单状态（仅安卓）：true=已关闭省电优化 / false=未关闭 / null=未知或非安卓
   bool? _batteryIgnoring;
@@ -118,19 +119,25 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget? _healthBadge(String key) {
-    final s = _health[key];
-    if (s == null) return null;
+    final health = _health[key];
+    if (health == null) return null;
+    final l10n = context.l10n;
+    final text = health.hasData
+        ? '${l10n.settingsPageHealthBadgeStartsWith} · ${health.data}ms'
+        : health.hasError
+        ? l10n.settingsPageAutoCheckSetState2
+        : l10n.settingsPageAutoCheckSetState;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Text(
-        s,
+        text,
         style: TextStyle(
           fontSize: 11,
-          color: s == context.l10n.settingsPageAutoCheckSetState
-              ? p.muted
-              : s.startsWith(context.l10n.settingsPageHealthBadgeStartsWith)
+          color: health.hasData
               ? p.green
-              : p.red,
+              : health.hasError
+              ? p.red
+              : p.muted,
         ),
       ),
     );
@@ -159,27 +166,29 @@ class _SettingsPageState extends State<SettingsPage> {
     String user,
     String pass,
   ) async {
-    final l10n = context.l10n;
     setState(() {
-      _health[key] = l10n.settingsPageAutoCheckSetState;
+      _health[key] = const AsyncSnapshot<int>.waiting();
       _loginStatus[key] = 'gray';
     });
-    String? health;
+    int health;
     try {
       health = await ApiService.checkHealth(app, base);
-    } catch (_) {
-      health = null;
-    }
-    if (!mounted) return;
-    if (health == null) {
+    } catch (error, stackTrace) {
+      if (!mounted) return;
       setState(() {
-        _health[key] = l10n.settingsPageAutoCheckSetState2;
+        _health[key] = AsyncSnapshot<int>.withError(
+          ConnectionState.done,
+          error,
+          stackTrace,
+        );
         _loginStatus[key] = 'gray';
       });
       return;
     }
-    final h = health;
-    setState(() => _health[key] = h);
+    if (!mounted) return;
+    setState(() {
+      _health[key] = AsyncSnapshot<int>.withData(ConnectionState.done, health);
+    });
     if (user.isEmpty || pass.isEmpty) {
       setState(() => _loginStatus[key] = 'gray');
       return;
@@ -1992,7 +2001,7 @@ class _SettingsPageState extends State<SettingsPage> {
       'zh-CN': context.l10n.simplifiedChinese,
       'zh-TW': context.l10n.traditionalChinese,
       'ja': '日本語',
-      'en': 'English',
+      'en': 'English (beta)',
       'ru': 'Русский',
     };
     return _translationDropdown(
@@ -2002,7 +2011,7 @@ class _SettingsPageState extends State<SettingsPage> {
       items: [
         _menuHead(context, context.l10n.interfaceLanguage),
         ...labels.entries.map((entry) {
-          final enabled = entry.key == 'zh-CN';
+          final enabled = AppLanguage.selectablePreferences.contains(entry.key);
           return PopupMenuItem<String>(
             value: entry.key,
             enabled: enabled,

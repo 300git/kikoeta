@@ -83,19 +83,18 @@ void main() {
       final ids = <String>[];
       final run = queue.run((entry) async {
         execution.add(entry.label);
-        final created = entry.backendJob == null
-            ? await service.createJob(
-                [
-                  for (var i = 0; i < entry.tracks.length; i++)
-                    KtSourceFile(
-                      url: entry.tracks[i].url!,
-                      name: ktUploadName(i, entry.tracks[i].title),
-                    ),
-                ],
-                cacheWorkId: entry.work.rj,
-                cacheTrackPaths: entry.tracks.map((e) => e.path).toList(),
-              )
-            : await service.resume(entry.backendJob!.jobId);
+        final created = await service.startOrRecoverJob(
+          [
+            for (var i = 0; i < entry.tracks.length; i++)
+              KtSourceFile(
+                url: entry.tracks[i].url!,
+                name: ktUploadName(i, entry.tracks[i].title),
+              ),
+          ],
+          existingJobId: entry.backendJob?.jobId,
+          cacheWorkId: entry.work.rj,
+          cacheTrackPaths: entry.tracks.map((e) => e.path).toList(),
+        );
         final id = created['job_id'] as String;
         ids.add(id);
         entry.backendJob = service.reference(id);

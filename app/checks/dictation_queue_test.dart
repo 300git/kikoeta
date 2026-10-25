@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kikoeta_app/data.dart';
 import 'package:kikoeta_app/l10n/generated/app_localizations.dart';
 import 'package:kikoeta_app/pages/dictation_translation_page.dart';
 import 'package:kikoeta_app/services/dictation_queue.dart';
+import 'package:kikoeta_app/services/kt_service.dart';
+import 'package:kikoeta_app/smooth_scroll.dart';
 import 'package:kikoeta_app/src/rust/frb_generated.dart';
 import 'package:kikoeta_app/widgets/dictation_queue_list.dart';
 
@@ -301,8 +304,10 @@ void main() {
     DictationQueue queue, {
     ValueChanged<DictationQueueEntry>? onDelete,
     ValueChanged<DictationQueueEntry>? onJump,
+    ValueChanged<DictationQueueEntry>? onRetry,
   }) => tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('zh', 'CN'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
@@ -314,12 +319,112 @@ void main() {
               queue: queue,
               onDelete: onDelete ?? queue.remove,
               onJump: onJump,
+              onRetry: onRetry,
             ),
           ),
         ),
       ),
     ),
   );
+
+  test(
+    'retry reuses the failed batch and rejects repeated taps or stale entries',
+    () async {
+      final queue = DictationQueue();
+      addTearDown(queue.dispose);
+      final a = enqueue(queue, 'A');
+      final b = enqueue(queue, 'B');
+      expect(queue.retry(a), isFalse);
+      await queue.run((_) async => DictationQueueStatus.failed);
+      a.backendJob = const KtJobReference(
+        jobId: 'previous',
+        endpoint: 'http://127.0.0.1:2370',
+        username: 'user',
+        password: 'pass',
+      );
+      final revision = queue.pendingRevision;
+      queue.cancelling = true;
+      expect(queue.retry(a), isFalse);
+      queue.cancelling = false;
+      expect(queue.retry(a), isTrue);
+      expect(queue.retry(a), isFalse);
+      expect(a.backendJob?.jobId, 'previous');
+      expect(a.label, 'A');
+      expect(queue.pendingRevision, revision + 1);
+      expect(queue.entries.last, same(a));
+      final processed = <String>[];
+      await queue.run((entry) async {
+        processed.add(entry.label);
+        return DictationQueueStatus.completed;
+      });
+      expect(processed, ['A']);
+      expect(b.status, DictationQueueStatus.failed);
+      expect(queue.retry(a), isFalse);
+      queue.remove(b);
+      expect(queue.retry(b), isFalse);
+      expect(enqueue(queue, 'A').label, 'A-1');
+    },
+  );
+
+  test(
+    'retry while processing runs next without preempting the active batch',
+    () async {
+      final queue = DictationQueue();
+      addTearDown(queue.dispose);
+      final failed = enqueue(queue, 'A');
+      await queue.run((_) async => DictationQueueStatus.failed);
+      final current = enqueue(queue, 'B');
+      final release = Completer<DictationQueueStatus>();
+      final processed = <String>[];
+      final run = queue.run((entry) async {
+        processed.add(entry.label);
+        if (entry == current) return release.future;
+        return DictationQueueStatus.completed;
+      });
+      expect(queue.retry(failed), isTrue);
+      expect(queue.preemptRequested, isFalse);
+      expect(queue.current, same(current));
+      release.complete(DictationQueueStatus.completed);
+      await run;
+      expect(processed, ['B', 'A']);
+    },
+  );
+
+  testWidgets(
+    'failed batch offers one-tap retry without a dialog or duplicate entry',
+    (tester) async {
+      final queue = DictationQueue();
+      addTearDown(queue.dispose);
+      final entry = enqueue(queue, 'RJ111111');
+      await queue.run((_) async => DictationQueueStatus.failed);
+      await showQueue(tester, queue, onRetry: queue.retry);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, '重试'));
+      await tester.pumpAndSettle();
+      expect(entry.status, DictationQueueStatus.pending);
+      expect(queue.entries, [entry]);
+      expect(find.text('重试'), findsNothing);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('failed retries can be disabled during cancellation or syncing', (
+    tester,
+  ) async {
+    final queue = DictationQueue();
+    addTearDown(queue.dispose);
+    enqueue(queue, 'RJ111111');
+    await queue.run((_) async => DictationQueueStatus.failed);
+    await showQueue(tester, queue);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextButton>(find.widgetWithText(TextButton, '重试'))
+          .onPressed,
+      isNull,
+    );
+  });
 
   testWidgets('pending batch action invokes jump without deleting the batch', (
     tester,
@@ -446,6 +551,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           navigatorKey: navigator,
+          locale: const Locale('zh', 'CN'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(),
@@ -516,6 +622,112 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'expanded batch audio shares the queue scrollbar and wheel position',
+    (tester) async {
+      final queue = DictationQueue();
+      addTearDown(queue.dispose);
+      final entry = queue.enqueue(
+        work: work('RJ100001'),
+        tracks: List.generate(
+          24,
+          (index) => MediaNode(
+            title: 'audio $index',
+            type: 'file',
+            path: 'audio $index',
+          ),
+        ),
+      );
+      enqueue(queue, 'RJ100002');
+      enqueue(queue, 'RJ100003');
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.windows),
+          locale: const Locale('zh', 'CN'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 520,
+              child: ListenableBuilder(
+                listenable: queue,
+                builder: (_, _) =>
+                    DictationQueueList(queue: queue, onDelete: queue.remove),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(entry.label));
+      await tester.pumpAndSettle();
+      final scrollables = find.descendant(
+        of: find.byType(DictationQueueList),
+        matching: find.byType(Scrollable),
+      );
+      expect(scrollables, findsOneWidget);
+      expect(find.byType(Scrollbar), findsOneWidget);
+      final position = tester.state<ScrollableState>(scrollables).position;
+      expect(position.maxScrollExtent, greaterThan(600));
+      final before = position.pixels;
+      await tester.sendEventToBinding(
+        PointerScrollEvent(
+          position: tester.getCenter(find.text('audio 0')),
+          scrollDelta: const Offset(0, 120),
+          kind: PointerDeviceKind.mouse,
+          device: 1,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(position.pixels, moreOrLessEquals(before + 120, epsilon: 1));
+      await tester.scrollUntilVisible(
+        find.text('audio 23'),
+        160,
+        scrollable: scrollables,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('audio 23').hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('single batch keeps its bounded audio scroll view', (
+    tester,
+  ) async {
+    final queue = DictationQueue();
+    addTearDown(queue.dispose);
+    queue.enqueue(
+      work: work('RJ100001'),
+      tracks: List.generate(
+        24,
+        (index) => MediaNode(
+          title: 'audio $index',
+          type: 'file',
+          path: 'audio $index',
+        ),
+      ),
+    );
+    await showQueue(tester, queue);
+    await tester.pumpAndSettle();
+    expect(find.byType(SmoothCustomScrollView), findsNothing);
+    expect(find.byType(SmoothListView), findsOneWidget);
+    final scrollables = find.descendant(
+      of: find.byType(DictationQueueList),
+      matching: find.byType(Scrollable),
+    );
+    expect(scrollables, findsOneWidget);
+    expect(
+      tester.getSize(find.byType(SmoothListView)).height,
+      lessThanOrEqualTo(230),
+    );
+    await tester.scrollUntilVisible(
+      find.text('audio 23'),
+      160,
+      scrollable: scrollables,
+    );
+    expect(find.text('audio 23').hitTestable(), findsOneWidget);
+  });
 
   testWidgets(
     'running batches have no drag handle; long press still offers delete',

@@ -7,6 +7,7 @@ import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../l10n/strings.dart';
+import '../l10n/tag_names.dart';
 
 class HistoryPage extends StatelessWidget {
   final AppState app;
@@ -21,6 +22,7 @@ class HistoryPage extends StatelessWidget {
     dur: '',
     tags: List<String>.from((e['tags'] as List?) ?? const []),
     grayTags: List<String>.from((e['grayTags'] as List?) ?? const []),
+    tagNames: TagNames.fromJson(e['tagNames']),
     grad: 0,
     coverUrl: e['coverUrl'] as String?,
   );
@@ -154,7 +156,10 @@ class HistoryPage extends StatelessWidget {
                                           .map(
                                             (t) => _tagChip(
                                               ctx,
-                                              t,
+                                              w.tagLabel(
+                                                t,
+                                                Localizations.localeOf(ctx),
+                                              ),
                                               gray: w.grayTags.contains(t),
                                             ),
                                           )

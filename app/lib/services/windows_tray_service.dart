@@ -20,6 +20,7 @@ class WindowsTrayService with TrayListener, WindowListener {
   bool _exiting = false;
   bool? _menuLyricsOn;
   bool? _menuPlaying;
+  String? _menuLanguage;
 
   Future<void> init(AppState app) async {
     _app = app;
@@ -41,6 +42,7 @@ class WindowsTrayService with TrayListener, WindowListener {
   Future<void> _setContextMenu() async {
     _menuLyricsOn = _app.desktopLyricsOn;
     _menuPlaying = _app.playing;
+    _menuLanguage = _app.uiLanguage;
     await trayManager.setContextMenu(
       Menu(
         items: [
@@ -66,7 +68,8 @@ class WindowsTrayService with TrayListener, WindowListener {
   void _syncContextMenu() {
     if (!_initialized ||
         (_menuLyricsOn == _app.desktopLyricsOn &&
-            _menuPlaying == _app.playing)) {
+            _menuPlaying == _app.playing &&
+            _menuLanguage == _app.uiLanguage)) {
       return;
     }
     unawaited(_setContextMenu());

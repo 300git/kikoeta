@@ -4,6 +4,7 @@ import '../data.dart';
 import '../smooth_scroll.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
+import '../l10n/tag_names.dart';
 
 Map<String, String> get _typeLabels => {
   'rj': appL10n.blacklistPageTypeLabelsTypeLabels,
@@ -80,7 +81,12 @@ class BlacklistPage extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              value,
+                              type == 'tag'
+                                  ? TagNames.display(
+                                      value,
+                                      Localizations.localeOf(ctx),
+                                    )
+                                  : value,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(

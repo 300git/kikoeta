@@ -225,13 +225,12 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
         );
       }
       submissionAttempted = true;
-      final created = pausedJob != null
-          ? await service.resume(pausedJob.jobId)
-          : await service.createJob(
-              sources,
-              cacheWorkId: currentWork.rj,
-              cacheTrackPaths: tracks.map((track) => track.path).toList(),
-            );
+      final created = await service.startOrRecoverJob(
+        sources,
+        existingJobId: pausedJob?.jobId,
+        cacheWorkId: currentWork.rj,
+        cacheTrackPaths: tracks.map((track) => track.path).toList(),
+      );
       final jobId = created['job_id']?.toString() ?? '';
       if (jobId.isEmpty) {
         throw FormatException(
@@ -434,6 +433,11 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
 
   void _appendLog(String message) {
     _session.appendLog(message);
+  }
+
+  Future<void> _retryEntry(DictationQueueEntry entry) async {
+    if (_syncing || !_session.retry(entry)) return;
+    if (!_session.running) await _start();
   }
 
   Future<void> _jumpEntry(DictationQueueEntry entry) async {
@@ -934,6 +938,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
           queue: _session,
           onDelete: _deleteEntry,
           onJump: _jumpEntry,
+          onRetry: _syncing || _session.cancelling ? null : _retryEntry,
         ),
         const SizedBox(height: 10),
         SizedBox(

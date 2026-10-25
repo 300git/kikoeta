@@ -20,6 +20,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         theme: buildTheme(Brightness.light),
@@ -49,6 +50,7 @@ void main() {
       ListenableBuilder(
         listenable: app,
         builder: (context, _) => MaterialApp(
+          locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           theme: buildTheme(Brightness.light),
@@ -59,7 +61,10 @@ void main() {
     await tester.pumpAndSettle();
     final speedSwitch = find.descendant(
       of: find
-          .ancestor(of: find.text('显示倍速入口'), matching: find.byType(Row))
+          .ancestor(
+            of: find.text('Show speed control'),
+            matching: find.byType(Row),
+          )
           .first,
       matching: find.byType(Switch),
     );
@@ -107,9 +112,9 @@ void main() {
     addTearDown(app.dispose);
     await showSheet(tester, app, showAudioChannelSheet);
     for (final selection in {
-      '左右反转': AudioChannelMode.swap,
-      '声道合并': AudioChannelMode.mono,
-      '原始声道': AudioChannelMode.stereo,
+      'Swap left/right': AudioChannelMode.swap,
+      'Merge channels': AudioChannelMode.mono,
+      'Original': AudioChannelMode.stereo,
     }.entries) {
       await tester.tap(find.text(selection.key));
       await tester.pumpAndSettle();

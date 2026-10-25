@@ -10,7 +10,8 @@ class AppLanguage {
 
   static const system = 'system';
   static const simplifiedChinese = 'zh-CN';
-  static const selectablePreferences = [system, simplifiedChinese];
+  static const english = 'en';
+  static const selectablePreferences = [system, simplifiedChinese, english];
   static String _preference = system;
 
   static String get preference => _preference;
@@ -19,8 +20,11 @@ class AppLanguage {
     if (selectablePreferences.contains(value)) _preference = value;
   }
 
-  static Locale? get localeOverride =>
-      _preference == system ? null : const Locale('zh', 'CN');
+  static Locale? get localeOverride => switch (_preference) {
+    simplifiedChinese => const Locale('zh', 'CN'),
+    english => const Locale('en'),
+    _ => null,
+  };
 
   static Locale resolveLocale(List<Locale> systemLocales) =>
       basicLocaleListResolution(

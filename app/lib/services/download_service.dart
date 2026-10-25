@@ -13,6 +13,7 @@ import 'download_transfer.dart';
 import 'media_tree.dart';
 import 'settings_store.dart';
 import '../l10n/strings.dart';
+import '../l10n/tag_names.dart';
 
 const _libraryKey = 'voice_downloads';
 const _maxConcurrentDownloads = 2;
@@ -1107,6 +1108,7 @@ Map<String, dynamic> _workToJson(Work work) => {
   'releaseDate': work.releaseDate,
   'tags': work.tags,
   'grayTags': work.grayTags,
+  'tagNames': work.tagNames,
   'grad': work.grad,
   'coverUrl': work.coverUrl,
   'hasSubtitle': work.hasSubtitle,
@@ -1136,6 +1138,7 @@ Work _workFromJson(Map<String, dynamic> json) => Work(
   grayTags: ((json['grayTags'] as List?) ?? const [])
       .map((e) => e.toString())
       .toList(),
+  tagNames: TagNames.fromJson(json['tagNames']),
   grad: (json['grad'] as num?)?.toInt() ?? 0,
   coverUrl: json['coverUrl'] as String?,
   hasSubtitle: json['hasSubtitle'] as bool? ?? false,

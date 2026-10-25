@@ -113,6 +113,20 @@ class DictationQueue extends ChangeNotifier {
     return true;
   }
 
+  bool retry(DictationQueueEntry entry) {
+    if (entry.status != DictationQueueStatus.failed ||
+        !_entries.contains(entry) ||
+        cancelling) {
+      return false;
+    }
+    entry._status = DictationQueueStatus.pending;
+    _entries.remove(entry);
+    _entries.add(entry);
+    pendingRevision++;
+    notifyListeners();
+    return true;
+  }
+
   bool remove(DictationQueueEntry entry) {
     if (entry.status == DictationQueueStatus.running) return false;
     if (!_entries.remove(entry)) return false;
