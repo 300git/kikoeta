@@ -169,7 +169,7 @@ kikoeta/
 
 - [ ] Linux 与 macOS 客户端
 - [x] 基于 [kikoeta-transl](https://github.com/chenflxs/kikoeta-transl) 的听写翻译与歌词库导入
-- [x] 音声下载功能 ( *短期内无计划* )
+- [x] 音声下载功能 ~~( *短期内无计划* )~~
 - [ ] ...
 ## 致谢
 

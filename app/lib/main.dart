@@ -39,6 +39,7 @@ import 'services/api_service.dart';
 import 'services/theme_reveal.dart';
 import 'src/rust/api/kikoeru_api.dart';
 import 'theme.dart';
+import 'navigation_page_stack.dart';
 import 'widgets.dart';
 import 'l10n/strings.dart';
 
@@ -1025,7 +1026,7 @@ class _ShellState extends State<Shell> {
                 bottom: false,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-                  child: IndexedStack(
+                  child: NavigationPageStack(
                     index: app.tab,
                     children: [
                       HomePage(app: app),
