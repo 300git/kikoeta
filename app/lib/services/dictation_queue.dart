@@ -14,6 +14,7 @@ class DictationQueueEntry {
   final bool automaticallyMatched;
   final String label;
   final Map<String, String> sourceHeaders;
+  KtJobReference? backendJob;
   DictationQueueStatus _status = DictationQueueStatus.pending;
 
   DictationQueueEntry._({

@@ -260,6 +260,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
       '${app.desktopLyricsOn}|${app.playMode}|${app.volume}|'
       '${app.volumeBoostLevel}|${app.sleepEndAt?.millisecondsSinceEpoch}|'
       '${app.playbackSeekBackwardSeconds}|${app.playbackSeekForwardSeconds}|'
+      '${app.playbackSpeedEnabled}|${app.playbackRate}|'
       '${app.queue.length}|${app.playWork?.rj ?? ''}|${app.lyricsLibraryAuto}';
 
   void _syncPlayerSnapshot({bool rebuild = false}) {
@@ -952,6 +953,17 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
         context.l10n.sleepTimer,
         () => showSleepSheet(context, app),
       ),
+      (
+        Icons.swap_horiz,
+        context.l10n.audioChannels,
+        () => showAudioChannelSheet(context, app),
+      ),
+      if (app.playbackSpeedEnabled)
+        (
+          Icons.speed,
+          context.l10n.playbackSpeed,
+          () => showPlaybackSpeedSheet(context, app),
+        ),
     ];
     return Material(
       key: const ValueKey('wide-cover-menu'),
@@ -1781,6 +1793,17 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
           context.l10n.equalizer,
           () => showEqSheet(context, app),
         ),
+        _util(
+          Icons.swap_horiz,
+          context.l10n.audioChannels,
+          () => showAudioChannelSheet(context, app),
+        ),
+        if (app.playbackSpeedEnabled)
+          _util(
+            Icons.speed,
+            '${app.playbackRate}×',
+            () => showPlaybackSpeedSheet(context, app),
+          ),
         _util(
           Icons.timer_outlined,
           app.sleepEndAt != null

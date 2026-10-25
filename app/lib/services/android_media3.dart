@@ -11,6 +11,8 @@ class AndroidMedia3 {
   /// MediaSession 控制命令回调：action = play/pause/stop/seekTo/next/previous
   static void Function(String action, int positionMs)? onCommand;
 
+  static void Function(double rate)? onPlaybackRateChanged;
+
   static Future<void> init() async {
     _ch.setMethodCallHandler((call) async {
       if (call.method == 'command') {
@@ -19,6 +21,10 @@ class AndroidMedia3 {
           a['action'] as String? ?? '',
           (a['positionMs'] as num?)?.toInt() ?? 0,
         );
+      } else if (call.method == 'setPlaybackRate') {
+        final a = call.arguments as Map;
+        final rate = (a['rate'] as num?)?.toDouble();
+        if (rate != null && rate.isFinite) onPlaybackRateChanged?.call(rate);
       }
       return null;
     });
@@ -42,6 +48,8 @@ class AndroidMedia3 {
     required String mediaId,
     bool hideCard = false,
     bool logoCover = false,
+    double playbackRate = 1.0,
+    bool playbackSpeedEnabled = false,
   }) async {
     // ignore: avoid_print
     print(
@@ -58,6 +66,8 @@ class AndroidMedia3 {
         'mediaId': mediaId,
         'hideCard': hideCard,
         'logoCover': logoCover,
+        'playbackRate': playbackRate,
+        'playbackSpeedEnabled': playbackSpeedEnabled,
       });
     } catch (e) {
       // ignore: avoid_print

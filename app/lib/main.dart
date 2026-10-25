@@ -74,6 +74,7 @@ Future<void> main() async {
     await WindowsTrayService.instance.init(appState);
   }
   MediaKit.ensureInitialized();
+  await _bindPlaybackOptions();
   await AppPlayer.instance.setMediaCacheLimitMb(appState.mediaCacheLimitMb);
   // 在首次加载媒体前配置 Android 音频后端与输出缓冲，降低 UI 交互/后台
   // 调度波动引发的环境声变淡和爆音。
@@ -85,6 +86,9 @@ Future<void> main() async {
   if (!kIsWeb && Platform.isAndroid) {
     AndroidMedia3.init();
     AndroidMedia3.onCommand = _media3Command;
+    AndroidMedia3.onPlaybackRateChanged = (rate) {
+      if (appState.playbackSpeedEnabled) appState.setPlaybackRate(rate);
+    };
     _bindMedia3Sync();
   }
   // 播放器为全局单例：退出播放器页后仍把播放状态同步给应用
@@ -360,6 +364,8 @@ bool _media3SessionStarted = false;
 bool _media3Hidden = false;
 // 最近一次已下发到原生层的封面隐私选项，用于让切换绕过常规状态同步节流。
 bool _media3LogoCover = false;
+double _media3PlaybackRate = 1.0;
+bool _media3SpeedEnabled = false;
 String _media3ArtworkLoadKey = '';
 
 /// MediaSession 控制命令（Kotlin → Dart，mpv 执行）
@@ -449,10 +455,14 @@ void _syncMedia3State() {
   }
   _media3Hidden = hideCard;
   _media3LogoCover = appState.notifCover;
+  _media3PlaybackRate = appState.playbackRate;
+  _media3SpeedEnabled = appState.playbackSpeedEnabled;
   AndroidMedia3.updateState(
     isPlaying: AppPlayer.instance.isNowPlaying,
     positionMs: AppPlayer.instance.currentPosition * 1000,
     durationMs: AppPlayer.instance.currentDuration * 1000,
+    playbackRate: appState.playbackRate,
+    playbackSpeedEnabled: appState.playbackSpeedEnabled,
     title: title,
     artist: w.title,
     artworkKey: artworkKey,
@@ -523,7 +533,11 @@ void _bindMedia3Sync() {
     final privacySettingChanged =
         appState.lsCover != _media3Hidden ||
         appState.notifCover != _media3LogoCover;
+    final speedSettingChanged =
+        appState.playbackRate != _media3PlaybackRate ||
+        appState.playbackSpeedEnabled != _media3SpeedEnabled;
     if (privacySettingChanged ||
+        speedSettingChanged ||
         now.difference(_lastMedia3Sync).inMilliseconds > 1000) {
       _lastMedia3Sync = now;
       _syncMedia3State();
@@ -532,6 +546,24 @@ void _bindMedia3Sync() {
 }
 
 final AppState appState = AppState();
+
+/// 速度和声道不依赖播放器页面，切歌、后台播放和设置重置共用这份状态。
+Future<void> _bindPlaybackOptions() async {
+  var rate = appState.playbackRate;
+  var channelMode = appState.audioChannelMode;
+  await AppPlayer.instance.setPlaybackRate(rate);
+  await AppPlayer.instance.setChannelMode(channelMode);
+  appState.addListener(() {
+    if (rate != appState.playbackRate) {
+      rate = appState.playbackRate;
+      unawaited(AppPlayer.instance.setPlaybackRate(rate));
+    }
+    if (channelMode != appState.audioChannelMode) {
+      channelMode = appState.audioChannelMode;
+      unawaited(AppPlayer.instance.setChannelMode(channelMode));
+    }
+  });
+}
 
 String? _persistedPlaybackTrack;
 

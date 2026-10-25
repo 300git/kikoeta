@@ -6,8 +6,7 @@ import 'package:media_kit/media_kit.dart' hide Track;
 import '../src/rust/api/proxy.dart';
 import '../src/rust/api/simple.dart';
 import 'android_audio.dart';
-
-const _eqHz = ['31', '62', '125', '250', '500', '1k', '2k', '4k', '8k', '16k'];
+import 'audio_effects.dart';
 
 /// stop()/open() 后残留 completed 事件的抑制窗口：
 /// mpv 卸载旧文件/加载新文件产生的伪 completed=true 会在这段时间内到达，
@@ -70,7 +69,17 @@ class AppPlayer {
 
   static final AppPlayer instance = AppPlayer._();
 
-  final Player player = Player();
+  // Keep pitch control disabled: media_kit then sets mpv speed directly instead
+  // of replacing af with its own scaletempo filter when changing the rate.
+  final Player player = Player(
+    configuration: const PlayerConfiguration(pitch: false),
+  );
+
+  bool _equalizerEnabled = false;
+  List<double> _equalizerGains = const [];
+  AudioChannelMode _channelMode = AudioChannelMode.stereo;
+  Future<void> _audioFilterUpdates = Future<void>.value();
+  String? _appliedAudioFilterChain;
 
   /// 当前是否已打开媒体（页面可据此判断是否需要重新打开）
   bool opened = false;
@@ -330,23 +339,40 @@ class AppPlayer {
   Future<void> applyEqualizer({
     required bool enabled,
     required List<double> gains,
-  }) async {
-    try {
-      final p = player.platform;
-      if (p is! NativePlayer) return; // Android/其他后端暂不支持 af
-      if (!enabled || gains.every((g) => g.abs() < 0.05)) {
-        await p.setProperty('af', '');
-        return;
+  }) {
+    _equalizerEnabled = enabled;
+    _equalizerGains = List<double>.of(gains);
+    return _applyAudioFilters();
+  }
+
+  Future<void> setChannelMode(AudioChannelMode mode) {
+    _channelMode = mode;
+    return _applyAudioFilters();
+  }
+
+  Future<void> setPlaybackRate(double rate) =>
+      player.setRate(normalizePlaybackRate(rate));
+
+  Future<void> _applyAudioFilters() {
+    // Serialize rapid changes and build from the latest combined state after
+    // prior writes finish, so an older EQ update cannot overwrite channel mode.
+    _audioFilterUpdates = _audioFilterUpdates.then((_) async {
+      try {
+        final platform = player.platform;
+        if (platform is! NativePlayer) return;
+        final chain = buildAudioFilterChain(
+          equalizerEnabled: _equalizerEnabled,
+          gains: _equalizerGains,
+          channelMode: _channelMode,
+        );
+        if (chain == _appliedAudioFilterChain) return;
+        await platform.setProperty('af', chain);
+        _appliedAudioFilterChain = chain;
+      } catch (_) {
+        // 某些后端不支持动态 af：沿用原有 EQ 的兼容处理。
       }
-      final chain = List.generate(10, (i) {
-        final hz = _eqHz[i];
-        final g = gains[i].clamp(-12, 12).toStringAsFixed(1);
-        return 'equalizer=f=$hz:t=q:w=1.0:g=$g';
-      }).join(',');
-      await p.setProperty('af', chain);
-    } catch (_) {
-      // 某些后端不支持动态 af：静默忽略
-    }
+    });
+    return _audioFilterUpdates;
   }
 
   /// 设置 mpv 网络媒体缓冲上限，只影响在线播放时占用的内存。

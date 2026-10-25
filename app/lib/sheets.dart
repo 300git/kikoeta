@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'data.dart';
+import 'services/audio_effects.dart';
 import 'services/player_service.dart';
 import 'smooth_scroll.dart';
 import 'theme.dart';
@@ -547,6 +548,70 @@ Future<void> showEqSheet(BuildContext context, AppState app) {
                   color: app.eqOn ? p.green : p.dim,
                 ),
               ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+// ---------------- 倍速 / 声道 ----------------
+Future<void> showPlaybackSpeedSheet(BuildContext context, AppState app) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => ListenableBuilder(
+      listenable: app,
+      builder: (ctx, _) => _sheetScaffold(
+        context: ctx,
+        title: ctx.l10n.playbackSpeed,
+        sub: ctx.l10n.playbackSpeedDescription,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final rate in playbackRatePresets)
+                Pill(
+                  label:
+                      '${rate == rate.roundToDouble() ? rate.toInt() : rate}×',
+                  selected: app.playbackRate == rate,
+                  onTap: () => app.setPlaybackRate(rate),
+                ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<void> showAudioChannelSheet(BuildContext context, AppState app) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => ListenableBuilder(
+      listenable: app,
+      builder: (ctx, _) => _sheetScaffold(
+        context: ctx,
+        title: ctx.l10n.audioChannels,
+        sub: ctx.l10n.audioChannelsDescription,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final mode in AudioChannelMode.values)
+                Pill(
+                  label: switch (mode) {
+                    AudioChannelMode.stereo => ctx.l10n.audioChannelsOriginal,
+                    AudioChannelMode.swap => ctx.l10n.audioChannelsSwap,
+                    AudioChannelMode.mono => ctx.l10n.audioChannelsMerge,
+                  },
+                  selected: app.audioChannelMode == mode,
+                  onTap: () => app.setAudioChannelMode(mode),
+                ),
             ],
           ),
         ],

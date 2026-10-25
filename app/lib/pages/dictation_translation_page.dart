@@ -185,12 +185,15 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
 
   // Connection and strings are captured before navigation can dispose this page.
   Future<DictationQueueStatus> _processEntry(
-    KtService service,
+    KtService connection,
     DictationQueueEntry entry,
     AppLocalizations l10n,
   ) async {
     final currentWork = entry.work;
     final tracks = entry.tracks;
+    final pausedJob = entry.backendJob;
+    final service = pausedJob?.connect() ?? connection;
+    _session.activeService = service;
     var submissionAttempted = false;
     var terminalObserved = false;
     _appendLog(l10n.dictationQueueProcessing(entry.label));
@@ -222,11 +225,13 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
         );
       }
       submissionAttempted = true;
-      final created = await service.createJob(
-        sources,
-        cacheWorkId: currentWork.rj,
-        cacheTrackPaths: tracks.map((track) => track.path).toList(),
-      );
+      final created = pausedJob != null
+          ? await service.resume(pausedJob.jobId)
+          : await service.createJob(
+              sources,
+              cacheWorkId: currentWork.rj,
+              cacheTrackPaths: tracks.map((track) => track.path).toList(),
+            );
       final jobId = created['job_id']?.toString() ?? '';
       if (jobId.isEmpty) {
         throw FormatException(
@@ -234,6 +239,7 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
         );
       }
       _session.jobId = jobId;
+      entry.backendJob = service.reference(jobId);
       if (_session.stopRequested) {
         await _cancelSubmittedJob(service, jobId, l10n);
       } else if (_session.preemptRequested) {
@@ -345,6 +351,8 @@ class _DictationTranslationPageState extends State<DictationTranslationPage> {
       );
       _toast(l10n.dictationTranslationPageStartToast(error.toString()));
       return DictationQueueStatus.failed;
+    } finally {
+      if (!identical(service, connection)) service.close();
     }
   }
 

@@ -2647,6 +2647,33 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get playbackSpeed => '倍速';
+
+  @override
+  String get playbackSpeedDescription => '切换播放速度，保持音调';
+
+  @override
+  String get playbackSpeedEntry => '显示倍速入口';
+
+  @override
+  String get playbackSpeedEntryDescription => '在播放器显示倍速控制，关闭后恢复 1×';
+
+  @override
+  String get audioChannels => '声道';
+
+  @override
+  String get audioChannelsDescription => '反转左右声道，或合并后双耳播放相同声音';
+
+  @override
+  String get audioChannelsOriginal => '原始声道';
+
+  @override
+  String get audioChannelsSwap => '左右反转';
+
+  @override
+  String get audioChannelsMerge => '声道合并';
+
+  @override
   String get widgetsInputRowHintText => '搜索 RJ 号、作品名、声优…';
 }
 

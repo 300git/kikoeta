@@ -9,6 +9,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.SimpleBasePlayer
 import androidx.media3.common.util.UnstableApi
 import com.google.common.util.concurrent.Futures
@@ -25,6 +26,8 @@ class BridgePlayer(context: Context) : SimpleBasePlayer(context.mainLooper) {
     private var positionMs = 0L
     private var bufferedMs = 0L
     private var durationMs = C.TIME_UNSET
+    private var playbackRate = 1f
+    private var playbackSpeedEnabled = false
     private var title = ""
     private var artist = ""
     private var artworkKey: String? = null
@@ -35,6 +38,8 @@ class BridgePlayer(context: Context) : SimpleBasePlayer(context.mainLooper) {
 
     /** 控制命令回调（由 MainActivity 注入，转发给 Dart） */
     var onCommand: ((action: String, positionMs: Long) -> Unit)? = null
+
+    var onPlaybackRateChanged: ((Float) -> Unit)? = null
 
     private fun sendCommand(action: String, positionMs: Long = -1) {
         onCommand?.invoke(action, positionMs)
@@ -50,11 +55,15 @@ class BridgePlayer(context: Context) : SimpleBasePlayer(context.mainLooper) {
         artworkKey: String?,
         mediaId: String,
         logoCover: Boolean,
+        playbackRate: Float,
+        playbackSpeedEnabled: Boolean,
     ) {
         this.isPlaying = playing
         this.positionMs = positionMs
         this.bufferedMs = positionMs
         this.durationMs = if (durationMs > 0) durationMs else C.TIME_UNSET
+        this.playbackRate = if (playbackRate.isFinite() && playbackRate > 0f) playbackRate else 1f
+        this.playbackSpeedEnabled = playbackSpeedEnabled
         this.title = title
         this.artist = artist
         if (this.mediaId != mediaId || this.artworkKey != artworkKey ||
@@ -81,6 +90,8 @@ class BridgePlayer(context: Context) : SimpleBasePlayer(context.mainLooper) {
         positionMs = 0
         bufferedMs = 0
         durationMs = C.TIME_UNSET
+        playbackRate = 1f
+        playbackSpeedEnabled = false
         title = ""
         artist = ""
         artworkKey = null
@@ -163,7 +174,9 @@ class BridgePlayer(context: Context) : SimpleBasePlayer(context.mainLooper) {
                 .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
                 .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
                 .add(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
-                .add(Player.COMMAND_SET_SPEED_AND_PITCH)
+                .apply {
+                    if (playbackSpeedEnabled) add(Player.COMMAND_SET_SPEED_AND_PITCH)
+                }
                 .build()
             val builder = State.Builder()
                 .setAvailableCommands(commands)
@@ -174,6 +187,7 @@ class BridgePlayer(context: Context) : SimpleBasePlayer(context.mainLooper) {
                 // 有曲目即 READY（暂停时通知/锁屏卡片保持显示，仅状态变暂停）
                 .setPlaybackState(if (title.isEmpty()) Player.STATE_IDLE else Player.STATE_READY)
                 .setAudioAttributes(AudioAttributes.DEFAULT)
+                .setPlaybackParameters(PlaybackParameters(playbackRate))
                 .setContentPositionMs(positionMs)
                 .setContentBufferedPositionMs(PositionSupplier.getConstant(bufferedMs))
                 .setTotalBufferedDurationMs(PositionSupplier.getConstant(bufferedMs))
@@ -223,6 +237,14 @@ class BridgePlayer(context: Context) : SimpleBasePlayer(context.mainLooper) {
 
     override fun handleStop(): ListenableFuture<*> {
         sendCommand("stop")
+        return Futures.immediateVoidFuture()
+    }
+
+    override fun handleSetPlaybackParameters(
+        playbackParameters: PlaybackParameters,
+    ): ListenableFuture<*> {
+        // 实际速度由 Dart/mpv 确认后通过 updateState 回传。
+        onPlaybackRateChanged?.invoke(playbackParameters.speed)
         return Futures.immediateVoidFuture()
     }
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'services/android_audio.dart';
+import 'services/audio_effects.dart';
 import 'l10n/app_language.dart';
 import 'services/player_service.dart';
 import 'services/settings_store.dart';
@@ -284,6 +285,9 @@ class AppState extends ChangeNotifier {
 
   bool eqOn = true;
   final List<double> eqGains = List.filled(10, 0);
+  bool playbackSpeedEnabled = false;
+  double playbackRate = 1.0;
+  AudioChannelMode audioChannelMode = AudioChannelMode.stereo;
   String conv = 'orig'; // orig / zh / tw
   int playMode = 0; // 0 列表播放 / 1 循环播放 / 2 单曲循环
 
@@ -1113,6 +1117,17 @@ class AppState extends ChangeNotifier {
         }
       } catch (_) {}
     }
+    playbackSpeedEnabled = SettingsStore.get('playback_speed_enabled') == '1';
+    playbackRate = playbackSpeedEnabled
+        ? normalizePlaybackRate(
+            double.tryParse(SettingsStore.get('playback_rate') ?? '') ?? 1.0,
+          )
+        : 1.0;
+    final channelMode = SettingsStore.get('audio_channel_mode');
+    audioChannelMode = AudioChannelMode.values.firstWhere(
+      (mode) => mode.name == channelMode,
+      orElse: () => AudioChannelMode.stereo,
+    );
     final favs = SettingsStore.get('favs');
     if (favs != null && favs.isNotEmpty) {
       try {
@@ -1361,6 +1376,35 @@ class AppState extends ChangeNotifier {
       eqGains[i] = gains[i].clamp(-12, 12);
     }
     SettingsStore.set('eq_gains', jsonEncode(eqGains));
+    notifyListeners();
+  }
+
+  void setPlaybackSpeedEnabled(bool enabled) {
+    if (playbackSpeedEnabled == enabled) return;
+    playbackSpeedEnabled = enabled;
+    _writePlaybackSetting('playback_speed_enabled', enabled ? '1' : '0');
+    if (!enabled) {
+      playbackRate = 1.0;
+      _writePlaybackSetting('playback_rate', '$playbackRate');
+    }
+    notifyListeners();
+  }
+
+  void setPlaybackRate(double rate) {
+    if (!playbackSpeedEnabled ||
+        !playbackRatePresets.contains(rate) ||
+        playbackRate == rate) {
+      return;
+    }
+    playbackRate = rate;
+    _writePlaybackSetting('playback_rate', '$rate');
+    notifyListeners();
+  }
+
+  void setAudioChannelMode(AudioChannelMode mode) {
+    if (audioChannelMode == mode) return;
+    audioChannelMode = mode;
+    _writePlaybackSetting('audio_channel_mode', mode.name);
     notifyListeners();
   }
 
@@ -1836,6 +1880,9 @@ class AppState extends ChangeNotifier {
     translated.clear();
     eqOn = true;
     eqGains.fillRange(0, eqGains.length, 0);
+    playbackSpeedEnabled = false;
+    playbackRate = 1.0;
+    audioChannelMode = AudioChannelMode.stereo;
     conv = 'orig';
     playMode = 0;
     volume = 100;

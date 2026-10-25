@@ -83,6 +83,24 @@ class KtCachedResult {
   }
 }
 
+/// A paused task belongs to the KT server and account that accepted it.
+class KtJobReference {
+  final String jobId;
+  final String endpoint;
+  final String username;
+  final String password;
+
+  const KtJobReference({
+    required this.jobId,
+    required this.endpoint,
+    required this.username,
+    required this.password,
+  });
+
+  KtService connect() =>
+      KtService(endpoint, username: username, password: password);
+}
+
 class KtService {
   static const defaultUsername = 'admin';
   static const defaultPassword = 'kikoeta';
@@ -139,6 +157,8 @@ class KtService {
     String? cacheWorkId,
     List<String> cacheTrackPaths = const [],
   }) => _postJson('/api/v1/jobs', {
+    // A fresh import must not consume another batch's paused checkpoint.
+    'resume_existing': false,
     'files': files.map((file) => file.toJson()).toList(),
     'flags': {'enable_correct': true, 'enable_translate': true},
     'settings': {
@@ -189,6 +209,16 @@ class KtService {
 
   Future<Map<String, dynamic>> preempt(String jobId) =>
       _postJson('/api/v1/jobs/$jobId/preempt', const {});
+
+  Future<Map<String, dynamic>> resume(String jobId) =>
+      _postJson('/api/v1/jobs/$jobId/resume', const {});
+
+  KtJobReference reference(String jobId) => KtJobReference(
+    jobId: jobId,
+    endpoint: endpoint,
+    username: username,
+    password: password,
+  );
 
   Future<Uint8List> download(String path) async {
     final response = await _client

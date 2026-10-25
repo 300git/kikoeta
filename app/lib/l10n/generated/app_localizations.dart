@@ -4812,6 +4812,60 @@ abstract class AppLocalizations {
   /// **'已删除「{value}」'**
   String widgetsHistoryPanelText3(String value);
 
+  /// No description provided for @playbackSpeed.
+  ///
+  /// In zh, this message translates to:
+  /// **'倍速'**
+  String get playbackSpeed;
+
+  /// No description provided for @playbackSpeedDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换播放速度，保持音调'**
+  String get playbackSpeedDescription;
+
+  /// No description provided for @playbackSpeedEntry.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示倍速入口'**
+  String get playbackSpeedEntry;
+
+  /// No description provided for @playbackSpeedEntryDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'在播放器显示倍速控制，关闭后恢复 1×'**
+  String get playbackSpeedEntryDescription;
+
+  /// No description provided for @audioChannels.
+  ///
+  /// In zh, this message translates to:
+  /// **'声道'**
+  String get audioChannels;
+
+  /// No description provided for @audioChannelsDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'反转左右声道，或合并后双耳播放相同声音'**
+  String get audioChannelsDescription;
+
+  /// No description provided for @audioChannelsOriginal.
+  ///
+  /// In zh, this message translates to:
+  /// **'原始声道'**
+  String get audioChannelsOriginal;
+
+  /// No description provided for @audioChannelsSwap.
+  ///
+  /// In zh, this message translates to:
+  /// **'左右反转'**
+  String get audioChannelsSwap;
+
+  /// No description provided for @audioChannelsMerge.
+  ///
+  /// In zh, this message translates to:
+  /// **'声道合并'**
+  String get audioChannelsMerge;
+
   /// widgets.dart: _inputRow
   ///
   /// In zh, this message translates to:

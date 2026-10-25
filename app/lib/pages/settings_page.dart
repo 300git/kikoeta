@@ -754,6 +754,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     app.doNotRememberPlaybackProgress,
                     app.setDoNotRememberPlaybackProgress,
                   ),
+                  _switchRow(
+                    Icons.speed,
+                    context.l10n.playbackSpeedEntry,
+                    context.l10n.playbackSpeedEntryDescription,
+                    app.playbackSpeedEnabled,
+                    app.setPlaybackSpeedEnabled,
+                  ),
                   _row(
                     icon: Icons.fast_rewind,
                     title: context.l10n.settingsPageSectionsTitle3,

@@ -31,6 +31,7 @@ class KikoetaMediaSessionService : MediaSessionService() {
         try {
             val player = BridgePlayer(this).also { Media3Bridge.player = it }
             player.onCommand = Media3Bridge.commandSender
+            player.onPlaybackRateChanged = Media3Bridge.playbackRateSender
             Media3Bridge.pendingState?.let { state ->
                 player.updateState(
                     state.isPlaying,
@@ -41,6 +42,8 @@ class KikoetaMediaSessionService : MediaSessionService() {
                     state.artworkKey,
                     state.mediaId,
                     state.logoCover,
+                    state.playbackRate,
+                    state.playbackSpeedEnabled,
                 )
             }
             val session = MediaSession.Builder(this, player)
@@ -122,6 +125,8 @@ object Media3Bridge {
     /** 把 MediaSession 控制命令转发给 Dart（mpv 执行）。 */
     var commandSender: ((String, Long) -> Unit)? = null
 
+    var playbackRateSender: ((Float) -> Unit)? = null
+
     /** Flutter/Rust 写完封面缓存后的本地路径。 */
     var onArtworkCached: ((mediaId: String, artworkKey: String, artworkPath: String) -> Unit)? =
         null
@@ -137,6 +142,8 @@ object Media3Bridge {
         val mediaId: String,
         val hideCard: Boolean,
         val logoCover: Boolean,
+        val playbackRate: Float,
+        val playbackSpeedEnabled: Boolean,
     )
 
     var pendingState: PendingState? = null

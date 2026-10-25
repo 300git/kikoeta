@@ -191,6 +191,12 @@ class MainActivity : FlutterActivity() {
             } catch (_: Exception) {}
         }
         Media3Bridge.player?.onCommand = Media3Bridge.commandSender
+        Media3Bridge.playbackRateSender = { rate ->
+            try {
+                ch.invokeMethod("setPlaybackRate", mapOf("rate" to rate))
+            } catch (_: Exception) {}
+        }
+        Media3Bridge.player?.onPlaybackRateChanged = Media3Bridge.playbackRateSender
         ch.setMethodCallHandler { call, result ->
             when (call.method) {
                 "ensureSession" -> {
@@ -210,8 +216,11 @@ class MainActivity : FlutterActivity() {
                     val mediaId = a["mediaId"] as String? ?: ""
                     val hideCard = a["hideCard"] == true
                     val logoCover = a["logoCover"] == true
+                    val playbackRate = (a["playbackRate"] as? Number)?.toFloat() ?: 1f
+                    val playbackSpeedEnabled = a["playbackSpeedEnabled"] == true
                     val state = Media3Bridge.PendingState(
                         playing, pos, dur, title, artist, artworkKey, mediaId, hideCard, logoCover,
+                        playbackRate, playbackSpeedEnabled,
                     )
                     // 始终保留最近状态：服务刚创建时需要回放，而异步封面也需要据此丢弃旧结果。
                     Media3Bridge.pendingState = state
@@ -222,6 +231,7 @@ class MainActivity : FlutterActivity() {
                             playing, pos, dur,
                             if (hideCard) "" else title,
                             artist, artworkKey, mediaId, logoCover,
+                            playbackRate, playbackSpeedEnabled,
                         )
                     }
                     result.success(null)
