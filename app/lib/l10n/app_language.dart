@@ -10,8 +10,14 @@ class AppLanguage {
 
   static const system = 'system';
   static const simplifiedChinese = 'zh-CN';
+  static const traditionalChinese = 'zh-TW';
   static const english = 'en';
-  static const selectablePreferences = [system, simplifiedChinese, english];
+  static const selectablePreferences = [
+    system,
+    simplifiedChinese,
+    traditionalChinese,
+    english,
+  ];
   static String _preference = system;
 
   static String get preference => _preference;
@@ -22,15 +28,39 @@ class AppLanguage {
 
   static Locale? get localeOverride => switch (_preference) {
     simplifiedChinese => const Locale('zh', 'CN'),
+    traditionalChinese => const Locale.fromSubtags(
+      languageCode: 'zh',
+      scriptCode: 'Hant',
+      countryCode: 'TW',
+    ),
     english => const Locale('en'),
     _ => null,
   };
 
-  static Locale resolveLocale(List<Locale> systemLocales) =>
-      basicLocaleListResolution(
-        localeOverride == null ? systemLocales : [localeOverride!],
-        AppLocalizations.supportedLocales,
-      );
+  static Locale resolveLocale(List<Locale> systemLocales) => resolveLocales(
+    localeOverride == null ? systemLocales : [localeOverride!],
+    AppLocalizations.supportedLocales,
+  );
+
+  static Locale resolveLocales(
+    List<Locale>? preferredLocales,
+    Iterable<Locale> supportedLocales,
+  ) => basicLocaleListResolution(
+    preferredLocales?.map((locale) {
+      // Some platforms report traditional regions without a script subtag.
+      if (locale.languageCode == 'zh' &&
+          locale.scriptCode == null &&
+          const ['TW', 'HK', 'MO'].contains(locale.countryCode)) {
+        return Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+          countryCode: locale.countryCode,
+        );
+      }
+      return locale;
+    }).toList(),
+    supportedLocales,
+  );
 
   static Locale get resolvedLocale =>
       resolveLocale(PlatformDispatcher.instance.locales);

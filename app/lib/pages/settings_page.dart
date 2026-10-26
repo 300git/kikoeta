@@ -423,7 +423,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   _row(
                     icon: Icons.translate,
                     title: context.l10n.translationEngine,
-                    sub: context.l10n.settingsPageSectionsSub10,
                     trailing: _engineDropdown(),
                     showDivider: false,
                   ),

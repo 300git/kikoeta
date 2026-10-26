@@ -50,7 +50,7 @@ void main() {
       var notifications = 0;
       app.addListener(() => notifications++);
 
-      for (final value in ['ru', 'ja', 'zh-TW', 'invalid']) {
+      for (final value in ['ru', 'ja', 'invalid']) {
         app.setUiLanguage(value);
       }
       expect(saved, isEmpty);
@@ -73,6 +73,19 @@ void main() {
       expect(notifications, 2);
       app.setUiLanguage('en');
       expect(notifications, 2);
+      app.setUiLanguage('zh-TW');
+      expect(app.uiLanguage, 'zh-TW');
+      expect(saved, {'ui_language': 'zh-TW'});
+      expect(
+        AppLanguage.localeOverride,
+        const Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+          countryCode: 'TW',
+        ),
+      );
+      expect(appL10n.settings, '設定');
+      expect(notifications, 3);
     },
   );
 
@@ -101,6 +114,8 @@ void main() {
       expect(app.resolvedTranslationTarget, 'en');
       app.setUiLanguage('zh-CN');
       expect(app.resolvedTranslationTarget, 'zh-CN');
+      app.setUiLanguage('zh-TW');
+      expect(app.resolvedTranslationTarget, 'zh-TW');
       app.setUiLanguage('en');
       expect(app.resolvedTranslationTarget, 'en');
       app.setTranslationTarget('en');
@@ -124,6 +139,7 @@ void main() {
           locale: AppLanguage.localeOverride,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          localeListResolutionCallback: AppLanguage.resolveLocales,
           theme: buildTheme(Brightness.light),
           home: SettingsPage(app: app, sectionKey: section),
         ),
@@ -133,7 +149,7 @@ void main() {
   }
 
   testWidgets(
-    'language menu enables beta English and switches between English and Chinese',
+    'language menu switches English, simplified and traditional Chinese, and system',
     (tester) async {
       final saved = <String, String>{};
       final app = AppState(
@@ -164,7 +180,7 @@ void main() {
       ]);
       expect(
         entries.where((entry) => entry.enabled).map((entry) => entry.value),
-        ['system', 'zh-CN', 'en'],
+        ['system', 'zh-CN', 'zh-TW', 'en'],
       );
       for (final label in ['繁體中文', '日本語', 'English (beta)', 'Русский']) {
         expect(find.text(label), findsOneWidget);
@@ -189,6 +205,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(app.uiLanguage, 'en');
       expect(find.text('Language and translation'), findsOneWidget);
+      await tester.tap(find.byTooltip('Interface language'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('繁體中文'));
+      await tester.pumpAndSettle();
+      expect(app.uiLanguage, 'zh-TW');
+      expect(saved['ui_language'], 'zh-TW');
+      expect(find.text('繁體中文'), findsOneWidget);
+      expect(find.text('語言與翻譯'), findsOneWidget);
+      await tester.tap(find.byTooltip('介面語言'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('English (beta)'));
+      await tester.pumpAndSettle();
       tester.binding.platformDispatcher.localesTestValue = const [
         Locale('zh', 'CN'),
       ];
@@ -206,6 +234,57 @@ void main() {
     },
   );
 
+  test(
+    'traditional system locales resolve through Flutter script and region matching',
+    () {
+      for (final locale in const [
+        Locale('zh', 'TW'),
+        Locale('zh', 'HK'),
+        Locale('zh', 'MO'),
+        Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+        Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+          countryCode: 'TW',
+        ),
+        Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+          countryCode: 'HK',
+        ),
+        Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+          countryCode: 'CN',
+        ),
+      ]) {
+        final resolved = AppLanguage.resolveLocale([locale]);
+        expect(resolved.scriptCode, 'Hant');
+        expect(lookupAppLocalizations(resolved).settings, '設定');
+      }
+      for (final locale in const [
+        Locale('zh', 'CN'),
+        Locale('zh', 'SG'),
+        Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
+        Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hans',
+          countryCode: 'TW',
+        ),
+        Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hans',
+          countryCode: 'HK',
+        ),
+      ]) {
+        expect(
+          lookupAppLocalizations(AppLanguage.resolveLocale([locale])).settings,
+          '设置',
+        );
+      }
+    },
+  );
+
   testWidgets('English language settings fit a phone viewport', (tester) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
@@ -220,6 +299,50 @@ void main() {
     expect(find.text('English (beta)'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('traditional Chinese language settings fit a phone viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final app = AppState(languageSettingsWriter: (_, _) {});
+    addTearDown(app.dispose);
+    app.setUiLanguage('zh-TW');
+    await showSettings(tester, app);
+    expect(find.text('語言與翻譯'), findsOneWidget);
+    await tester.tap(find.byTooltip('介面語言'));
+    await tester.pumpAndSettle();
+    expect(find.text('繁體中文'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'follow system renders traditional regions and updates with the system locale',
+    (tester) async {
+      tester.binding.platformDispatcher.localesTestValue = const [
+        Locale('zh', 'HK'),
+      ];
+      addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+      final app = AppState(languageSettingsWriter: (_, _) {});
+      addTearDown(app.dispose);
+      app.setTranslationTarget('ui');
+      await showSettings(tester, app);
+      expect(find.text('語言與翻譯'), findsOneWidget);
+      expect(find.text('跟隨系統'), findsOneWidget);
+      expect(
+        Localizations.localeOf(tester.element(find.text('語言與翻譯'))).scriptCode,
+        'Hant',
+      );
+      tester.binding.platformDispatcher.localesTestValue = const [
+        Locale('zh', 'CN'),
+      ];
+      await tester.pumpAndSettle();
+      expect(find.text('语言与翻译'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'translation menu offers follow UI and retains explicit targets',

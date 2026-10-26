@@ -193,6 +193,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('低语'), findsOneWidget);
       expect(find.text('Whispering'), findsNothing);
+      locale.value = const Locale.fromSubtags(
+        languageCode: 'zh',
+        scriptCode: 'Hant',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('環繞音'), findsOneWidget);
+      expect(find.text('低語'), findsOneWidget);
       expect(work.tags, ['环绕音', '低语']);
       expect(tester.takeException(), isNull);
     },

@@ -31,6 +31,7 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
   Set<String> _onlineWorkIds = {};
   Map<String, List<LyricsLibraryFile>> _files = {};
   String _source = 'local';
+  bool _aiOnly = false;
   bool _loading = false;
   bool _importing = false;
   bool _deleting = false;
@@ -181,7 +182,7 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
     }
     final ids = directoryCounts.keys.toList()..sort();
     _searchTimer?.cancel();
-    final filtered = _filterWorkIds(ids);
+    final filtered = _filterWorkIds(ids, aiWorkIds);
     ++_countLoadToken;
     setState(() {
       _workIds = ids;
@@ -198,10 +199,24 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
     _loadCounts(filtered.take(_batchSize).toList());
   }
 
-  List<String> _filterWorkIds(List<String> ids) {
+  List<String> _filterWorkIds(List<String> ids, Set<String> aiWorkIds) {
     final query = _search.text.trim().toUpperCase();
-    if (query.isEmpty) return ids;
-    return ids.where((id) => id.contains(query)).toList();
+    if (query.isEmpty && !_aiOnly) return ids;
+    return ids
+        .where(
+          (id) => (!_aiOnly || aiWorkIds.contains(id)) && id.contains(query),
+        )
+        .toList();
+  }
+
+  void _setAiOnly(bool? value) {
+    if (value == null || value == _aiOnly) return;
+    _searchTimer?.cancel();
+    _aiOnly = value;
+    _updateSearchResults();
+    if (_selected.isNotEmpty) {
+      _selected.retainAll(_filteredWorkIds.toSet());
+    }
   }
 
   void _onSearchChanged() {
@@ -220,7 +235,7 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
 
   void _updateSearchResults() {
     if (!mounted) return;
-    final filtered = _filterWorkIds(_workIds);
+    final filtered = _filterWorkIds(_workIds, _aiWorkIds);
     ++_countLoadToken;
     setState(() {
       _filteredWorkIds = filtered;
@@ -658,7 +673,7 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
                   ),
                   Text(
                     context.l10n.lyricsLibraryPageBuildText8(
-                      (_workIds.length).toString(),
+                      (_aiOnly ? ids.length : _workIds.length).toString(),
                     ),
                     style: TextStyle(fontSize: 12, color: p.dim),
                   ),
@@ -669,7 +684,7 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
                   const BackButton(),
                   Text(
                     context.l10n.lyricsLibraryPageBuildText8(
-                      (_workIds.length).toString(),
+                      (_aiOnly ? ids.length : _workIds.length).toString(),
                     ),
                     style: TextStyle(fontSize: 12, color: p.dim),
                   ),
@@ -683,7 +698,6 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Pill(
                     label: context.l10n.local,
@@ -695,6 +709,28 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
                     label: context.l10n.online,
                     selected: _source == 'remote',
                     onTap: () => _changeSource('remote'),
+                  ),
+                  const Spacer(),
+                  MergeSemantics(
+                    child: InkWell(
+                      onTap: () => _setAiOnly(!_aiOnly),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: _aiOnly,
+                            onChanged: _setAiOnly,
+                            activeColor: p.accent,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          Text(
+                            context.l10n.widgetsBuildBuilder,
+                            style: TextStyle(fontSize: 12.5, color: p.muted),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -813,7 +849,9 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
                     child: _loading
                         ? const CircularProgressIndicator()
                         : Text(
-                            _source == 'remote'
+                            _aiOnly
+                                ? context.l10n.homePageEmptyHintText4
+                                : _source == 'remote'
                                 ? context.l10n.lyricsLibraryPageBuildText9
                                 : context.l10n.lyricsLibraryPageBuildText6,
                           ),

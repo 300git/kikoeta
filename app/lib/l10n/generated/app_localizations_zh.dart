@@ -2681,3 +2681,2677 @@ class AppLocalizationsZh extends AppLocalizations {
 class AppLocalizationsZhCn extends AppLocalizationsZh {
   AppLocalizationsZhCn() : super('zh_CN');
 }
+
+/// The translations for Chinese, using the Han script (`zh_Hant`).
+class AppLocalizationsZhHant extends AppLocalizationsZh {
+  AppLocalizationsZhHant() : super('zh_Hant');
+
+  @override
+  String get appName => 'Kikoeta';
+
+  @override
+  String get playbackShortcuts => '快捷鍵設定';
+
+  @override
+  String get dictationQueueTitle => '聽寫翻譯佇列';
+
+  @override
+  String get dictationQueueClear => '清空清單';
+
+  @override
+  String get dictationQueueEmpty => '暫無任務';
+
+  @override
+  String dictationQueueTracks(String count) {
+    return '$count 個音訊檔案';
+  }
+
+  @override
+  String dictationQueueActions(String name) {
+    return '你想對 $name 執行的操作';
+  }
+
+  @override
+  String get dictationQueueJump => '插隊';
+
+  @override
+  String get dictationQueuePending => '待處理';
+
+  @override
+  String get dictationQueueRunning => '處理中';
+
+  @override
+  String get dictationQueueCompleted => '已完成';
+
+  @override
+  String get dictationQueueFailed => '失敗';
+
+  @override
+  String get dictationQueueCancelled => '已取消';
+
+  @override
+  String get dictationQueueDrag => '拖動調整待處理順序';
+
+  @override
+  String dictationQueueProcessing(String name) {
+    return '開始處理佇列批次：$name';
+  }
+
+  @override
+  String get invertSelection => '反選';
+
+  @override
+  String get traditionalChinese => '繁體中文';
+
+  @override
+  String get home => '首頁';
+
+  @override
+  String get favorites => '收藏';
+
+  @override
+  String get more => '更多';
+
+  @override
+  String get voiceActor => '聲優';
+
+  @override
+  String get circle => '社團';
+
+  @override
+  String get tag => '標籤';
+
+  @override
+  String get retry => '重試';
+
+  @override
+  String get advancedFilterPageBuildText => '進階篩選';
+
+  @override
+  String get advancedFilterPageBuildContentText => '暫無資料';
+
+  @override
+  String get advancedFilterPageBuildContentText2 => '沒有符合的參數';
+
+  @override
+  String advancedFilterPageBuildSearchFieldHintText(String placeholder) {
+    return '搜尋$placeholder…';
+  }
+
+  @override
+  String get add => '新增';
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get blacklistPageTypeLabelsTypeLabels => 'RJ號';
+
+  @override
+  String get blacklist => '黑名單';
+
+  @override
+  String get blacklistPageResultText => '新增黑名單';
+
+  @override
+  String get blacklistPageResultHintText => '要遮蔽的 RJ 號 / 名稱';
+
+  @override
+  String get blacklistPageBuildText => '暫無黑名單條目\n黑名單中的作品不會出現在首頁與搜尋';
+
+  @override
+  String get local => '本機';
+
+  @override
+  String get network => '網路';
+
+  @override
+  String get password => '密碼';
+
+  @override
+  String get dictationTranslationPageWorkCardTitle => '作品';
+
+  @override
+  String get username => '使用者名稱';
+
+  @override
+  String get dictationTranslationPageWorkCardText => '取消任務';
+
+  @override
+  String get dictationTranslationPageInitStateText => '等待開始';
+
+  @override
+  String get dictationTranslationPageTestConnectionToast => '連線成功';
+
+  @override
+  String get dictationTranslationPageLogCardTitle => '執行紀錄';
+
+  @override
+  String get dictationTranslationPageStartUpdate => '任務失敗';
+
+  @override
+  String get dictationTranslationPageBuildText => '聽寫翻譯';
+
+  @override
+  String get dictationTranslationPageConnectionCardTitle => '服務連線';
+
+  @override
+  String get dictationTranslationPageConnectionCardInputDecoration => '服務位址';
+
+  @override
+  String get dictationTranslationPageConnectionCardTooltip => '顯示密碼';
+
+  @override
+  String get dictationTranslationPageConnectionCardTooltip2 => '隱藏密碼';
+
+  @override
+  String get testConnection => '測試連線';
+
+  @override
+  String get dictationTranslationPageProgressCardTitle => '聽寫進度';
+
+  @override
+  String get dictationTranslationPageStartUpdate2 => '任務已排隊';
+
+  @override
+  String get dictationTranslationPageStartUpdate3 => '任務已取消';
+
+  @override
+  String get dictationTranslationPageWorkCardTitle2 => '待處理音訊';
+
+  @override
+  String get dictationTranslationPageWorkCardText2 => '正在取消…';
+
+  @override
+  String get dictationTranslationPageStartUpdate4 => '聽寫翻譯完成';
+
+  @override
+  String get dictationTranslationPageSyncCachedResultsUpdate => '快取同步完成';
+
+  @override
+  String get dictationTranslationPageConnectionCardText => '使用預設帳密';
+
+  @override
+  String get dictationTranslationPageWorkCardText3 => '開始聽寫翻譯';
+
+  @override
+  String get dictationTranslationPageStartUpdate5 => '正在寫入歌詞庫';
+
+  @override
+  String dictationTranslationPageStartAppendLog(String error) {
+    return '錯誤：$error';
+  }
+
+  @override
+  String get dictationTranslationPageConnectionCardInputDecoration2 =>
+      '本機服務位址（固定）';
+
+  @override
+  String get dictationTranslationPageConnectionCardText2 => 'Android裝置僅支援網路連線';
+
+  @override
+  String dictationTranslationPageTestConnectionToast2(String error) {
+    return '連線失敗：$error';
+  }
+
+  @override
+  String dictationTranslationPageCancelToast(String error) {
+    return '取消失敗：$error';
+  }
+
+  @override
+  String get dictationTranslationPageConnectionCardText3 => '前往 GitHub 下載';
+
+  @override
+  String dictationTranslationPageSyncCachedResultsAppendLog(String error) {
+    return '快取同步失敗：$error';
+  }
+
+  @override
+  String dictationTranslationPageStartToast(String error) {
+    return '聽寫翻譯失敗：$error';
+  }
+
+  @override
+  String dictationTranslationPageSyncCachedResultsToast(String skipped) {
+    return '，略過 $skipped 個重複項目';
+  }
+
+  @override
+  String get dictationTranslationPageStartUpdate6 => '正在連線 kikoeta-transl';
+
+  @override
+  String get dictationTranslationPageStartException => 'kikoeta-transl 任務失敗';
+
+  @override
+  String get dictationTranslationPageBuildTooltip => '同步 kikoeta-transl 快取';
+
+  @override
+  String get dictationTranslationPageConnectionCardText4 =>
+      '尚未安裝 kikoeta-transl？';
+
+  @override
+  String get dictationTranslationPageTestConnectionFormatException =>
+      'kikoeta-transl 服務未就緒';
+
+  @override
+  String get dictationTranslationPageLogCardSelectableText =>
+      '等待 kikoeta-transl 紀錄…';
+
+  @override
+  String get dictationTranslationPageStartToast2 => '請從作品詳情頁的更多選項進入並啟動聽寫翻譯';
+
+  @override
+  String get dictationTranslationPageStartToast3 => '請返回作品詳情頁勾選需要聽寫翻譯的媒體檔案';
+
+  @override
+  String get dictationTranslationPageStartFormatException =>
+      'kikoeta-transl 未回傳任務編號';
+
+  @override
+  String get dictationTranslationPageOpenKikoetaTranslDownloadToast =>
+      '無法開啟 kikoeta-transl 專案頁面';
+
+  @override
+  String get dictationTranslationPageServiceFormatException =>
+      'kikoeta-transl 使用者名稱不能包含冒號';
+
+  @override
+  String get dictationTranslationPageCancelAppendLog =>
+      '已向 kikoeta-transl 傳送取消請求';
+
+  @override
+  String get dictationTranslationPageServiceFormatException2 =>
+      '請輸入 kikoeta-transl 使用者名稱和密碼';
+
+  @override
+  String get dictationTranslationPageSyncCachedResultsToast2 =>
+      'kikoeta-transl 沒有可同步的快取結果';
+
+  @override
+  String get dictationTranslationPageStartFormatException2 =>
+      'kikoeta-transl 未回傳可用的 LRC 檔案';
+
+  @override
+  String dictationTranslationPageProgressCardText(String savedFiles) {
+    return ' · 已入庫 $savedFiles';
+  }
+
+  @override
+  String dictationTranslationPageStartToast4(String missing) {
+    return '有 $missing 個音訊檔案缺少下載位址，請登入作品伺服器後重試';
+  }
+
+  @override
+  String dictationTranslationPageStartAppendLog2(String jobId, String length) {
+    return '任務 $jobId 已建立，共 $length 個音訊檔案';
+  }
+
+  @override
+  String get dictationTranslationPageConnectionCardText5 =>
+      '下載並啟動 kikoeta-transl 後，即可使用本機或網路聽寫翻譯。';
+
+  @override
+  String dictationTranslationPageSyncCachedResultsAppendLog2(
+    String jobId,
+    String name,
+    String error,
+  ) {
+    return '同步 $jobId/$name 失敗：$error';
+  }
+
+  @override
+  String dictationTranslationPageSyncCachedResultsAppendLog3(
+    String saved,
+    String skipped,
+    String failed,
+  ) {
+    return '快取同步完成：寫入 $saved，略過重複項目 $skipped，失敗 $failed';
+  }
+
+  @override
+  String dictationTranslationPageSyncCachedResultsAppendLog4(String length) {
+    return '開始同步 $length 條 kikoeta-transl 快取任務';
+  }
+
+  @override
+  String get dictationTranslationPageWorkCardText4 =>
+      '要建立任務，請開啟作品詳情頁，在右上角「更多」中選擇「聽寫翻譯」。未勾選檔案時會自動比對，優先選擇無效果音版本並保留獨立特典；也可先手動勾選指定檔案。';
+
+  @override
+  String get dictationAutoSelectionHint =>
+      '已自動比對：優先無效果音，保留獨立特典。請檢查媒體清單；需要調整時，可返回作品頁手動勾選。';
+
+  @override
+  String dictationTranslationPageStartAppendLog3(String rj, String savedFiles) {
+    return '已按 $rj 寫入 $savedFiles 個歌詞檔案';
+  }
+
+  @override
+  String dictationTranslationPageWorkCardText5(String rj, String length) {
+    return '$rj · 已從作品詳情頁勾選 $length 個媒體檔案';
+  }
+
+  @override
+  String dictationTranslationPageStartToast5(String savedFiles, String rj) {
+    return '完成：$savedFiles 個歌詞已寫入 $rj 歌詞庫';
+  }
+
+  @override
+  String dictationTranslationPageSyncCachedResultsToast3(
+    String saved,
+    String value,
+  ) {
+    return '同步完成：寫入 $saved 個歌詞$value';
+  }
+
+  @override
+  String dictationTranslationPageProgressCardText2(
+    String finishedFiles,
+    String length,
+    String value,
+  ) {
+    return '已處理 $finishedFiles / $length$value';
+  }
+
+  @override
+  String get selectMultiple => '多選';
+
+  @override
+  String get selectAll => '全選';
+
+  @override
+  String get downloads => '下載';
+
+  @override
+  String get downloading => '下載中';
+
+  @override
+  String get downloadsPageStatusStatus => '等待中';
+
+  @override
+  String get downloadsPageStatusStatus2 => '已完成';
+
+  @override
+  String get downloadsPageStatusStatus3 => '已暫停';
+
+  @override
+  String get exitSelection => '結束多選';
+
+  @override
+  String get downloadsPageBuildTooltip => '關閉搜尋';
+
+  @override
+  String get downloadsPageStatusStatus4 => '下載失敗';
+
+  @override
+  String get downloadsPageStatusStatus5 => '等待下載';
+
+  @override
+  String get deselectAll => '取消全選';
+
+  @override
+  String get downloadsPageBuildText => '下載檔案';
+
+  @override
+  String get downloadsPageBuildText2 => '暫無下載音聲';
+
+  @override
+  String get downloadsPageBuildText3 => '完整檔案結構';
+
+  @override
+  String get downloadsPageBuildTooltip2 => '刪除選取的作品';
+
+  @override
+  String get downloadsPageBuildText4 => '暫無下載檔案';
+
+  @override
+  String get downloadsPageBuildTooltip3 => '搜尋已下載作品';
+
+  @override
+  String get downloadsPageBuildTooltip4 => '開始/暫停全部';
+
+  @override
+  String get downloadsPageBuildTooltip5 => '刪除選取的下載紀錄';
+
+  @override
+  String get downloadsPageFileNameFileName => '暫無正在下載的檔案';
+
+  @override
+  String downloadsPageProgressTextText(String percent) {
+    return '下載中 $percent%';
+  }
+
+  @override
+  String downloadsPageBuildText5(String value) {
+    return '載入更多（$value）';
+  }
+
+  @override
+  String downloadsPageBuildText6(String rj, String downloaded, String length) {
+    return '$rj  $downloaded/$length 個檔案已下載';
+  }
+
+  @override
+  String downloadsPageStatusStatus6(String round) {
+    return '下載中 $round%';
+  }
+
+  @override
+  String get postponed => '擱置';
+
+  @override
+  String get remove => '移除';
+
+  @override
+  String get all => '全部';
+
+  @override
+  String get wantToListen => '想聽';
+
+  @override
+  String get listening => '在聽';
+
+  @override
+  String get listened => '聽過';
+
+  @override
+  String get replay => '重聽';
+
+  @override
+  String get favoritesPageReviewFilterButtonTooltip => '進度篩選';
+
+  @override
+  String get favoritesPageLabelLabel => '取消收藏';
+
+  @override
+  String get loading => '載入中…';
+
+  @override
+  String get favoritesPageReviewSortDropdownTooltip => '排序方式';
+
+  @override
+  String get favoritesPageReviewSortLabelsReviewSortLabels => '評論數量';
+
+  @override
+  String get favoritesPageBodyText => '點選重試';
+
+  @override
+  String get favoritesPageReviewSortLabelsReviewSortLabels2 => '銷售數量';
+
+  @override
+  String get favoritesPageBuildTooltip => '切換歌單';
+
+  @override
+  String get favoritesPageReviewSortLabelsReviewSortLabels3 => '發售日期';
+
+  @override
+  String get favoritesPageReviewSortLabelsReviewSortLabels4 => '我的評價';
+
+  @override
+  String get favoritesPageReviewSortLabelsReviewSortLabels5 => '標記時間';
+
+  @override
+  String get ageRating => '年齡分級';
+
+  @override
+  String get favoritesPageInputText => '新增作品';
+
+  @override
+  String get favoritesPageBodyText2 => '已顯示全部';
+
+  @override
+  String get favoritesPageLabelLabel2 => '移出播放清單';
+
+  @override
+  String get favoritesPagePlaylistHeaderActionsTooltip => '複製分享連結';
+
+  @override
+  String favoritesPageAddWorksByRjToast(String e) {
+    return '新增失敗：$e';
+  }
+
+  @override
+  String get shareLinkCopied => '已複製分享連結';
+
+  @override
+  String get favoritesPageRemoveSelectedWorksToast => '無法取得作品編號';
+
+  @override
+  String get favoritesPageBodyText3 => '還沒有收藏的作品';
+
+  @override
+  String favoritesPageRemoveCurrentLikedPlaylistToast(String e) {
+    return '取消收藏失敗：$e';
+  }
+
+  @override
+  String get favoritesPagePlaylistHeaderActionsTooltip2 => '取消收藏該播放清單';
+
+  @override
+  String get favoritesPageBodyText4 => '該播放清單還沒有作品';
+
+  @override
+  String get favoritesPagePlaylistHeaderActionsTooltip3 => '按 RJ 號新增作品';
+
+  @override
+  String get favoritesPageAddWorksByRjToast2 => '沒有識別到 RJ 號';
+
+  @override
+  String favoritesPageSelectionBarText(String count) {
+    return '已選 $count 項';
+  }
+
+  @override
+  String favoritesPageRemoveSelectedWorksToast2(String label, String e) {
+    return '$label失敗：$e';
+  }
+
+  @override
+  String get favoritesPageBodyText5 => 'SFW 模式下不顯示收藏內容';
+
+  @override
+  String get favoritesPageBodyText6 => '載入失敗，請確認已在設定中登入';
+
+  @override
+  String get favoritesPageOkText => '確定從我的播放清單中移除該歌單嗎？';
+
+  @override
+  String favoritesPageAddWorksByRjToast3(String length) {
+    return '已新增 $length 個作品';
+  }
+
+  @override
+  String favoritesPageOkText2(String count, String label) {
+    return '確定將 $count 個作品$label嗎？';
+  }
+
+  @override
+  String favoritesPageRemoveSelectedWorksToast3(String label, String length) {
+    return '已$label $length 個作品';
+  }
+
+  @override
+  String get favoritesPageInputHintText =>
+      '輸入 RJ 號，可一次填多個\n例如：RJ01367541 RJ01417842\n支援換行、空格或逗號分隔';
+
+  @override
+  String get clear => '清空';
+
+  @override
+  String get historyPageEntryWorkTitle => '未知作品';
+
+  @override
+  String get playHistory => '播放歷史';
+
+  @override
+  String get historyPageBuildText => '暫無播放歷史';
+
+  @override
+  String get historyPageBuildText2 => 'SFW 模式下不顯示播放歷史';
+
+  @override
+  String historyPageFmtTimeText(String padLeft, String padLeft2) {
+    return '今天 $padLeft:$padLeft2';
+  }
+
+  @override
+  String historyPageFmtTimeText2(
+    String month,
+    String day,
+    String padLeft,
+    String padLeft2,
+  ) {
+    return '$month月$day日 $padLeft:$padLeft2';
+  }
+
+  @override
+  String get homePageServerLabelText => '自建';
+
+  @override
+  String get homePageLabelsLabels => '熱門';
+
+  @override
+  String get homePageLabelsLabels2 => '推薦';
+
+  @override
+  String get homePageSortLabelsSortLabels => '整體評價';
+
+  @override
+  String get homePageSortLabelsSortLabels2 => '收錄時間';
+
+  @override
+  String get homePageSortLabelsSortLabels3 => '銷售價格';
+
+  @override
+  String get homePageEmptyHintText => '暫無作品';
+
+  @override
+  String get homePageSearchResultsViewText => '搜尋中…';
+
+  @override
+  String get homePageEmptyHintText2 => '正在載入…';
+
+  @override
+  String get homePageGridText => '已顯示全部作品';
+
+  @override
+  String get homePageEmptyHintText3 => '點選任意處重試';
+
+  @override
+  String get homePageSearchResultsViewText2 => '沒有找到相關作品';
+
+  @override
+  String get homePageSearchResultsViewText3 => '已顯示全部搜尋結果';
+
+  @override
+  String get homePageEmptyHintText4 => '目前篩選條件下暫無作品';
+
+  @override
+  String get homePageEmptyHintText5 => '無網路連線，請檢查網路或伺服器設定';
+
+  @override
+  String get homePageHeaderTooltip => 'SFW 模式已開啟：僅顯示全年齡內容';
+
+  @override
+  String get homePageHeaderTooltip2 => '開啟 SFW 模式（僅顯示全年齡內容）';
+
+  @override
+  String get save => '儲存';
+
+  @override
+  String get loginPageBuildLoginText => '登 入';
+
+  @override
+  String get loginPageShowNoAccountText => '關於帳號';
+
+  @override
+  String get loginPageShowNoAccountText2 => '我知道了';
+
+  @override
+  String get loginPageBuildSiteConfigTooltip => '返回登入';
+
+  @override
+  String get loginPageBuildSiteConfigText => '已有站台';
+
+  @override
+  String get loginPageBuildSiteConfigHint => '站台密碼';
+
+  @override
+  String get loginPageShowProxyDialogLabelText => '代理伺服器';
+
+  @override
+  String get loginPageBuildLoginText2 => '我沒有帳號';
+
+  @override
+  String get loginPageBuildSiteConfigText2 => '使用該站台';
+
+  @override
+  String get loginPageBuildSiteConfigText3 => '新增站台';
+
+  @override
+  String get loginPageBuildSiteConfigText4 => '儲存並進入';
+
+  @override
+  String get loginPageShowProxyDialogText => '設定網路代理';
+
+  @override
+  String get loginPageBuildLoginText3 => '設定自建站台';
+
+  @override
+  String get loginPageBuildSiteConfigHint2 => '站台登入帳號';
+
+  @override
+  String get loginPageShowProxyDialogToast => '網路代理已啟用';
+
+  @override
+  String get loginPageShowProxyDialogToast2 => '網路代理已關閉';
+
+  @override
+  String get loginPageBuildLoginHint => 'one 站帳號';
+
+  @override
+  String get loginPageLoginToast => '請輸入帳號和密碼';
+
+  @override
+  String get loginPageLoginToast2 => '請檢查網路或帳號密碼';
+
+  @override
+  String get loginPageShowProxyDialogText2 => '使用 HTTP 代理';
+
+  @override
+  String get loginPageBuildLoginText4 => '登入 one 站帳號';
+
+  @override
+  String get loginPageShowProxyDialogHelperText => '僅支援 HTTP 代理';
+
+  @override
+  String get loginPageBuildSiteConfigHint3 => '別名，如：家庭 NAS';
+
+  @override
+  String get loginPageSaveNewSiteToast => '請填寫別名、位址、帳號和密碼';
+
+  @override
+  String get loginPageShowProxyDialogHintText => '例如 http://代理位址:連接埠';
+
+  @override
+  String get loginPageBuildSiteConfigText5 =>
+      '支援 IP+連接埠，如 http://192.168.1.100:3000';
+
+  @override
+  String loginPageLoginToast3(String value) {
+    return '登入失敗：$value';
+  }
+
+  @override
+  String get loginPageShowNoAccountText3 =>
+      '本專案不提供任何註冊服務。\n\n帳號與密碼需由您自行取得，本專案不提供任何取得管道。\n\n您使用該帳號在本應用程式中取得、播放的任何內容，其所有權與責任均歸屬內容提供者與帳號持有人，本專案對此不承擔任何責任。\n\n帳號資訊僅儲存在本機裝置，不會上傳到任何第三方伺服器。';
+
+  @override
+  String get close => '關閉';
+
+  @override
+  String get delete => '刪除';
+
+  @override
+  String get remote => '遠端';
+
+  @override
+  String get continueAction => '繼續';
+
+  @override
+  String get online => '線上';
+
+  @override
+  String get importAction => '匯入';
+
+  @override
+  String get lyricsLibraryPageBuildNavItem => '遠端庫';
+
+  @override
+  String get lyricsLibrary => '歌詞庫';
+
+  @override
+  String get lyricsLibraryPageBuildNavItem2 => '本機檔案';
+
+  @override
+  String get lyricsLibraryPageProceedText => '繼續匯入';
+
+  @override
+  String get lyricsLibraryPageImportText => '取消匯入';
+
+  @override
+  String get lyricsLibraryPageProgressPhase => '準備匯入';
+
+  @override
+  String get lyricsLibraryPageOkText => '深度重新整理';
+
+  @override
+  String get lyricsLibraryPageOkText2 => '刪除歌詞';
+
+  @override
+  String get lyricsLibraryPageSectionContentText => '選擇資料夾';
+
+  @override
+  String get lyricsLibraryPageConfirmedText => '刪除遠端庫';
+
+  @override
+  String get lyricsLibraryPageSectionContentText2 => '匯入遠端庫';
+
+  @override
+  String get lyricsLibraryPageBuildText => '匯入歌詞庫';
+
+  @override
+  String get lyricsLibraryPageBuildLabel => '重新整理歌詞庫';
+
+  @override
+  String get lyricsLibraryPageBuildTooltip => '搜尋歌詞庫';
+
+  @override
+  String get lyricsLibraryPageBuildText2 => '正在匯入歌詞';
+
+  @override
+  String get lyricsLibraryPageImportText2 => '跳過衝突檔案';
+
+  @override
+  String get lyricsLibraryPageImportText3 => '覆蓋衝突檔案';
+
+  @override
+  String get lyricsLibraryPageOkText3 => '移除遠端作品';
+
+  @override
+  String get lyricsLibraryPageProceedText2 => '大型內容匯入';
+
+  @override
+  String get lyricsLibraryPageImportText4 => '發現匯入衝突';
+
+  @override
+  String get lyricsLibraryPageRemoteSourceListTooltip => '只重新整理此遠端庫';
+
+  @override
+  String get lyricsLibraryPageOkText4 => '刪除歌詞庫作品';
+
+  @override
+  String get lyricsLibraryPageBuildLabel2 => '重新整理全部遠端庫';
+
+  @override
+  String get lyricsLibraryPageBuildText3 => '正在準備檔案…';
+
+  @override
+  String get lyricsLibraryPageSelectionDialogTitle => '選擇歌詞資料夾';
+
+  @override
+  String get lyricsLibraryPageSectionContentText3 => '正在連線並同步';
+
+  @override
+  String get lyricsLibraryPageSearchFieldHintText => '搜尋作品 ID';
+
+  @override
+  String lyricsLibraryPageImportText5(String e) {
+    return '匯入失敗：$e';
+  }
+
+  @override
+  String get lyricsLibraryPageRemoteSourceListText => '尚未匯入遠端庫';
+
+  @override
+  String get lyricsLibraryPageBuildHint => '長按執行深度重新整理';
+
+  @override
+  String get lyricsLibraryPageBuildText4 => '正在統計歌詞檔案';
+
+  @override
+  String get lyricsLibraryPageScanProgressPhase => '正在檢查檔案衝突';
+
+  @override
+  String get lyricsLibraryPageResultDialogTitle => '選擇 ZIP 檔案';
+
+  @override
+  String get lyricsLibraryPageSectionContentText4 => '選擇 ZIP 壓縮檔';
+
+  @override
+  String get lyricsLibraryPageBuildText5 => '暫時無法統計歌詞檔案';
+
+  @override
+  String lyricsLibraryPageRefreshText(String error) {
+    return '重新整理失敗：$error';
+  }
+
+  @override
+  String get lyricsLibraryPageShowFilesText => '沒有可用的歌詞或字幕檔案';
+
+  @override
+  String get lyricsLibraryPageBuildText6 => '暫無資料，點選右上角匯入';
+
+  @override
+  String get lyricsLibraryPageShowFilesText2 => '載入歌詞檔案失敗，請重試';
+
+  @override
+  String lyricsLibraryPageReorderSetState(String error) {
+    return '調整優先順序失敗：$error';
+  }
+
+  @override
+  String get lyricsLibraryPageSectionContentLabelText => 'HTTP / HTTPS 位址';
+
+  @override
+  String get lyricsLibraryPageBuildHint2 => '同步所有已匯入遠端庫的作品索引';
+
+  @override
+  String get lyricsLibraryPageImportText6 => '所選資料夾裡沒有歌詞或字幕檔案';
+
+  @override
+  String get lyricsLibraryPageSectionContentText5 => '選擇要匯入的歌詞檔案或壓縮檔。';
+
+  @override
+  String get lyricsLibraryPageSectionContentText6 => '輸入開啟了歌詞庫廣播的裝置位址。';
+
+  @override
+  String lyricsLibraryPageRefreshOneSetState(String url, String error) {
+    return '重新整理 $url 失敗：$error';
+  }
+
+  @override
+  String lyricsLibraryPageRemoveRemoteLibrarySetState(
+    String url,
+    String error,
+  ) {
+    return '刪除 $url 失敗：$error';
+  }
+
+  @override
+  String lyricsLibraryPageBuildText7(String directoryCount) {
+    return '$directoryCount 個目錄';
+  }
+
+  @override
+  String lyricsLibraryPageBuildText8(String length) {
+    return '$length 個';
+  }
+
+  @override
+  String get lyricsLibraryPageBuildText9 => '暫無遠端作品，點選右上角匯入並連線遠端庫';
+
+  @override
+  String lyricsLibraryPageOkText5(String workId) {
+    return '確定移除 $workId 的遠端作品索引嗎？';
+  }
+
+  @override
+  String lyricsLibraryPageOkText6(String workId) {
+    return '確定刪除 $workId 的全部歌詞檔案嗎？';
+  }
+
+  @override
+  String get lyricsLibraryPageOkText7 => '將刪除沒有歌詞或字幕檔案的作品目錄，是否繼續？';
+
+  @override
+  String get lyricsLibraryPageSectionContentText7 => '已匯入的遠端庫（從上到下優先順序遞減，拖動排序）';
+
+  @override
+  String lyricsLibraryPageRemoteSourceListText2(String value) {
+    return '優先順序 $value · 長按刪除';
+  }
+
+  @override
+  String lyricsLibraryPageConfirmedText2(String url) {
+    return '確定移除遠端庫 $url 及其已同步的作品索引嗎？';
+  }
+
+  @override
+  String get lyricsLibraryPageSectionContentText8 =>
+      '匯入時只同步作品索引；播放時再下載該作品的全部歌詞。';
+
+  @override
+  String get lyricsLibraryPageProceedText3 =>
+      '偵測到大型壓縮檔或資料夾，匯入過程可能需要較長時間，請耐心等待。';
+
+  @override
+  String lyricsLibraryPageOkText8(String length) {
+    return '確定刪除選取的 $length 個作品目錄嗎？';
+  }
+
+  @override
+  String lyricsLibraryPageImportText7(String length) {
+    return '偵測到 $length 個已存在檔案，如何處理？';
+  }
+
+  @override
+  String lyricsLibraryPageOkText9(String length) {
+    return '確定移除選取的 $length 個遠端作品索引嗎？';
+  }
+
+  @override
+  String lyricsLibraryPageBuildText10(String fileCount, String value) {
+    return '$fileCount 個歌詞/字幕檔案 · $value';
+  }
+
+  @override
+  String get morePageBuildRow => '歌單';
+
+  @override
+  String get settings => '設定';
+
+  @override
+  String get morePageBuildRow2 => '隨心聽';
+
+  @override
+  String morePageBuildText(String server) {
+    return '伺服器：$server';
+  }
+
+  @override
+  String get morePageOpenRandomWorkText => '目前條件下沒有可播放的作品';
+
+  @override
+  String get morePageOpenRandomWorkText2 => '隨心聽載入失敗，請稍後重試';
+
+  @override
+  String get playerPageShowLyricSettingsText => '歸零';
+
+  @override
+  String get back => '返回';
+
+  @override
+  String get seekBackward => '快退';
+
+  @override
+  String get seekForward => '快進';
+
+  @override
+  String get playerPageUtilsUtil => '定時';
+
+  @override
+  String get equalizer => '均衡器';
+
+  @override
+  String get playerPageUtilsUtil2 => '定時中';
+
+  @override
+  String get playerPageShowLyricSettingsText2 => '繁簡互轉';
+
+  @override
+  String get autoMatch => '自動比對';
+
+  @override
+  String get workDetails => '作品詳情';
+
+  @override
+  String get playlist => '播放清單';
+
+  @override
+  String get sleepTimer => '定時關閉';
+
+  @override
+  String get playerPageWideLyricsPanelText => '暫無歌詞';
+
+  @override
+  String get playerPageTopBarText => '正在播放';
+
+  @override
+  String get desktopLyrics => '桌面歌詞';
+
+  @override
+  String get playerPagePlayModeLabelText => '循環播放';
+
+  @override
+  String get playerPagePlayModeLabelText2 => '單曲循環';
+
+  @override
+  String get playerPagePlayModeLabelText3 => '依序播放';
+
+  @override
+  String get playerPageShowLyricSettingsText3 => '歌詞設定';
+
+  @override
+  String get playerPageShowLyricSettingsText4 => '字幕偏移';
+
+  @override
+  String get simplifiedToTraditional => '簡 → 繁';
+
+  @override
+  String get traditionalToSimplified => '繁 → 簡';
+
+  @override
+  String get playerPageShowQueueText => '播放清單為空';
+
+  @override
+  String get playerPageResDialogTitle => '選擇歌詞檔案';
+
+  @override
+  String get playerPagePickOnlineLyricText => '選擇線上歌詞';
+
+  @override
+  String get playerPageBuildText => '暫無播放內容';
+
+  @override
+  String get playerPageShowLyricSettingsTitle => '選擇離線歌詞';
+
+  @override
+  String get playerPagePickOnlineLyricToast => '未找到線上歌詞';
+
+  @override
+  String get playerPageShowLyricSettingsTitle2 => '選擇歌詞庫歌詞';
+
+  @override
+  String get playerPageLoadOnlineLyricToast => '該歌詞無法解析';
+
+  @override
+  String get playerPageLyricsPanelText => '正在載入歌詞…';
+
+  @override
+  String get playerPageNextToast => '已播放完播放清單';
+
+  @override
+  String get playerPageOpenCurrentToast => '檔案串流需登入後可用';
+
+  @override
+  String get playerPageShowLyricSettingsSub => '歌詞庫中沒有該作品';
+
+  @override
+  String get playerPageOpenMediaToast => '開啟媒體逾時，請重試';
+
+  @override
+  String get playerPageLibraryAutoTileText => '從歌詞庫自動比對歌詞';
+
+  @override
+  String get playerPageOpenMediaToast2 => '開啟失敗，正在重試…';
+
+  @override
+  String get playerPageFriendlyPlayErrorText => '媒體串流代理異常，請重試';
+
+  @override
+  String get playerPageVolumeControlTooltip => '響度提升（上限 120）';
+
+  @override
+  String get playerPageShowLyricSettingsSub2 => '從本機選擇歌詞或字幕檔案';
+
+  @override
+  String get playerPageInitStateToast => '網路波動，正在自動重新連線…';
+
+  @override
+  String get playerPagePickLibraryLyricToast => '歌詞庫中沒有該作品的歌詞';
+
+  @override
+  String get playerPageOpenMediaToast3 => '開啟媒體逾時，正在重試…';
+
+  @override
+  String get playerPageShowLyricSettingsSub3 => '僅顯示目前作品的歌詞檔案';
+
+  @override
+  String get playerPageCheckSleepToast => '已停止播放，系統資源已釋放';
+
+  @override
+  String get playerPagePickOnlineLyricSub => '按曲目名與中文優先自動選擇';
+
+  @override
+  String get playerPageFriendlyPlayErrorText2 => '伺服器回傳錯誤，請稍後重試';
+
+  @override
+  String get playerPageVolumeControlTooltip2 => '啟用響度提升（上限 120）';
+
+  @override
+  String get playerPageFriendlyPlayErrorText3 => '登入已失效，請重新登入後重試';
+
+  @override
+  String get playerPagePickOfflineLyricToast => '檔案中沒有可讀取的帶時間軸歌詞';
+
+  @override
+  String get playerPageFriendlyPlayErrorText4 => '無法連線媒體串流，請檢查網路後重試';
+
+  @override
+  String get playerPageVolumeControlTooltip3 => '響度提升 Plus（上限 200）';
+
+  @override
+  String get playerPageToggleDesktopLyricsToast => '未授予懸浮視窗權限，無法顯示桌面歌詞';
+
+  @override
+  String playerPageSeekCircleMessage(String label, String seconds) {
+    return '$label $seconds 秒';
+  }
+
+  @override
+  String get playerPageLibraryAutoTileText2 => '優先比對本機歌詞，找不到時使用線上歌詞';
+
+  @override
+  String playerPageShowQueueText2(String length) {
+    return '播放清單（$length）';
+  }
+
+  @override
+  String playerPageInitStateToast2(String friendlyPlayError) {
+    return '播放失敗：$friendlyPlayError';
+  }
+
+  @override
+  String playerPageOpenMediaToast4(String friendlyPlayError) {
+    return '無法開啟媒體串流：$friendlyPlayError';
+  }
+
+  @override
+  String get playlistsPageNameText => '建立';
+
+  @override
+  String get playlistsPageBuildText => '重新命名';
+
+  @override
+  String get playlistsPageBuildText2 => '新增歌單';
+
+  @override
+  String get playlistsPageNameHintText => '歌單名稱';
+
+  @override
+  String get playlistsPageBuildText3 => '歌單為空';
+
+  @override
+  String get playlistsPageHeaderTooltip => '移除作品';
+
+  @override
+  String get playlistsPageNameText2 => '重新命名歌單';
+
+  @override
+  String get playlistsPageHeaderMessage => '拖動調整作品順序';
+
+  @override
+  String get playlistsPageRowMessage => '拖動調整播放順序';
+
+  @override
+  String get playlistsPagePlayTrackText => '歌單中沒有可播放的音訊';
+
+  @override
+  String get playlistsPageBuildText4 => 'SFW 模式下不顯示歌單';
+
+  @override
+  String get playlistsPageBuildText5 => '暫無歌單，點選右下角新增';
+
+  @override
+  String get playlistsPageBuildText6 => 'SFW 模式下不顯示歌單內容';
+
+  @override
+  String playlistsPageBuildText7(String length) {
+    return '$length 個條目';
+  }
+
+  @override
+  String get playlistsPagePlayTrackText2 => '該音訊缺少可用檔案串流，請從作品詳情重新新增';
+
+  @override
+  String get playlistsPageBuildText8 => '拖動標題調整作品順序，拖動媒體調整播放順序';
+
+  @override
+  String get playlistsPageBuildText9 => '長按標題調整作品順序，長按媒體調整播放順序';
+
+  @override
+  String playlistsPageHeaderText(String length) {
+    return '$length 個音訊';
+  }
+
+  @override
+  String get traditionalChineseShort => '繁中';
+
+  @override
+  String get englishLanguage => '英語';
+
+  @override
+  String get simplifiedChineseShort => '簡中';
+
+  @override
+  String get settingsPageHealthBadgeStartsWith => '正常';
+
+  @override
+  String get settingsPageSectionsMiniBtn => '偵測';
+
+  @override
+  String get settingsPageSectionsMiniBtn2 => '設定';
+
+  @override
+  String get settingsPageLockRowText => '解鎖';
+
+  @override
+  String get play => '播放';
+
+  @override
+  String get lyrics => '歌詞';
+
+  @override
+  String get settingsPageSectionsSection => '曲目';
+
+  @override
+  String get settingsPageOnVersionTapText => '好吧';
+
+  @override
+  String get settingsPageSectionsSection2 => '其他';
+
+  @override
+  String get settingsPageSectionsSection3 => '外觀';
+
+  @override
+  String get settingsPageSectionsText => '主題';
+
+  @override
+  String get settingsPageSectionsText2 => '淺色';
+
+  @override
+  String get settingsPageSectionsText3 => '深色';
+
+  @override
+  String get settingsPageSectionsText4 => '重置';
+
+  @override
+  String get settingsPageSectionsSection4 => '關於';
+
+  @override
+  String get settingsPageSectionTitleText => '隱私';
+
+  @override
+  String get settingsPageSectionsTitle => '版本';
+
+  @override
+  String get settingsPageSectionsTitle2 => '原始碼';
+
+  @override
+  String get settingsPageLockRowSub => '未鎖定';
+
+  @override
+  String get settingsPageSectionsMiniBtn3 => '去關閉';
+
+  @override
+  String get settingsPageShortcutConflictText => '下一曲';
+
+  @override
+  String get settingsPageShortcutConflictText2 => '上一曲';
+
+  @override
+  String get settingsPageSectionsLockRow => '桌面端';
+
+  @override
+  String get settingsPageSectionsMiniBtn4 => '已關閉';
+
+  @override
+  String get settingsPageShortcutLabelText => '未設定';
+
+  @override
+  String get translationEngine => '翻譯引擎';
+
+  @override
+  String get settingsPageSectionsLabel => '字型顏色';
+
+  @override
+  String get settingsPageSectionsLabel2 => '描邊顏色';
+
+  @override
+  String get simplifiedChinese => '简体中文';
+
+  @override
+  String get settingsPageAutoCheckSetState => '偵測中…';
+
+  @override
+  String get settingsPageSectionsTitle3 => '快退秒數';
+
+  @override
+  String get interfaceLanguage => '介面語言';
+
+  @override
+  String get settingsPageSectionsTitle4 => '快進秒數';
+
+  @override
+  String get settingsPageAiModelInputLabelText => '模型名稱';
+
+  @override
+  String get settingsPageShortcutLabelText2 => '方向鍵→';
+
+  @override
+  String get chineseConversion => '繁簡轉換';
+
+  @override
+  String get settingsPageSectionsText5 => '描邊寬度';
+
+  @override
+  String get settingsPageSectionsSection5 => '帳號設定';
+
+  @override
+  String get settingsPageSectionsText6 => '字型大小';
+
+  @override
+  String get settingsPageShortcutLabelText3 => '方向鍵←';
+
+  @override
+  String get settingsPageBuildText => '完全重置';
+
+  @override
+  String get settingsPageSectionsSwitchRow => '智慧路徑';
+
+  @override
+  String get settingsPageAutoCheckSetState2 => '連線失敗';
+
+  @override
+  String get followSystem => '跟隨系統';
+
+  @override
+  String get settingsPageOpenRepoToast => '開啟失敗';
+
+  @override
+  String get settingsPageEditAudioTypePreferenceText => '恢復預設';
+
+  @override
+  String get settingsPageSectionsText7 => '介面縮放';
+
+  @override
+  String get settingsPageBuildText2 => '確定重置';
+
+  @override
+  String get settingsPageSectionsTitle5 => '檢查更新';
+
+  @override
+  String get targetLanguage => '目標語言';
+
+  @override
+  String get languageAndTranslation => '語言與翻譯';
+
+  @override
+  String get settingsPageSectionsSwitchRow2 => '歌詞庫廣播';
+
+  @override
+  String get settingsPageSectionsSwitchRow3 => '剪貼簿偵測';
+
+  @override
+  String get settingsPageShortcutConflictText3 => '播放/暫停';
+
+  @override
+  String get settingsPageSectionsTitle6 => '快退快捷鍵';
+
+  @override
+  String get settingsPageSectionsSwitchRow4 => '效果音偏好';
+
+  @override
+  String get settingsPageSectionsTitle7 => '快進快捷鍵';
+
+  @override
+  String get settingsPageOnVersionTapText2 => '開發者模式';
+
+  @override
+  String get settingsPageSectionsSub => '未設定帳號';
+
+  @override
+  String get settingsPageRowSub => '點選進入設定';
+
+  @override
+  String get settingsPageSectionsTitle8 => '音訊類型偏好';
+
+  @override
+  String get settingsPageSectionsText8 => '偵測模型清單';
+
+  @override
+  String get settingsPageProxySettingsTooltip => '清空代理位址';
+
+  @override
+  String get settingsPageSectionsTitle9 => '上一曲快捷鍵';
+
+  @override
+  String get settingsPageSectionsTitle10 => '停用電池最佳化';
+
+  @override
+  String get settingsPageSectionsSwitchRow5 => '忽略音訊焦點';
+
+  @override
+  String get settingsPageSectionsSwitchRow6 => '自動檢查更新';
+
+  @override
+  String get settingsPageMediaCacheLimitRowText => '媒體快取上限';
+
+  @override
+  String get settingsPageSectionsTitle11 => '下一曲快捷鍵';
+
+  @override
+  String get translationTargetLanguage => '翻譯目標語言';
+
+  @override
+  String get followInterfaceLanguage => '跟隨介面語言';
+
+  @override
+  String get settingsPageSectionsText9 => '新增自建站台';
+
+  @override
+  String get settingsPageSectionsLockRow2 => 'Android（橫向）';
+
+  @override
+  String get settingsPageSectionsLockRow3 => 'Android（直向）';
+
+  @override
+  String get settingsPageSectionsTitle12 => '完全重置軟體';
+
+  @override
+  String get settingsPageProxySettingsSwitchRow => 'HTTP 代理';
+
+  @override
+  String get settingsPageAiModelInputTooltip => '選擇已偵測模型';
+
+  @override
+  String get settingsPageSectionsTitle13 => '恢復預設快捷鍵';
+
+  @override
+  String get settingsPageSectionsSwitchRow7 => '不記憶播放進度';
+
+  @override
+  String get settingsPageSectionsSection6 => '歌詞與桌面歌詞';
+
+  @override
+  String settingsPageSectionsToast(String e) {
+    return '連線失敗：$e';
+  }
+
+  @override
+  String get settingsPageSectionsToast2 => '正在測試連線…';
+
+  @override
+  String get settingsPageSectionsSwitchRow8 => '拔出耳機自動暫停';
+
+  @override
+  String get settingsPageSectionsTitle14 => '播放/暫停快捷鍵';
+
+  @override
+  String get settingsPageSectionsSub2 => '手動檢查更新服務';
+
+  @override
+  String get settingsPageSectionsSwitchRow9 => '歌詞視窗保持最上層';
+
+  @override
+  String get settingsPageAiModelInputTooltip2 => '請先偵測模型清單';
+
+  @override
+  String get settingsPageProxySettingsHelperText => '留空將不使用代理';
+
+  @override
+  String get settingsPageLabelsLabels => 'OpenAI 相容';
+
+  @override
+  String get settingsPageSectionsSwitchRow10 => '關閉視窗後縮小至系統匣';
+
+  @override
+  String get settingsPageDetectOpenAiModelsToast => '正在取得模型清單…';
+
+  @override
+  String get settingsPageSectionsSwitchRow11 => '不顯示通知欄媒體卡片';
+
+  @override
+  String get settingsPageSectionsSub3 => '歌詞中文部分自動轉換';
+
+  @override
+  String get sourceAndTargetLanguage => '來源語言 / 目標語言';
+
+  @override
+  String get settingsPageDetectOpenAiModelsToast2 => '請先填寫 API 位址';
+
+  @override
+  String get settingsPageSectionsSwitchRow12 => '定時關閉後釋放系統資源';
+
+  @override
+  String get settingsPagePlaybackShortcutRowSub => '播放器頁取得焦點時生效';
+
+  @override
+  String get settingsPageAiModelInputHintText => '輸入模型名或從清單選擇';
+
+  @override
+  String get settingsPageSectionsSub4 => '防止背景播放被系統中斷';
+
+  @override
+  String get settingsPageStatusStatus => '已儲存位址，開啟後生效';
+
+  @override
+  String settingsPageLockRowTitle(String label) {
+    return '$label 歌詞鎖定';
+  }
+
+  @override
+  String settingsPageDetectOpenAiModelsToast3(String e) {
+    return '模型清單取得失敗：$e';
+  }
+
+  @override
+  String get settingsPageSectionsToast3 => '正在測試 DeepL…';
+
+  @override
+  String get settingsPageSectionsSwitchRow13 => '優先進入包含效果音的目錄';
+
+  @override
+  String settingsPageSectionsToast4(String e) {
+    return '關閉歌詞庫廣播失敗：$e';
+  }
+
+  @override
+  String settingsPageSectionsToast5(String e) {
+    return '無法開啟歌詞庫廣播：$e';
+  }
+
+  @override
+  String get settingsPageSectionsSwitchRow14 => '開啟作品自動進入最佳目錄';
+
+  @override
+  String settingsPageSectionsToast6(String e) {
+    return 'DeepL 連線失敗：$e';
+  }
+
+  @override
+  String get settingsPageSectionsSwitchRow15 => '自動識別複製的 RJ 連結';
+
+  @override
+  String get settingsPageSectionsSwitchRow16 => '到點清除鎖定畫面媒體卡片與通知';
+
+  @override
+  String get settingsPageSectionsSwitchRow17 => '啟動後 3 秒請求更新服務';
+
+  @override
+  String settingsPageSectionsToast7(String r) {
+    return 'DeepL 連線正常：$r';
+  }
+
+  @override
+  String get settingsPageOnVersionTapText3 => '你不會真以為有開發者模式吧？';
+
+  @override
+  String get settingsPageProxySettingsHelperText2 => '開啟 HTTP 代理後可編輯';
+
+  @override
+  String get settingsPageSectionsSwitchRow18 => '拔出耳機或中斷藍牙連線時自動暫停';
+
+  @override
+  String get settingsPageSectionsSwitchRow19 => '與其他應用程式同時播放，互不打斷';
+
+  @override
+  String get settingsPageSectionsSwitchRow20 => '播放時不在通知欄顯示媒體卡片';
+
+  @override
+  String get settingsPageAiModelInputHintText2 => '例如 gpt-4o-mini';
+
+  @override
+  String get settingsPageSectionsSwitchRow21 => '通知欄封面顯示專案 logo';
+
+  @override
+  String settingsPageBuildText3(String count) {
+    return '確定重置（$count 秒）';
+  }
+
+  @override
+  String get settingsPageSectionsSub5 => '清除本機全部資料，恢復初始狀態';
+
+  @override
+  String get settingsPageSectionsSub6 => '5–60 秒，每次調整 5 秒';
+
+  @override
+  String settingsPageEditPlaybackShortcutToast(String conflict) {
+    return '該按鍵已用於$conflict';
+  }
+
+  @override
+  String get settingsPageDetectOpenAiModelsFormatException => '回應未包含 data[].id';
+
+  @override
+  String get settingsPageSectionsInput => 'API Key（本機服務可留空）';
+
+  @override
+  String get settingsPageConfirmResetText => '已重置：帳號與全部本機資料已清除';
+
+  @override
+  String get settingsPageRequestBatteryIgnoreToast => '請在系統設定中允許「忽略電池最佳化」';
+
+  @override
+  String get settingsPageStatusStatus2 => '已啟用，請填寫 HTTP 代理位址';
+
+  @override
+  String get settingsPageMediaCacheLimitRowText2 => '僅限制線上播放緩衝，不影響下載功能';
+
+  @override
+  String get settingsPageSectionsSwitchRow22 => '關閉視窗時停止背景執行並結束程式';
+
+  @override
+  String get settingsPageSectionsSub7 => '已加入白名單，背景播放不受省電限制';
+
+  @override
+  String get settingsPageSectionsInput2 => 'API 位址 (Base URL)';
+
+  @override
+  String get settingsPageSectionsInput3 => 'DeepL 免費版 API Key';
+
+  @override
+  String settingsPageSectionsSub8(String asmrUser) {
+    return '帳號：$asmrUser';
+  }
+
+  @override
+  String get settingsPageSectionsSwitchRow23 => '關閉後繼續在背景播放，可從系統匣還原視窗';
+
+  @override
+  String get settingsPageSectionsSwitchRow24 => '重啟程式後恢復上次曲目，但從頭開始播放';
+
+  @override
+  String get settingsPageSectionsSwitchRow25 => '唯讀 API 服務 · 連接埠 2377';
+
+  @override
+  String get settingsPageLockRowSub2 => '已鎖定：點選歌詞不會回應，可在設定中解鎖';
+
+  @override
+  String get settingsPageStatusStatus3 => '僅支援 HTTP 代理協定，適用於所有網路請求';
+
+  @override
+  String get settingsPageSectionsSwitchRow26 => '開啟後封面位置顯示專案 logo，不顯示真實封面';
+
+  @override
+  String settingsPageDetectOpenAiModelsToast4(String length) {
+    return '已取得 $length 個模型';
+  }
+
+  @override
+  String settingsPageOnVersionTapToast(String value) {
+    return '再執行 $value 步進入開發者模式';
+  }
+
+  @override
+  String settingsPageStatusStatus4(String trim) {
+    return '已啟用：$trim';
+  }
+
+  @override
+  String get settingsPageSectionsInput4 => '在 deepl.com 免費註冊後取得（api-free）';
+
+  @override
+  String get settingsPageSectionsSub9 => 'Space / PageUp / PageDown / 方向鍵←→';
+
+  @override
+  String settingsPageAiModelInputHelperText(String length) {
+    return '已偵測到 $length 個模型';
+  }
+
+  @override
+  String get settingsPageSectionsSub10 =>
+      'Google / Microsoft 免費 · DeepL 免費 Key · OpenAI 相容';
+
+  @override
+  String get settingsPageSectionsInput5 =>
+      'https://api.openai.com/v1 或 http://127.0.0.1:11434/v1';
+
+  @override
+  String settingsPageSectionsSub11(String translationTargetLabel) {
+    return '日語 → $translationTargetLabel';
+  }
+
+  @override
+  String settingsPageNextKeyIdText(String shortcutLabel) {
+    return '目前按鍵：$shortcutLabel\n\n按下新的單個按鍵';
+  }
+
+  @override
+  String get settingsPageBuildText4 =>
+      '將清除本機全部資料，且不可恢復：\n\n· ASMR.ONE 帳號與自建站台設定\n· 收藏 / 播放歷史 / 歌單 / 黑名單\n· 翻譯結果、均衡器、桌面歌詞、定時關閉等全部設定\n\n請確認是否繼續。';
+
+  @override
+  String get mark => '標記';
+
+  @override
+  String get confirm => '確定';
+
+  @override
+  String get refresh => '重新整理';
+
+  @override
+  String get workPageBuildLabel => '評論';
+
+  @override
+  String get translate => '翻譯';
+
+  @override
+  String get workPageRefreshWorkToast => '已重新整理';
+
+  @override
+  String get workPageBuildTooltip => '上一張';
+
+  @override
+  String get workPageBuildText => '已收藏';
+
+  @override
+  String get workPageBuildText2 => '翻譯中';
+
+  @override
+  String get workPageBuildTooltip2 => '下一張';
+
+  @override
+  String get workPageLanguageEditionsButtonText => '多語言';
+
+  @override
+  String get workPageSimilarWorksSliversText => '相似作品';
+
+  @override
+  String get workPageBuildText3 => '曲目清單';
+
+  @override
+  String get workPageConfirmedText => '刪除標記';
+
+  @override
+  String get workPageConfirmedText2 => '刪除作品';
+
+  @override
+  String get workPageRefreshWorkToast2 => '重新整理失敗';
+
+  @override
+  String get workPageShowTextViewerTooltip => '切換編碼';
+
+  @override
+  String get workPageBuildText4 => '我的評論';
+
+  @override
+  String get workPageAddToPlaylistText => '確認新增';
+
+  @override
+  String get workPageBuildHintText => '寫評論…';
+
+  @override
+  String get workPageBuildText5 => '取消翻譯';
+
+  @override
+  String get workPageOkText => '加入黑名單';
+
+  @override
+  String get workPageAddToPlaylistText2 => '新增到歌單';
+
+  @override
+  String get workPageTranslateTitlesToast => '已取消翻譯';
+
+  @override
+  String get workPageSelectedText => '選擇 CV';
+
+  @override
+  String get workPageBuildText6 => '新增至歌單';
+
+  @override
+  String get workPageBuildText7 => '下載選取項目';
+
+  @override
+  String get workPageOpenVideoChooserText => '選擇開啟方式';
+
+  @override
+  String get workPageOpenVideoChooserText2 => '音訊方式開啟';
+
+  @override
+  String get workPageSelectedText2 => '切換翻譯引擎';
+
+  @override
+  String get workPageTranslateTitlesToast2 => '未知翻譯引擎';
+
+  @override
+  String get workPageTranslateTitlesFormatException => '翻譯結果為空';
+
+  @override
+  String get workPageAllFilesRowText => '檢視全部檔案';
+
+  @override
+  String get workPageDownloadSelectedToast => '已加入下載佇列';
+
+  @override
+  String get workPageAddToPlaylistText3 => '請輸入歌單名稱';
+
+  @override
+  String get workPageOpenVideoChooserText3 => '外部播放器開啟';
+
+  @override
+  String workPageDeleteNotify(String e) {
+    return '刪除失敗：$e';
+  }
+
+  @override
+  String get workPageBuildLabel2 => '新增到播放清單';
+
+  @override
+  String workPageSetProgressToast(String e) {
+    return '標記失敗：$e';
+  }
+
+  @override
+  String get workPageBuildLabel3 => '僅顯示媒體檔案';
+
+  @override
+  String get workPageTreePlaceholderText => '該作品暫無曲目';
+
+  @override
+  String workPageTranslateTitlesToast3(String e) {
+    return '翻譯失敗：$e';
+  }
+
+  @override
+  String workPageRateWorkToast(String e) {
+    return '評分失敗：$e';
+  }
+
+  @override
+  String workPageApplyEncodingToast(String e) {
+    return '解碼失敗：$e';
+  }
+
+  @override
+  String workPageSubmitNotify(String e) {
+    return '儲存失敗：$e';
+  }
+
+  @override
+  String get workPageSimilarWorksSliversText2 => '載入更多相似作品';
+
+  @override
+  String get workPageDownloadSelectedToast2 => '曲目清單尚未載入';
+
+  @override
+  String workPageClearRatingToast(String e) {
+    return '取消評分失敗：$e';
+  }
+
+  @override
+  String get workPageRefreshWorkToast3 => '已重新整理本機下載紀錄';
+
+  @override
+  String workPageDownloadSelectedToast3(String e) {
+    return '加入下載失敗：$e';
+  }
+
+  @override
+  String get workPageSimilarWorksSliversText3 => '已顯示全部相似作品';
+
+  @override
+  String get workPageOpenLanguageEditionToast => '無法載入該語言版本';
+
+  @override
+  String workPageBuildToast(String e) {
+    return '收藏操作失敗：$e';
+  }
+
+  @override
+  String get workPageConfirmedText3 => '確定要刪除標記嗎？';
+
+  @override
+  String workPageSetProgressToast2(String e) {
+    return '取消標記失敗：$e';
+  }
+
+  @override
+  String get workPageBuildLabel4 => '前往 DLsite';
+
+  @override
+  String get workPageAddToPlaylistToast => '請先勾選檔案或資料夾';
+
+  @override
+  String get workPageBuildText8 => '曲目清單（資料夾結構）';
+
+  @override
+  String get workPageBuildLabel5 => '前往 asmr.one';
+
+  @override
+  String workPageAddToPlaylistToast2(String name) {
+    return '已新增到「$name」';
+  }
+
+  @override
+  String get workPageAddToServerPlaylistToast => '只能新增到自建播放清單';
+
+  @override
+  String get workPageOnMoreActionToast => '曲目清單載入中，請稍候';
+
+  @override
+  String get workPageTreePlaceholderText2 => '該作品沒有音訊或影片檔案';
+
+  @override
+  String get workPageAddToServerPlaylistToast2 => '該作品缺少編號，無法新增';
+
+  @override
+  String get workPageOpenReviewDialogToast => '該作品缺少編號，無法評價';
+
+  @override
+  String get workPageDeleteSelectedLocalFilesToast => '所選項目中沒有已下載檔案';
+
+  @override
+  String get workPageDeleteSelectedLocalFilesToast2 => '請先勾選要刪除的本機檔案';
+
+  @override
+  String get workPageOnMoreActionToast2 => '曲目載入失敗，請重新整理後重試';
+
+  @override
+  String get workPageTreePlaceholderText3 => '無網路連線，無法取得曲目清單';
+
+  @override
+  String workPageBuildText9(String dur) {
+    return '長度 $dur';
+  }
+
+  @override
+  String get workPageEnginesEngines => 'DeepL（免費版 Key）';
+
+  @override
+  String get workPageEnginesEngines2 => 'OpenAI 相容（可設定）';
+
+  @override
+  String workPageCopyRjToast(String rj) {
+    return '已複製 $rj';
+  }
+
+  @override
+  String get workPageDownloadSelectedToast4 => '請先勾選要下載的項目或資料夾';
+
+  @override
+  String get workPageAddToPlaylistToast3 => '所選項目中沒有可播放的音訊檔案';
+
+  @override
+  String get workPageOnMoreActionToast3 => '請先勾選需要聽寫翻譯的媒體檔案';
+
+  @override
+  String get workPagePlayAsAudioToast => 'SFW 模式下不能播放非全年齡作品';
+
+  @override
+  String get workPageOpenLanguageEditionToast2 => 'SFW 模式下不能開啟非全年齡作品';
+
+  @override
+  String get workPagePlayFilesToast => '暫無音訊檔案（檔案串流需登入後可用）';
+
+  @override
+  String get workPageEnginesEngines3 => 'Google（免費，無需 Key）';
+
+  @override
+  String workPageNodeRowToast(String title) {
+    return '已複製檔名：$title';
+  }
+
+  @override
+  String workPageDeleteSelectedLocalFilesToast3(String deleted) {
+    return '已刪除 $deleted 個本機檔案';
+  }
+
+  @override
+  String get workPageTranslateTitlesToast4 => '請先在設定中填寫 API 位址與模型名稱';
+
+  @override
+  String get workPageEnginesEngines4 => 'Microsoft（免費，無需 Key）';
+
+  @override
+  String workPageOpenFileToast(String title) {
+    return '暫不支援檢視該類型：$title';
+  }
+
+  @override
+  String get workPageEnginesEngines5 => 'Index-Translate（官方 API）';
+
+  @override
+  String get workPageConfirmDeleteWorkToast => '刪除失敗，請關閉正在佔用該作品的程式後重試';
+
+  @override
+  String workPageTranslateTitlesToast5(String length) {
+    return '正在翻譯 $length 行標題…';
+  }
+
+  @override
+  String get workPageTranslateTitlesToast6 => '請先在設定中填寫 DeepL 免費版 API Key';
+
+  @override
+  String workPageAddToPlaylistText4(String length) {
+    return '已選擇 $length 個音訊檔案';
+  }
+
+  @override
+  String get workPageOnMoreActionToast4 => '所選項目中沒有可傳送給 kikoeta-transl 的媒體檔案';
+
+  @override
+  String workPageTranslateTitlesToast7(String length) {
+    return '翻譯完成（標題 + $length 個曲目）';
+  }
+
+  @override
+  String workPageOkText2(String t) {
+    return '將標籤「$t」加入黑名單？\n加入後，含該標籤的作品將從首頁與搜尋中過濾。';
+  }
+
+  @override
+  String workPageConfirmedText4(String title) {
+    return '確定刪除「$title」的全部本機檔案嗎？此操作無法復原。';
+  }
+
+  @override
+  String get liked => '喜歡';
+
+  @override
+  String get privatePlaylist => '私人';
+
+  @override
+  String get publicPlaylist => '公開';
+
+  @override
+  String get sharedByLink => '透過連結分享';
+
+  @override
+  String get apiServiceMapPlaylistName => '未命名歌單';
+
+  @override
+  String get apiServiceMapWorkVa => 'CV. 未知';
+
+  @override
+  String get apiServiceFetchWorkFormatException => '作品詳情格式無效';
+
+  @override
+  String get apiServiceFetchPlaylistMetadataFormatException => '歌單詳情格式無效';
+
+  @override
+  String get apiServiceFetchAdvancedFilterEntriesValue => '不支援的進階篩選類型';
+
+  @override
+  String get apiServiceFetchAdvancedFilterEntriesFormatException =>
+      '進階篩選資料格式無效';
+
+  @override
+  String get apiServiceToggleFavoriteException => '該作品缺少編號，無法收藏';
+
+  @override
+  String get apiServiceClearReviewRatingException => '該作品缺少編號，無法取消評分';
+
+  @override
+  String get apiServiceClearReviewProgressException => '該作品缺少編號，無法取消標記';
+
+  @override
+  String get apiServiceDeleteReviewException => '該作品缺少編號，無法刪除標記';
+
+  @override
+  String get search => '搜尋';
+
+  @override
+  String clipboardWatcherCheckText(String rj) {
+    return '偵測到 $rj，點選搜尋';
+  }
+
+  @override
+  String get desktopLyricsOverlayEnsureWindowToNativeUtf16 => 'Kikoeta 桌面歌詞';
+
+  @override
+  String get downloadServiceDownloadFileHttpException => '下載檔案為空';
+
+  @override
+  String get downloadServiceRunStateError => '沒有可下載的檔案';
+
+  @override
+  String get downloadServiceRunStateError2 => '下載檔案位址為空';
+
+  @override
+  String get downloadTransferDownloadToFileHttpException => '下載回應不完整';
+
+  @override
+  String get downloadTransferDownloadToFileHttpException2 => '下載分片長度發生變化';
+
+  @override
+  String get downloadTransferDownloadToFileHttpException3 => '下載檔案長度驗證失敗';
+
+  @override
+  String get downloadTransferDownloadToFileHttpException4 => '下載回應的位元組範圍不符';
+
+  @override
+  String get downloadTransferDownloadToFileHttpException5 => '下載回應超過宣告的檔案長度';
+
+  @override
+  String get downloadTransferDownloadToFileHttpException6 => '下載回應使用了非原始位元組編碼';
+
+  @override
+  String downloadTransferDownloadToFileHttpException7(String status) {
+    return '下載失敗 HTTP $status';
+  }
+
+  @override
+  String get ktServiceNormalizeEndpointFormatException =>
+      '連線位址格式應為 IP/網域名稱:連接埠';
+
+  @override
+  String get ktServiceDecodeFormatException => 'kikoeta-transl 回傳了無效回應';
+
+  @override
+  String get ktServiceNormalizeEndpointFormatException2 =>
+      '請輸入 kikoeta-transl 的 IP/網域名稱與連接埠';
+
+  @override
+  String ktServiceErrorMessageText(String statusCode) {
+    return 'kikoeta-transl 請求失敗（HTTP $statusCode）';
+  }
+
+  @override
+  String get lyricsLibraryRemoteClientValidateWorkIdFormatException => '無效的作品號';
+
+  @override
+  String get lyricsLibraryRemoteClientFetchWorksFormatException =>
+      '遠端歌詞庫分頁游標無效';
+
+  @override
+  String get lyricsLibraryRemoteClientFetchWorksFormatException2 =>
+      '遠端歌詞庫未提供作品清單';
+
+  @override
+  String get lyricsLibraryRemoteClientFetchLyricsFormatException =>
+      '遠端作品沒有歌詞檔案清單';
+
+  @override
+  String get lyricsLibraryRemoteClientFetchLyricsFormatException2 =>
+      '遠端作品沒有可用歌詞檔案';
+
+  @override
+  String get lyricsLibraryRemoteClientGetJsonFormatException =>
+      '遠端歌詞庫回傳的資料格式無效';
+
+  @override
+  String get lyricsLibraryRemoteClientNormalizeBaseUrlFormatException =>
+      '請輸入有效的 HTTP 或 HTTPS 位址';
+
+  @override
+  String lyricsLibraryRemoteClientGetJsonHttpException(String statusCode) {
+    return '遠端歌詞庫回傳 HTTP $statusCode';
+  }
+
+  @override
+  String get lyricsLibraryServiceExtractArchivePhase => '正在解壓縮';
+
+  @override
+  String get lyricsLibraryServiceCopyTreePhase => '正在複製';
+
+  @override
+  String get lyricsLibraryServiceRemoveRemoteLibraryStateError => '該遠端庫尚未匯入';
+
+  @override
+  String get lyricsLibraryServiceSaveTranslatedLyricsArgumentError =>
+      '不支援的歌詞格式';
+
+  @override
+  String get lyricsLibraryServiceSaveTranslatedLyricsArgumentError2 =>
+      '檔案中沒有有效時間軸';
+
+  @override
+  String get lyricsLibraryServiceImportRemoteWorkFormatException =>
+      '遠端作品沒有有效歌詞檔案';
+
+  @override
+  String get lyricsLibraryServiceSaveTranslatedLyricsArgumentError3 =>
+      '目標檔案必須位於作品目錄內';
+
+  @override
+  String get lyricsLibraryServiceSetRemoteLibraryOrderArgumentError =>
+      '遠端庫清單已變化，請重新開啟匯入視窗';
+
+  @override
+  String lyricsLibraryServiceSubscriptionStateError(String message) {
+    return '歌詞匯入處理程序異常：$message';
+  }
+
+  @override
+  String get updateServiceShowUpdateDialogText => '不再提示';
+
+  @override
+  String get updateServiceShowUpdateDialogText2 => '前往下載';
+
+  @override
+  String get updateServiceShowUpdateDialogText3 => '發現新版本';
+
+  @override
+  String get updateServiceCheckManuallyText => '正在檢查更新…';
+
+  @override
+  String get updateServiceCheckError => '更新服務連線失敗';
+
+  @override
+  String get updateServiceCheckManuallyToast => '目前已是最新版本';
+
+  @override
+  String get updateServiceShowUpdateDialogToast => '開啟下載頁面失敗';
+
+  @override
+  String get updateServiceGetUpdateResponseStateError => '更新服務請求未執行';
+
+  @override
+  String get updateServiceParseReleaseResponseFormatException => '更新回應缺少版本資訊';
+
+  @override
+  String get updateServiceCheckError2 => '更新服務未回傳有效版本資訊';
+
+  @override
+  String get updateServiceCheckError3 => '無法連線更新服務或 GitHub';
+
+  @override
+  String updateServiceShowUpdateDialogText4(
+    String version,
+    String currentVersion,
+  ) {
+    return '最新版本：$version\n目前版本：$currentVersion';
+  }
+
+  @override
+  String get pause => '暫停';
+
+  @override
+  String get quit => '結束';
+
+  @override
+  String get windowsTrayServiceSetContextMenuLabel => '顯示首頁';
+
+  @override
+  String get sheetsShowSleepSheetSuffixText => '分鐘';
+
+  @override
+  String get sheetsBuildText => '套用';
+
+  @override
+  String get sheetsShowSiteSheetField => '別名';
+
+  @override
+  String get sheetsShowSiteSheetField2 => '位址';
+
+  @override
+  String get account => '帳號';
+
+  @override
+  String get sheetsPresetsPresets => '人聲';
+
+  @override
+  String get sheetsPresetsPresets2 => '低音';
+
+  @override
+  String get sheetsPresetsPresets3 => '平坦';
+
+  @override
+  String get sheetsPresetsPresets4 => '流行';
+
+  @override
+  String get sheetsPresetsPresets5 => '搖滾';
+
+  @override
+  String get sheetsShowEqSheetText => '未啟用';
+
+  @override
+  String get sheetsShowEqSheetText2 => '已套用';
+
+  @override
+  String get sheetsShowSleepSheetText => '取消定時';
+
+  @override
+  String get sheetsShowSleepSheetText2 => '開始定時';
+
+  @override
+  String get playbackComplete => '播放完畢';
+
+  @override
+  String get sheetsTimePickerText => '關閉時間';
+
+  @override
+  String get sheetsShowSleepSheetLabel => '指定時間';
+
+  @override
+  String sheetsShowSleepSheetLabel2(String m) {
+    return '$m 分鐘';
+  }
+
+  @override
+  String get sheetsShowSleepSheetLabel3 => 'N 分鐘後';
+
+  @override
+  String get sheetsBuildTitle => '選擇伺服器';
+
+  @override
+  String get sheetsShowEqSheetText3 => '啟用均衡器';
+
+  @override
+  String get sheetsShowSiteSheetTitle => '編輯自建站台';
+
+  @override
+  String get sheetsBuildText2 => '管理自建站台';
+
+  @override
+  String get sheetsShowSleepSheetHintText => '自訂分鐘數';
+
+  @override
+  String get sheetsBuildText3 => '暫無自建站台';
+
+  @override
+  String get sheetsBuildText4 => '選擇自建站台';
+
+  @override
+  String get sheetsShowSiteSheetHint => '如：家庭 NAS';
+
+  @override
+  String get sheetsBuildText5 => '請先新增自建站台';
+
+  @override
+  String get sheetsShowOneConfigSheetTitle => 'ASMR.ONE 帳號';
+
+  @override
+  String get sheetsShowOneConfigSheetHint => 'asmr.one 帳號';
+
+  @override
+  String get sheetsShowOneConfigSheetSub => '帳號資訊僅儲存在本機（示範）';
+
+  @override
+  String get sheetsShowSleepSheetText3 => '目前播放清單播完後自動停止並關閉';
+
+  @override
+  String get sheetsShowSleepSheetText4 => '剩餘時間 · 到時自動停止並結束程式';
+
+  @override
+  String get sheetsBuildSub => '官方服務或自建 Kikoeru 站台';
+
+  @override
+  String get sheetsShowEqSheetSub => '真 10 段 · ±12 dB · 全平台';
+
+  @override
+  String get sheetsShowSleepSheetText5 => '目前播放清單的內容播放完畢後自動停止並關閉';
+
+  @override
+  String get sheetsShowSleepSheetSub => '到時停止播放並釋放系統資源（清除鎖定畫面卡片與通知）';
+
+  @override
+  String sheetsBuildLabel(String length) {
+    return '自訂設定（$length）';
+  }
+
+  @override
+  String playbackSeekSecondsControlBuildTooltip(String label) {
+    return '減少$label秒數';
+  }
+
+  @override
+  String playbackSeekSecondsControlBuildTooltip2(String label) {
+    return '增加$label秒數';
+  }
+
+  @override
+  String get name => '名稱';
+
+  @override
+  String get description => '描述';
+
+  @override
+  String get playlistPickerRowsMapEntry => '權限';
+
+  @override
+  String get language => '語言';
+
+  @override
+  String get confirmAction => '確認';
+
+  @override
+  String get create => '新增';
+
+  @override
+  String get playlistPickerShowEditorLabelText => '類型';
+
+  @override
+  String get playlistPickerRowsMapEntry2 => '建立者';
+
+  @override
+  String get playlistPickerRowsMapEntry3 => '更新時間';
+
+  @override
+  String get playlistPickerReviewsItemName => '我的收藏';
+
+  @override
+  String get playlistPickerRowsMapEntry4 => '播放次數';
+
+  @override
+  String get playlistPickerRowsMapEntry5 => '作品數量';
+
+  @override
+  String get playlistPickerCopyText => '歌單詳情';
+
+  @override
+  String get playlistPickerLinkLabelText => '分享連結';
+
+  @override
+  String get playlistPickerCopyText2 => '複製連結';
+
+  @override
+  String get playlistPickerRowsMapEntry6 => '建立時間';
+
+  @override
+  String get playlistPickerBuildText => '切換播放清單';
+
+  @override
+  String get playlistPickerPlaylistItemTooltip => '移除播放清單';
+
+  @override
+  String get playlistPickerPlaylistItemTooltip2 => '編輯播放清單';
+
+  @override
+  String get playlistPickerShowEditorText => '建立播放清單';
+
+  @override
+  String get playlistPickerLinkText => '匯入播放清單';
+
+  @override
+  String get playlistPickerOkText => '刪除播放清單';
+
+  @override
+  String playlistPickerRemoveLikedToast(String e) {
+    return '移除失敗：$e';
+  }
+
+  @override
+  String playlistPickerCreatePlaylistToast(String e) {
+    return '建立失敗：$e';
+  }
+
+  @override
+  String get playlistPickerLoadSetState => '無法載入播放清單';
+
+  @override
+  String get playlistPickerImportPlaylistToast => '無法識別播放清單連結';
+
+  @override
+  String get playlistPickerReviewsItemSubtitle => '我的評價/收藏（所有作品）';
+
+  @override
+  String get playlistPickerCreatePlaylistToast2 => '已建立，但清單中未找到該播放清單';
+
+  @override
+  String get playlistPickerImportPlaylistToast2 => '已新增，但清單中暫未找到該播放清單';
+
+  @override
+  String playlistPickerSubtitleSubtitle(String worksCount) {
+    return '$worksCount 個作品';
+  }
+
+  @override
+  String get playlistPickerLinkText2 => '貼上別人分享的播放清單連結，會收藏到我的播放清單。';
+
+  @override
+  String playlistPickerOkText2(String name) {
+    return '確定刪除「$name」嗎？此操作無法復原。';
+  }
+
+  @override
+  String playlistPickerOkText3(String name) {
+    return '確定從我的播放清單中移除「$name」嗎？';
+  }
+
+  @override
+  String playlistPickerSubtitleSubtitle2(String worksCount, String replaceAll) {
+    return '$worksCount 個作品 · $replaceAll';
+  }
+
+  @override
+  String get widgetsFilterButtonTooltip => '篩選';
+
+  @override
+  String get widgetsFilterButtonLabel => '僅字幕';
+
+  @override
+  String get allAges => '全年齡';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter => '排除語言';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter2 => '搜尋社團';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter3 => '搜尋聲優';
+
+  @override
+  String get widgetsBuildBuilder => 'AI歌詞';
+
+  @override
+  String get widgetsBuildBuilder2 => '遠端歌詞';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter4 => '篩選語言';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter5 => '排除標籤';
+
+  @override
+  String get widgetsBuildBuilder3 => '本機歌詞';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter6 => '排除社團';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter7 => '排除聲優';
+
+  @override
+  String get widgetsInputRowMessage => '進階搜尋';
+
+  @override
+  String get widgetsHistoryPanelText => '搜尋歷史';
+
+  @override
+  String get widgetsBuildBuilder4 => '線上歌詞';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter8 => '搜尋標籤';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter9 =>
+      '篩選年齡分級';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter10 =>
+      '排除年齡分級';
+
+  @override
+  String get widgetsBuildText => '進階搜尋參數';
+
+  @override
+  String get widgetsHistoryPanelText2 => '暫無搜尋歷史';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter11 =>
+      '包含低願力標籤';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter12 =>
+      '排除低願力標籤';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter13 =>
+      '篩選評分（大於）';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter14 =>
+      '篩選銷量（大於）';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter15 =>
+      '篩選價格（大於）';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter16 =>
+      '篩選作品長度（小於）';
+
+  @override
+  String get widgetsAdvancedSearchParametersAdvancedSearchParameter17 =>
+      '篩選作品長度（大於）';
+
+  @override
+  String widgetsHistoryPanelText3(String value) {
+    return '已刪除「$value」';
+  }
+
+  @override
+  String get playbackSpeed => '倍速';
+
+  @override
+  String get playbackSpeedDescription => '切換播放速度，保持音調';
+
+  @override
+  String get playbackSpeedEntry => '顯示倍速控制';
+
+  @override
+  String get playbackSpeedEntryDescription => '在播放器顯示倍速控制，關閉後恢復 1×';
+
+  @override
+  String get audioChannels => '聲道';
+
+  @override
+  String get audioChannelsDescription => '反轉左右聲道，或合併後雙耳播放相同聲音';
+
+  @override
+  String get audioChannelsOriginal => '原始聲道';
+
+  @override
+  String get audioChannelsSwap => '左右反轉';
+
+  @override
+  String get audioChannelsMerge => '聲道合併';
+
+  @override
+  String get widgetsInputRowHintText => '搜尋 RJ 號、作品名、聲優…';
+}

@@ -815,6 +815,7 @@ class _KikoetaAppState extends State<KikoetaApp>
       locale: AppLanguage.localeOverride,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      localeListResolutionCallback: AppLanguage.resolveLocales,
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: appMessengerKey,
       navigatorKey: appNavigatorKey,

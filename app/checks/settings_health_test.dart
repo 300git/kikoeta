@@ -54,7 +54,12 @@ void main() {
     final english = find.textContaining('OK · ');
     expect(english, findsOneWidget);
     expect(tester.widget<Text>(english).style!.color, AppColors.light.green);
-    expect(chinese, findsNothing);
+    app.setUiLanguage('zh-TW');
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Text>(find.textContaining('正常 · ')).style!.color,
+      AppColors.light.green,
+    );
     expect(tester.takeException(), isNull);
   });
 
