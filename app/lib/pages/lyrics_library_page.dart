@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../services/lyrics_folder_import.dart';
 import '../services/lyrics_library_service.dart';
 import '../smooth_scroll.dart';
+import '../subpage_swipe.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../l10n/strings.dart';
@@ -836,197 +837,202 @@ class _LyricsLibraryPageState extends State<LyricsLibraryPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (_searching)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: _searchField(p),
-            ),
-          Expanded(
-            child: ids.isEmpty
-                ? Center(
-                    child: _loading
-                        ? const CircularProgressIndicator()
-                        : Text(
-                            _aiOnly
-                                ? context.l10n.homePageEmptyHintText4
-                                : _source == 'remote'
-                                ? context.l10n.lyricsLibraryPageBuildText9
-                                : context.l10n.lyricsLibraryPageBuildText6,
-                          ),
-                  )
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      final count = (constraints.maxWidth / 210).floor().clamp(
-                        2,
-                        8,
-                      );
-                      return NotificationListener<ScrollNotification>(
-                        onNotification: (notification) {
-                          if (notification.metrics.pixels >=
-                              notification.metrics.maxScrollExtent - 240) {
-                            _loadNextBatch(ids);
-                          }
-                          return false;
-                        },
-                        child: SmoothGridView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: count,
-                                crossAxisSpacing: 13,
-                                mainAxisSpacing: 13,
-                                childAspectRatio: 3.15,
-                              ),
-                          itemCount: visibleCount,
-                          itemBuilder: (_, i) {
-                            final id = ids[i];
-                            final fileCount = _fileCounts[id];
-                            final directoryCount = _directoryCounts[id] ?? 0;
-                            final isAi = _aiWorkIds.contains(id);
-                            final isOnline = _onlineWorkIds.contains(id);
-                            return Stack(
-                              children: [
-                                InkWell(
-                                  onTap: () => _selecting
-                                      ? _toggleSelection(id)
-                                      : _showFiles(id),
-                                  onLongPress: _selecting
-                                      ? null
-                                      : () => _confirmDeleteWork(id),
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    height: 72,
-                                    padding: const EdgeInsets.fromLTRB(
-                                      12,
-                                      10,
-                                      10,
-                                      10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: p.surface2,
-                                      border: Border.all(color: p.border),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 34,
-                                          height: 34,
-                                          decoration: BoxDecoration(
-                                            color: p.accent.withValues(
-                                              alpha: .14,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            Icons.lyrics_outlined,
-                                            size: 19,
-                                            color: p.accent,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                id,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  color: p.text,
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
+      body: SubpageSwipe(
+        index: _source == 'local' ? 0 : 1,
+        count: 2,
+        onChanged: (index) => _changeSource(index == 0 ? 'local' : 'remote'),
+        child: Column(
+          children: [
+            if (_searching)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: _searchField(p),
+              ),
+            Expanded(
+              child: ids.isEmpty
+                  ? Center(
+                      child: _loading
+                          ? const CircularProgressIndicator()
+                          : Text(
+                              _aiOnly
+                                  ? context.l10n.homePageEmptyHintText4
+                                  : _source == 'remote'
+                                  ? context.l10n.lyricsLibraryPageBuildText9
+                                  : context.l10n.lyricsLibraryPageBuildText6,
+                            ),
+                    )
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final count = (constraints.maxWidth / 210)
+                            .floor()
+                            .clamp(2, 8);
+                        return NotificationListener<ScrollNotification>(
+                          onNotification: (notification) {
+                            if (notification.metrics.pixels >=
+                                notification.metrics.maxScrollExtent - 240) {
+                              _loadNextBatch(ids);
+                            }
+                            return false;
+                          },
+                          child: SmoothGridView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: count,
+                                  crossAxisSpacing: 13,
+                                  mainAxisSpacing: 13,
+                                  childAspectRatio: 3.15,
+                                ),
+                            itemCount: visibleCount,
+                            itemBuilder: (_, i) {
+                              final id = ids[i];
+                              final fileCount = _fileCounts[id];
+                              final directoryCount = _directoryCounts[id] ?? 0;
+                              final isAi = _aiWorkIds.contains(id);
+                              final isOnline = _onlineWorkIds.contains(id);
+                              return Stack(
+                                children: [
+                                  InkWell(
+                                    onTap: () => _selecting
+                                        ? _toggleSelection(id)
+                                        : _showFiles(id),
+                                    onLongPress: _selecting
+                                        ? null
+                                        : () => _confirmDeleteWork(id),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      height: 72,
+                                      padding: const EdgeInsets.fromLTRB(
+                                        12,
+                                        10,
+                                        10,
+                                        10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: p.surface2,
+                                        border: Border.all(color: p.border),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 34,
+                                            height: 34,
+                                            decoration: BoxDecoration(
+                                              color: p.accent.withValues(
+                                                alpha: .14,
                                               ),
-                                              const SizedBox(height: 3),
-                                              Text(
-                                                fileCount == null
-                                                    ? (_countFailures.contains(
-                                                            id,
-                                                          )
-                                                          ? context
-                                                                .l10n
-                                                                .lyricsLibraryPageBuildText5
-                                                          : context
-                                                                .l10n
-                                                                .lyricsLibraryPageBuildText4)
-                                                    : context.l10n.lyricsLibraryPageBuildText10(
-                                                        (fileCount).toString(),
-                                                        (isOnline
-                                                                ? context
-                                                                      .l10n
-                                                                      .remote
-                                                                : context.l10n.lyricsLibraryPageBuildText7(
-                                                                    (directoryCount)
-                                                                        .toString(),
-                                                                  ))
-                                                            .toString(),
-                                                      ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  color: p.muted,
-                                                  fontSize: 11,
-                                                ),
-                                              ),
-                                            ],
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(
+                                              Icons.lyrics_outlined,
+                                              size: 19,
+                                              color: p.accent,
+                                            ),
                                           ),
-                                        ),
-                                        if (isAi || isOnline)
-                                          Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              if (isAi)
-                                                _sourceBadge('AI', p.accent),
-                                              if (isOnline) ...[
-                                                if (isAi)
-                                                  const SizedBox(height: 3),
-                                                _sourceBadge(
-                                                  context.l10n.online,
-                                                  p.orange,
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  id,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    color: p.text,
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 3),
+                                                Text(
+                                                  fileCount == null
+                                                      ? (_countFailures
+                                                                .contains(id)
+                                                            ? context
+                                                                  .l10n
+                                                                  .lyricsLibraryPageBuildText5
+                                                            : context
+                                                                  .l10n
+                                                                  .lyricsLibraryPageBuildText4)
+                                                      : context.l10n.lyricsLibraryPageBuildText10(
+                                                          (fileCount)
+                                                              .toString(),
+                                                          (isOnline
+                                                                  ? context
+                                                                        .l10n
+                                                                        .remote
+                                                                  : context.l10n.lyricsLibraryPageBuildText7(
+                                                                      (directoryCount)
+                                                                          .toString(),
+                                                                    ))
+                                                              .toString(),
+                                                        ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    color: p.muted,
+                                                    fontSize: 11,
+                                                  ),
                                                 ),
                                               ],
-                                            ],
+                                            ),
                                           ),
-                                      ],
+                                          if (isAi || isOnline)
+                                            Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (isAi)
+                                                  _sourceBadge('AI', p.accent),
+                                                if (isOnline) ...[
+                                                  if (isAi)
+                                                    const SizedBox(height: 3),
+                                                  _sourceBadge(
+                                                    context.l10n.online,
+                                                    p.orange,
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                if (_selecting)
-                                  Positioned(
-                                    top: 6,
-                                    right: 6,
-                                    child: Checkbox(
-                                      value: _selected.contains(id),
-                                      onChanged: (_) => _toggleSelection(id),
+                                  if (_selecting)
+                                    Positioned(
+                                      top: 6,
+                                      right: 6,
+                                      child: Checkbox(
+                                        value: _selected.contains(id),
+                                        onChanged: (_) => _toggleSelection(id),
+                                      ),
                                     ),
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          if (_loadingMore)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+                                ],
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
             ),
-        ],
+            if (_loadingMore)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

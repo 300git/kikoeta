@@ -2058,6 +2058,18 @@ abstract class AppLocalizations {
   /// **'正在加载歌词…'**
   String get playerPageLyricsPanelText;
 
+  /// No description provided for @playerAlreadyFirstTrack.
+  ///
+  /// In zh, this message translates to:
+  /// **'已经是第一首'**
+  String get playerAlreadyFirstTrack;
+
+  /// No description provided for @playerAlreadyLastTrack.
+  ///
+  /// In zh, this message translates to:
+  /// **'已经是最后一首'**
+  String get playerAlreadyLastTrack;
+
   /// pages/player_page.dart: _next
   ///
   /// In zh, this message translates to:
@@ -2099,6 +2111,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'媒体流代理异常，请重试'**
   String get playerPageFriendlyPlayErrorText;
+
+  /// No description provided for @playerLoudnessBoostLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'响度提升'**
+  String get playerLoudnessBoostLabel;
 
   /// pages/player_page.dart: _volumeControl
   ///

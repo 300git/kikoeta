@@ -1122,6 +1122,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerPageLyricsPanelText => '正在加载歌词…';
 
   @override
+  String get playerAlreadyFirstTrack => '已经是第一首';
+
+  @override
+  String get playerAlreadyLastTrack => '已经是最后一首';
+
+  @override
   String get playerPageNextToast => '已播放完播放列表';
 
   @override
@@ -1141,6 +1147,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerPageFriendlyPlayErrorText => '媒体流代理异常，请重试';
+
+  @override
+  String get playerLoudnessBoostLabel => '响度提升';
 
   @override
   String get playerPageVolumeControlTooltip => '响度提升（上限 120）';
@@ -3800,6 +3809,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get playerPageLyricsPanelText => '正在載入歌詞…';
 
   @override
+  String get playerAlreadyFirstTrack => '已經是第一首';
+
+  @override
+  String get playerAlreadyLastTrack => '已經是最後一首';
+
+  @override
   String get playerPageNextToast => '已播放完播放清單';
 
   @override
@@ -3819,6 +3834,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerPageFriendlyPlayErrorText => '媒體串流代理異常，請重試';
+
+  @override
+  String get playerLoudnessBoostLabel => '響度提升';
 
   @override
   String get playerPageVolumeControlTooltip => '響度提升（上限 120）';

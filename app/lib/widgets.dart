@@ -1176,9 +1176,19 @@ class MiniPlayer extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {
-                if (app.queue.isNotEmpty) {
-                  app.trackIdx = (app.trackIdx + 1) % app.queue.length;
+                if (app.queue.isEmpty) return;
+                if (!app.hasNextTrack) {
+                  ScaffoldMessenger.of(context)
+                    ..clearSnackBars()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(context.l10n.playerAlreadyLastTrack),
+                        duration: const Duration(milliseconds: 1600),
+                      ),
+                    );
+                  return;
                 }
+                app.trackIdx++;
                 app.notify();
               },
               icon: const Icon(Icons.skip_next, size: 24),

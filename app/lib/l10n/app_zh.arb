@@ -1560,6 +1560,8 @@
   "@playerPageLyricsPanelText": {
     "description": "pages/player_page.dart: _lyricsPanel"
   },
+  "playerAlreadyFirstTrack": "已经是第一首",
+  "playerAlreadyLastTrack": "已经是最后一首",
   "playerPageNextToast": "已播放完播放列表",
   "@playerPageNextToast": {
     "description": "pages/player_page.dart: _next"
@@ -1588,6 +1590,7 @@
   "@playerPageFriendlyPlayErrorText": {
     "description": "pages/player_page.dart: _friendlyPlayError"
   },
+  "playerLoudnessBoostLabel": "响度提升",
   "playerPageVolumeControlTooltip": "响度提升（上限 120）",
   "@playerPageVolumeControlTooltip": {
     "description": "pages/player_page.dart: _volumeControl"

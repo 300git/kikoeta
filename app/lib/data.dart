@@ -276,6 +276,9 @@ class AppState extends ChangeNotifier {
   bool playing = false;
   int resumePosition = 0; // 上次播放位置（秒），重启恢复用（默认暂停）
 
+  bool get hasNextTrack => trackIdx >= 0 && trackIdx + 1 < queue.length;
+  bool get hasPreviousTrack => trackIdx > 0 && trackIdx < queue.length;
+
   // 收藏 / 历史 / 歌单 / 黑名单 / 标签
   final List<String> favoriteRjs = [];
   final Set<int> favIds = {}; // 服务器收藏的作品 API id

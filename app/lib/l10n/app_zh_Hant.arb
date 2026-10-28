@@ -1,5 +1,6 @@
 {
   "@@locale": "zh_Hant",
+  "playerLoudnessBoostLabel": "響度提升",
   "appName": "Kikoeta",
   "playbackShortcuts": "快捷鍵設定",
   "dictationQueueTitle": "聽寫翻譯佇列",
@@ -323,6 +324,8 @@
   "playerPageShowLyricSettingsTitle2": "選擇歌詞庫歌詞",
   "playerPageLoadOnlineLyricToast": "該歌詞無法解析",
   "playerPageLyricsPanelText": "正在載入歌詞…",
+  "playerAlreadyFirstTrack": "已經是第一首",
+  "playerAlreadyLastTrack": "已經是最後一首",
   "playerPageNextToast": "已播放完播放清單",
   "playerPageOpenCurrentToast": "檔案串流需登入後可用",
   "playerPageShowLyricSettingsSub": "歌詞庫中沒有該作品",

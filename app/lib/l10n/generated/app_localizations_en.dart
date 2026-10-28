@@ -1163,6 +1163,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerPageLyricsPanelText => 'Loading lyrics…';
 
   @override
+  String get playerAlreadyFirstTrack => 'Already at the first track';
+
+  @override
+  String get playerAlreadyLastTrack => 'Already at the last track';
+
+  @override
   String get playerPageNextToast => 'Reached the end of the playlist';
 
   @override
@@ -1185,6 +1191,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get playerPageFriendlyPlayErrorText =>
       'Media stream proxy error. Try again';
+
+  @override
+  String get playerLoudnessBoostLabel => 'Boost';
 
   @override
   String get playerPageVolumeControlTooltip => 'Loudness boost (up to 120)';

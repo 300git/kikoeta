@@ -371,6 +371,10 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
 
   void _next({bool auto = false}) {
     if (app.queue.isEmpty || _switching) return;
+    if (!auto && !app.hasNextTrack) {
+      _toast(context.l10n.playerAlreadyLastTrack);
+      return;
+    }
     if (auto) {
       final now = DateTime.now();
       // mpv 加载新文件时可能残留触发一次 completed，2 秒内忽略
@@ -454,8 +458,12 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
 
   void _prev() {
     if (app.queue.isEmpty || _switching) return;
+    if (!app.hasPreviousTrack) {
+      _toast(context.l10n.playerAlreadyFirstTrack);
+      return;
+    }
     _switching = true;
-    app.trackIdx = (app.trackIdx + app.queue.length - 1) % app.queue.length;
+    app.trackIdx--;
     _pos = 0;
     _dur = 0;
     AppPlayer.instance.opened = false;
@@ -1671,6 +1679,11 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   Widget _volumeControl() {
     final max = app.volumeMax.toDouble();
     final v = app.volume.clamp(0, max).toDouble();
+    final boostColor = app.volumeBoostLevel == 2
+        ? Colors.orange
+        : app.volumeBoost
+        ? p.accent
+        : p.muted;
     return Row(
       children: [
         Icon(
@@ -1712,6 +1725,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
             style: TextStyle(fontSize: 11.5, color: p.dim),
           ),
         ),
+        const SizedBox(width: 8),
         IconButton(
           onPressed: _toggleBoost,
           tooltip: app.volumeBoostLevel == 2
@@ -1719,15 +1733,25 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
               : app.volumeBoostLevel == 1
               ? context.l10n.playerPageVolumeControlTooltip
               : context.l10n.playerPageVolumeControlTooltip2,
-          visualDensity: VisualDensity.compact,
-          icon: Icon(
-            app.volumeBoostLevel == 2 ? Icons.bolt : Icons.bolt_outlined,
-            size: 20,
-            color: app.volumeBoostLevel == 2
-                ? Colors.orange
-                : app.volumeBoost
-                ? p.accent
-                : p.dim,
+          style: IconButton.styleFrom(
+            foregroundColor: boostColor,
+            backgroundColor: app.volumeBoost
+                ? boostColor.withValues(alpha: .12)
+                : p.surface2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.volume_up_rounded, size: 18),
+              const SizedBox(height: 3),
+              Text(
+                '${context.l10n.playerLoudnessBoostLabel}${app.volumeBoostLevel == 2 ? '+' : ''}',
+                style: TextStyle(fontSize: 10, color: boostColor),
+              ),
+            ],
           ),
         ),
       ],

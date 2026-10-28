@@ -396,7 +396,11 @@ void _media3Command(String action, int positionMs) {
 Future<void> _mediaNext() async {
   final q = appState.queue;
   if (q.isEmpty) return;
-  appState.trackIdx = (appState.trackIdx + 1) % q.length;
+  if (!appState.hasNextTrack) {
+    _showMediaBoundaryToast(appL10n.playerAlreadyLastTrack);
+    return;
+  }
+  appState.trackIdx++;
   appState.playing = true;
   appState.resumePosition = 0;
   appState.notify();
@@ -415,7 +419,11 @@ Future<void> _mediaNext() async {
 Future<void> _mediaPrev() async {
   final q = appState.queue;
   if (q.isEmpty) return;
-  appState.trackIdx = (appState.trackIdx + q.length - 1) % q.length;
+  if (!appState.hasPreviousTrack) {
+    _showMediaBoundaryToast(appL10n.playerAlreadyFirstTrack);
+    return;
+  }
+  appState.trackIdx--;
   appState.playing = true;
   appState.resumePosition = 0;
   appState.notify();
@@ -429,6 +437,17 @@ Future<void> _mediaPrev() async {
     } catch (_) {}
   }
   _syncMedia3State();
+}
+
+void _showMediaBoundaryToast(String message) {
+  appMessengerKey.currentState
+    ?..clearSnackBars()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 1600),
+      ),
+    );
 }
 
 /// 上报当前播放状态到 MediaSession（通知/锁屏卡片）

@@ -7,6 +7,7 @@ import '../routes.dart';
 import '../services/api_service.dart';
 import '../services/lyrics_library_service.dart';
 import '../services/theme_reveal.dart';
+import '../subpage_swipe.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import '../sheets.dart';
@@ -21,6 +22,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static const _categories = ['all', 'hot', 'rec'];
   String _loadedSig = '';
   String _loadedDataSig = ''; // 已渲染的列表数据签名（补页/加载状态变化时刷新）
 
@@ -257,14 +259,20 @@ class _HomePageState extends State<HomePage> {
                     _sortRow(),
                     const SizedBox(height: 4),
                     Expanded(
-                      child: Stack(
-                        children: [
-                          // 有搜索时直接展示搜索结果，否则展示作品列表
-                          if (_searchQuery.isNotEmpty)
-                            _searchResultsView()
-                          else
-                            _grid(),
-                        ],
+                      child: SubpageSwipe(
+                        index: _categories.indexOf(app.category),
+                        count: _categories.length,
+                        onChanged: (index) =>
+                            _changeCategory(_categories[index]),
+                        child: Stack(
+                          children: [
+                            // 有搜索时直接展示搜索结果，否则展示作品列表
+                            if (_searchQuery.isNotEmpty)
+                              _searchResultsView()
+                            else
+                              _grid(),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -372,6 +380,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _changeCategory(String category) {
+    if (category == 'rec') {
+      app.randomSeed = DateTime.now().millisecondsSinceEpoch % 1000000;
+    }
+    app.setCategory(category);
+  }
+
   Widget _sortRow() {
     final labels = {
       'all': context.l10n.all,
@@ -391,13 +406,7 @@ class _HomePageState extends State<HomePage> {
                       child: Pill(
                         label: e.value,
                         selected: app.category == e.key,
-                        onTap: () {
-                          if (e.key == 'rec') {
-                            app.randomSeed =
-                                DateTime.now().millisecondsSinceEpoch % 1000000;
-                          }
-                          app.setCategory(e.key);
-                        },
+                        onTap: () => _changeCategory(e.key),
                       ),
                     ),
                   )
