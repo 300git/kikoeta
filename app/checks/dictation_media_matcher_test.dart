@@ -48,6 +48,55 @@ List<MediaNode> tree(List raw, [String parent = '']) => raw.map((value) {
 }).toList();
 
 void main() {
+  test(
+    'only audio files enter matching, including early editions and bonuses',
+    () {
+      final formats = [
+        'mp3',
+        'aac',
+        'm4a',
+        'opus',
+        'ogg',
+        'wma',
+        'flac',
+        'ape',
+        'wav',
+        'aiff',
+        'mka',
+      ];
+      final audio = [
+        for (var i = 0; i < formats.length; i++)
+          file('${i + 1}_音声.${formats[i].toUpperCase()}'),
+      ];
+      final video = [
+        for (final ext in [
+          'mp4',
+          'webm',
+          'mkv',
+          'avi',
+          'mov',
+          'wmv',
+          'flv',
+          'ts',
+          'm4v',
+        ])
+          file('映像_$ext.$ext'),
+      ];
+      final chosen = select([
+        ...audio,
+        folder('早期購入版 SEなし 特典', [...video, file('01_挨拶.mp4')]),
+        folder('通常版', [file('01_挨拶.mp3')]),
+        file('音声.mp3.vtt'),
+        file('cover.jpg'),
+      ]);
+      expect(chosen.map((n) => n.title), [
+        ...audio.map((n) => n.title),
+        '01_挨拶.mp3',
+      ]);
+      expect(select(video), isEmpty);
+    },
+  );
+
   test('RJ01716786 keeps nine clean main tracks and seven spoken bonuses', () {
     final raw =
         jsonDecode(
@@ -230,11 +279,15 @@ void main() {
       }
       expect(byId[1629016]!.length, 13); // Separately labeled breathing track.
       expect(byId[280509]!.length, 8); // Excludes only 09.寝息.
-      expect(byId[1206897]!.length, 30); // Six pure-sound bonus clips.
+      expect(byId[1206897]!.length, 29); // Pure-sound clips and video excluded.
       expect(byId[1206897]!.any((n) => n.title.contains('無声音')), isTrue);
       expect(byId[1206897]!.any((n) => n.title.contains('耳舐め 出せ')), isTrue);
       expect(byId[319990]!.length, 12); // Main ear-cleaning scene survives.
-      expect(byId[1415066]!.any((n) => n.path.contains('初期購買特典')), isTrue);
+      expect(byId[1415066]!.any((n) => n.path.contains('初期購買特典')), isFalse);
+      expect(
+        byId[1415066]!.length,
+        11,
+      ); // Video bonus excluded; audio retained.
       const auditPath = String.fromEnvironment('DICTATION_EARLY_AUDIT_OUTPUT');
       if (auditPath.isNotEmpty) {
         File(
@@ -600,7 +653,11 @@ void main() {
       final index = MediaTreeIndex(tree(work['tree']));
       final chosen = DictationMediaMatcher.select(index);
       byId[work['id']] = chosen;
-      expect(chosen, isNotEmpty, reason: 'RJ${work['id']}');
+      expect(
+        chosen,
+        work['id'] == 315583 ? isEmpty : isNotEmpty,
+        reason: 'RJ${work['id']}',
+      );
       expect(chosen.map((n) => n.path).toSet().length, chosen.length);
       expect(chosen.every((n) => index.files.contains(n)), isTrue);
       output.add({
@@ -621,7 +678,7 @@ void main() {
     expect(byId[1393120]!.length, 5); // NOSE, regular and partial SE editions.
     expect(byId[1396305]!.length, 5); // Prefix markers in otherwise flat tree.
     expect(byId[1115505]!.length, 9); // Eight main tracks plus bonus audio.
-    expect(byId[315583]!.length, 6); // Video-only work remains supported.
+    expect(byId[315583], isEmpty); // Video-only work has no audio candidates.
     expect(byId[1297270]!.length, 5); // Compound SE効果音 labels.
     expect(byId[362833]!.length, 5); // Filename SE無し版 plus independent talk.
     expect(byId[277746]!.length, 4); // 16-bit/24-bit/MP3 editions.

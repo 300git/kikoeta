@@ -7,8 +7,8 @@ import 'media_tree.dart';
 /// (the same separation used by beets' duplicates keys/tiebreak options).
 /// Unknown editions and distinct bonus scopes are deliberately retained.
 class DictationMediaMatcher {
-  static final _media = RegExp(
-    r'\.(mp3|ogg|opus|wav|aac|flac|webm|mp4|m4a|mka|aiff|wma|ape|mkv|avi|mov|wmv|flv|ts|m4v)$',
+  static final _audio = RegExp(
+    r'\.(mp3|ogg|opus|wav|aac|flac|m4a|mka|aiff|wma|ape)$',
     caseSensitive: false,
   );
   static final _fullOff = RegExp(
@@ -155,12 +155,12 @@ class DictationMediaMatcher {
       final node = row.node;
       final parent = row.parentIndex;
       final name = _widthFold(node.title);
-      if (!node.isDir && (!_media.hasMatch(name) || !hasSource(node))) continue;
+      if (!node.isDir && (!_audio.hasMatch(name) || !hasSource(node))) continue;
       final early =
           (parent != null && earlyEditions[parent]) ||
           _earlyEdition.hasMatch(name) ||
           _earlyBonus.hasMatch(name);
-      final stem = node.isDir ? name : name.replaceFirst(_media, '');
+      final stem = node.isDir ? name : name.replaceFirst(_audio, '');
       final bitDepth =
           int.tryParse(_bitDepth.firstMatch(name)?.group(1) ?? '') ??
           (name.contains('ハイレゾ') ? 24 : (parent == null ? 0 : bits[parent]));
