@@ -3,6 +3,7 @@ name: Build Test APK (Kikoeta300)
 on:
   push:
     branches:
+      - 'build/**'
       - 'feature/**'
       - 'feat/**'
       - 'main'
