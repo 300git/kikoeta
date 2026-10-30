@@ -318,12 +318,22 @@ pub async fn api_search_custom(
     nsfw: Option<i32>,
     seed: Option<String>,
 ) -> Result<String, String> {
-    let mut url = format!(
-        "{}/api/search?keyword={}&page={}",
-        base_of(&base),
-        urlencoding(&keyword),
-        page
-    );
+    let is_advance = keyword.starts_with("[{") && keyword.ends_with("}]");
+    let mut url = if is_advance {
+        format!(
+            "{}/api/search?keyword={}&isAdvance=1&page={}",
+            base_of(&base),
+            urlencoding(&keyword),
+            page
+        )
+    } else {
+        format!(
+            "{}/api/search?keyword={}&page={}",
+            base_of(&base),
+            urlencoding(&keyword),
+            page
+        )
+    };
     append_custom_params(&mut url, &order, &sort, nsfw, None, seed.as_deref());
     let client = http_client()?;
     let auth = auth_header(&base);

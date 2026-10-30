@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'data.dart';
+import 'services/api_service.dart';
 import 'services/audio_effects.dart';
 import 'services/player_service.dart';
 import 'smooth_scroll.dart';
@@ -224,12 +225,20 @@ class _ServerSheetState extends State<_ServerSheet> {
           const SizedBox(height: 6),
         ],
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             if (_custom && app.customSites.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(context.l10n.sheetsBuildText5)),
               );
               return;
+            }
+            if (_custom && _idx < app.customSites.length) {
+              final s = app.customSites[_idx];
+              if (s.user.isNotEmpty && s.pass.isNotEmpty) {
+                try {
+                  await ApiService.login(app, s.url, s.user, s.pass);
+                } catch (_) {}
+              }
             }
             app.applyServer(_custom, _idx);
             Navigator.pop(context);
@@ -272,6 +281,7 @@ Future<void> showSiteSheet(
   final passCtrl = TextEditingController(
     text: isEdit ? app.customSites[editIndex].pass : '',
   );
+  var isNumber178 = isEdit ? app.customSites[editIndex].isNumber178 : false;
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -309,10 +319,43 @@ Future<void> showSiteSheet(
             hint: context.l10n.loginPageBuildSiteConfigHint,
             obscure: true,
           ),
+          StatefulBuilder(
+            builder: (ctx, setSwitch) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.sheetsShowSiteSheetNumber178Title,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: p.text,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          context.l10n.sheetsShowSiteSheetNumber178Sub,
+                          style: TextStyle(fontSize: 12, color: p.dim),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: isNumber178,
+                    onChanged: (val) => setSwitch(() => isNumber178 = val),
+                  ),
+                ],
+              ),
+            ),
+          ),
           ElevatedButton(
             onPressed: () {
               final alias = aliasCtrl.text.trim();
-              final url = urlCtrl.text.trim();
+              final url = urlCtrl.text.trim().replaceFirst(RegExp(r'/+$'), '');
               final user = userCtrl.text.trim();
               final pass = passCtrl.text;
               if (alias.isEmpty ||
@@ -326,6 +369,14 @@ Future<void> showSiteSheet(
                 );
                 return;
               }
+              final isCurrentActiveSite = isEdit &&
+                  app.customServer &&
+                  editIndex == app.customServerIdx;
+              if (isCurrentActiveSite && user.isNotEmpty && pass.isNotEmpty) {
+                try {
+                  ApiService.login(app, url, user, pass).catchError((_) => '');
+                } catch (_) {}
+              }
               if (isEdit) {
                 app.saveSite(
                   CustomSite(
@@ -333,6 +384,7 @@ Future<void> showSiteSheet(
                     url: url,
                     user: userCtrl.text.trim(),
                     pass: passCtrl.text,
+                    isNumber178: isNumber178,
                   ),
                   index: editIndex,
                 );
@@ -343,6 +395,7 @@ Future<void> showSiteSheet(
                     url: url,
                     user: userCtrl.text.trim(),
                     pass: passCtrl.text,
+                    isNumber178: isNumber178,
                   ),
                 );
               }

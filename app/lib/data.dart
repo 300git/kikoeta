@@ -123,11 +123,13 @@ class CustomSite {
   String url;
   String user;
   String pass;
+  bool isNumber178;
   CustomSite({
     required this.alias,
     required this.url,
     this.user = '',
     this.pass = '',
+    this.isNumber178 = false,
   });
 }
 
@@ -999,6 +1001,7 @@ class AppState extends ChangeNotifier {
                 url: e['url'] as String,
                 user: (e['user'] as String?) ?? '',
                 pass: (e['pass'] as String?) ?? '',
+                isNumber178: (e['isNumber178'] as bool?) ?? false,
               ),
             ),
           );
@@ -2002,6 +2005,7 @@ class AppState extends ChangeNotifier {
                 'url': s.url,
                 'user': s.user,
                 'pass': s.pass,
+                'isNumber178': s.isNumber178,
               },
             )
             .toList(),

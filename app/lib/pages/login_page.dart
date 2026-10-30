@@ -32,6 +32,7 @@ class _LoginPageState extends State<LoginPage> {
   final _siteUserCtrl = TextEditingController();
   final _sitePassCtrl = TextEditingController();
   bool _sitePassObscure = true;
+  bool _siteIsNumber178 = false;
 
   AppState get app => widget.app;
   Palette get p => Theme.of(context).brightness == Brightness.dark
@@ -244,6 +245,12 @@ class _LoginPageState extends State<LoginPage> {
   // ---------------- 自建站点配置 ----------------
   Future<void> _useSite(int idx) async {
     setState(() => _savingSite = true);
+    final site = app.customSites[idx];
+    if (site.user.isNotEmpty && site.pass.isNotEmpty) {
+      try {
+        await ApiService.login(app, site.url, site.user, site.pass);
+      } catch (_) {}
+    }
     // 使用现有站点：启用自建服务器 → loginRequired 变 false → 自动进入主界面
     app.applyServer(true, idx);
     if (mounted) setState(() => _savingSite = false);
@@ -252,7 +259,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _saveNewSite() async {
     final l10n = context.l10n;
     final alias = _aliasCtrl.text.trim();
-    final url = _urlCtrl.text.trim();
+    final url = _urlCtrl.text.trim().replaceFirst(RegExp(r'/+$'), '');
     final user = _siteUserCtrl.text.trim();
     final pass = _sitePassCtrl.text;
     if (alias.isEmpty || url.isEmpty || user.isEmpty || pass.isEmpty) {
@@ -261,7 +268,18 @@ class _LoginPageState extends State<LoginPage> {
     }
     setState(() => _savingSite = true);
     try {
-      app.saveSite(CustomSite(alias: alias, url: url, user: user, pass: pass));
+      try {
+        await ApiService.login(app, url, user, pass);
+      } catch (_) {}
+      app.saveSite(
+        CustomSite(
+          alias: alias,
+          url: url,
+          user: user,
+          pass: pass,
+          isNumber178: _siteIsNumber178,
+        ),
+      );
       // 自动启用刚添加的站点并进入主界面
       app.applyServer(true, app.customSites.length - 1);
     } finally {
@@ -653,7 +671,39 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    context.l10n.sheetsShowSiteSheetNumber178Title,
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: p.text,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    context.l10n.sheetsShowSiteSheetNumber178Sub,
+                                    style: TextStyle(fontSize: 12, color: p.dim),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: _siteIsNumber178,
+                              onChanged: (val) =>
+                                  setState(() => _siteIsNumber178 = val),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                       // 保存键（与登录键同款）
                       SizedBox(
                         height: 46,

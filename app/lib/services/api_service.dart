@@ -214,10 +214,31 @@ class ApiService {
   }) async {
     final base = resolveBase(app);
     if (app.customServer) {
-      // kikoeru-express：搜索走 /api/search?keyword=，年龄用 nsfw 过滤
+      final currentSite = app.customSites.isNotEmpty &&
+              app.customServerIdx < app.customSites.length
+          ? app.customSites[app.customServerIdx]
+          : null;
+      final isNumber178 = currentSite?.isNumber178 ?? false;
+
+      final cleanQuery = query.replaceAll('，', ' ').replaceAll(',', ' ').trim();
+      final terms = cleanQuery
+          .split(RegExp(r'\s+'))
+          .where((t) => t.isNotEmpty)
+          .toList();
+
+      final String searchKeyword;
+      // Number178 分支且输入了多个关键词时，构造 JSON 条件由 apiSearchCustom 自动启用聚合搜索
+      if (isNumber178 && terms.length > 1) {
+        searchKeyword = jsonEncode([
+          for (final term in terms) {'t': 1, 'd': term}
+        ]);
+      } else {
+        searchKeyword = query.trim();
+      }
+
       final json = await apiSearchCustom(
         base: base,
-        keyword: query.trim(),
+        keyword: searchKeyword,
         page: page,
         order: orderParam(app),
         sort: app.orderAsc ? 'asc' : 'desc',

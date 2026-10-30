@@ -2473,6 +2473,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sheetsShowSiteSheetField2 => 'URL';
 
   @override
+  String get sheetsShowSiteSheetNumber178Title => 'Number178 branch enhancement';
+
+  @override
+  String get sheetsShowSiteSheetNumber178Sub => 'Support multi-keyword search (space separated)';
+
+  @override
   String get account => 'Account';
 
   @override
