@@ -10,6 +10,7 @@ import '../services/theme_reveal.dart';
 import '../subpage_swipe.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../smooth_scroll.dart';
 import '../sheets.dart';
 import '../l10n/strings.dart';
 

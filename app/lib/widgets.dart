@@ -11,6 +11,7 @@ import 'services/app_paths.dart';
 import 'services/cover_cache.dart';
 import 'services/lyrics_library_service.dart';
 import 'services/player_service.dart';
+export 'smooth_scroll.dart';
 import 'smooth_scroll.dart';
 import 'theme.dart';
 import 'l10n/strings.dart';
@@ -902,7 +903,7 @@ class ResponsiveGrid extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (var i = start; i < end; i++) ...[
-                    if (i > start) const SizedBox(width: gap),
+                    if (i > start) SizedBox(width: gap),
                     SizedBox(
                       width: tile,
                       child: RepaintBoundary(child: itemBuilder(ctx, i)),
