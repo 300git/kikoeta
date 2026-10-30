@@ -36,11 +36,11 @@ void main() {
           await process.exitCode;
         }
         await stderr.cancel();
-      if (errors.isNotEmpty) {
-        // Preserve backend tracebacks if the real HTTP integration fails.
-        // ignore: avoid_print
-        print(errors.toString());
-      }
+        if (errors.isNotEmpty) {
+          // Preserve backend tracebacks if the real HTTP integration fails.
+          // ignore: avoid_print
+          print(errors.toString());
+        }
       });
       final ready = await process.stdout
           .transform(utf8.decoder)
@@ -75,7 +75,7 @@ void main() {
             url: '$endpoint/audio/$id/$i.mp3',
           ),
         ),
-      );
+      )!;
       final a = add('RJ111111', 5);
       final b = add('RJ222222', 1);
       final blocked = Completer<String>();

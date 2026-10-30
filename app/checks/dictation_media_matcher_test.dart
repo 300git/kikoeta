@@ -41,13 +41,154 @@ List<MediaNode> tree(List raw, [String parent = '']) => raw.map((value) {
     title: value['title'],
     type: value['type'],
     path: path,
-    duration: value['duration'] ?? 0,
+    duration: (value['duration'] as num?)?.toInt() ?? 0,
     children: tree(value['children'] ?? [], path),
     url: value['type'] == 'folder' ? null : 'https://example.invalid/audio',
   );
 }).toList();
 
 void main() {
+  test(
+    'RJ01627675 selects 25 chapters from 39 overlapping perspective mixes',
+    () {
+      final raw =
+          jsonDecode(
+                utf8.decode(
+                  gzip.decode(
+                    File(
+                      'checks/fixtures/RJ01627675-tracks.json.gz',
+                    ).readAsBytesSync(),
+                  ),
+                ),
+              )
+              as List;
+      final chosen = select(tree(raw));
+      expect(raw.where((n) => n['type'] == 'audio').length, 39);
+      expect(chosen.length, 25);
+      expect(chosen.map((n) => n.path).toSet().length, 25);
+      for (var chapter = 1; chapter <= 25; chapter++) {
+        expect(
+          chosen
+              .where((n) => RegExp('^#$chapter(?:A)?\\.').hasMatch(n.title))
+              .length,
+          1,
+          reason: 'Exactly one transcript source for chapter $chapter',
+        );
+      }
+    },
+  );
+
+  test(
+    'perspective mixes use existing format and SE preferences, then A first',
+    () {
+      expect(
+        select([
+          file('#06B.二人同時に優しく耳元でお話しsideB.wav', duration: 60),
+          file('#6A.二人同時に優しく耳元でお話しsideA.mp3', duration: 61),
+          file('#6C.二人同時に優しく耳元でお話しsideC.wav', duration: 60),
+        ]).map((n) => n.title),
+        ['#6A.二人同時に優しく耳元でお話しsideA.mp3'],
+      );
+      expect(
+        select([
+          file('#6A.二人同時に優しく耳元でお話しsideA.mp3', duration: 60),
+          file('#6B.二人同時に優しく耳元でお話しsideB_SEなし.wav', duration: 60),
+        ]).map((n) => n.title),
+        ['#6B.二人同時に優しく耳元でお話しsideB_SEなし.wav'],
+      );
+      expect(
+        select([
+          file('#6B.二人同時に優しく耳元でお話しsideB.wav', duration: 60),
+          file('#6A.二人同時に優しく耳元でお話しsideA.wav', duration: 60),
+        ]).single.title,
+        startsWith('#6A.'),
+      );
+    },
+  );
+
+  test('lettered chapters need all perspective-equivalence conditions', () {
+    final cases = <String, List<MediaNode>>{
+      'unrelated titles with identical durations': [
+        file('#6A.同時に朝の散歩へ出かける.wav', duration: 60),
+        file('#6B.同時に夜の図書館で読書する.wav', duration: 60),
+      ],
+      'no perspective label': [
+        file('#6A.彼女との楽しい一日の結末A.wav', duration: 60),
+        file('#6B.彼女との楽しい一日の結末B.wav', duration: 60),
+      ],
+      'short ambiguous titles': [
+        file('#6A.同時A.wav', duration: 60),
+        file('#6B.同時B.wav', duration: 60),
+      ],
+      'missing duration': [
+        file('#6A.二人同時に優しく耳元でお話しsideA.wav'),
+        file('#6B.二人同時に優しく耳元でお話しsideB.wav'),
+      ],
+      'duration tolerance does not chain': [
+        file('#6A.二人同時に優しく耳元でお話しsideA.wav', duration: 60),
+        file('#6B.二人同時に優しく耳元でお話しsideB.wav', duration: 61),
+        file('#6C.二人同時に優しく耳元でお話しsideC.wav', duration: 62),
+      ],
+      'ambiguous duplicate letters': [
+        file('#6A.二人同時に優しく耳元でお話しsideA.wav', duration: 60),
+        file('#06A.二人同時に優しく耳元でお話しsideA.wav', duration: 60),
+        file('#6B.二人同時に優しく耳元でお話しsideB.wav', duration: 60),
+      ],
+      'different chapter numbers': [
+        file('#6A.二人同時に優しく耳元でお話しsideA.wav', duration: 60),
+        file('#7B.二人同時に優しく耳元でお話しsideB.wav', duration: 60),
+      ],
+    };
+    for (final entry in cases.entries) {
+      expect(select(entry.value).length, entry.value.length, reason: entry.key);
+    }
+    expect(
+      select([
+        folder('声優一', [file('声優一/#6A.二人同時に優しく耳元でお話しsideA.wav', duration: 60)]),
+        folder('声優二', [file('声優二/#6B.二人同時に優しく耳元でお話しsideB.wav', duration: 60)]),
+      ]).length,
+      2,
+    );
+  });
+
+  test('combined-track coverage counts each perspective scene only once', () {
+    final chosen = select([
+      file('#1A.二人同時に優しく耳元でお話しsideA.wav', duration: 60),
+      file('#1B.二人同時に優しく耳元でお話しsideB.wav', duration: 60),
+      file('#2.おやすみ.wav', duration: 20),
+      file('全パート.wav', duration: 80),
+    ]);
+    expect(chosen.map((n) => n.title), [
+      '#1A.二人同時に優しく耳元でお話しsideA.wav',
+      '#2.おやすみ.wav',
+    ]);
+  });
+
+  test(
+    'hash-prefixed language chapters match each lettered branch separately',
+    () {
+      final chosen = select([
+        folder('日本語', [
+          file('日本語/#01.挨拶.mp3', duration: 30),
+          file('日本語/#6A.会話A.mp3', duration: 60),
+          file('日本語/#6B.会話B.mp3', duration: 60),
+        ]),
+        folder('简体中文', [
+          file('简体中文/＃１.问候.wav', duration: 30),
+          file('简体中文/#06A.对话甲.wav', duration: 60),
+          file('简体中文/#06B.对话乙.wav', duration: 60),
+          file('简体中文/#06C.独立分支.wav', duration: 60),
+        ]),
+      ]);
+      expect(chosen.map((n) => n.path), [
+        '日本語/#01.挨拶.mp3',
+        '日本語/#6A.会話A.mp3',
+        '日本語/#6B.会話B.mp3',
+        '简体中文/#06C.独立分支.wav',
+      ]);
+    },
+  );
+
   test(
     'only audio files enter matching, including early editions and bonuses',
     () {

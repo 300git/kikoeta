@@ -56,18 +56,31 @@ class DictationQueue extends ChangeNotifier {
       _entries.any((e) => e.status == DictationQueueStatus.pending);
   List<MediaNode> get tracks => current?.tracks ?? const [];
 
-  DictationQueueEntry enqueue({
+  /// Only unfinished batches reserve tracks; completed work can be translated
+  /// again. Use source paths, not expiring URLs or version-matched titles.
+  DictationQueueEntry? enqueue({
     required Work work,
     required List<MediaNode> tracks,
     bool automaticallyMatched = false,
     Map<String, String> sourceHeaders = const {},
   }) {
     final id = work.rj.toUpperCase();
+    final reservedPaths = <String>{
+      for (final entry in _entries)
+        if (entry.work.rj.toUpperCase() == id &&
+            (entry.status == DictationQueueStatus.pending ||
+                entry.status == DictationQueueStatus.running))
+          for (final track in entry.tracks) track.path,
+    };
+    final addedTracks = tracks
+        .where((track) => reservedPaths.add(track.path))
+        .toList();
+    if (addedTracks.isEmpty) return null;
     final batch = _nextBatch[id] ?? 0;
     _nextBatch[id] = batch + 1;
     final entry = DictationQueueEntry._(
       work: work,
-      tracks: tracks,
+      tracks: addedTracks,
       automaticallyMatched: automaticallyMatched,
       label: batch == 0 ? work.rj : '${work.rj}-$batch',
       sourceHeaders: sourceHeaders,

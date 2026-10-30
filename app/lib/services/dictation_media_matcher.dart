@@ -124,9 +124,12 @@ class DictationMediaMatcher {
     'traditionalchinese': 2,
   };
   static final _chapter = RegExp(
-    r'^(?:(?:tr(?:ack)?|トラック|音轨|音軌)[ _.-]*)?(\d+)(?=$|[^a-z0-9])',
+    r'^#?\s*(?:(?:tr(?:ack)?|トラック|音轨|音軌)[ _.-]*)?(\d+)([a-z])?(?=$|[^a-z0-9])',
   );
   static final _prefixedChapter = RegExp(r'^[a-z]+\d+[_-](\d+)(?=$|[^a-z0-9])');
+  static final _perspective = RegExp(
+    r'side|同時|同时|両耳|兩耳|双耳|雙耳|視点|视角|視角|perspective|\bpov\b',
+  );
 
   /// Large collections run off the UI isolate on Flutter's native platforms.
   static Future<List<MediaNode>> selectForDictation(
@@ -244,6 +247,7 @@ class DictationMediaMatcher {
     }
 
     final selected = winners.values.toList();
+    _deduplicatePerspectives(selected, index);
     // Only remove a named full track when chapters in the same semantic scope
     // cover its duration. Missing metadata or an uncertain sum retains both.
     final chapters = <String, (int, int)>{};
@@ -270,6 +274,91 @@ class DictationMediaMatcher {
   static bool hasSource(MediaNode node) =>
       (node.downloadUrl?.isNotEmpty ?? false) ||
       (node.url?.isNotEmpty ?? false);
+
+  /// Numbered A/B/C mixes of the same simultaneous scene need one transcript.
+  /// Require sibling files, perspective labels, close durations and similar
+  /// titles; unrelated branches and ambiguous repeated letters survive.
+  static void _deduplicatePerspectives(
+    List<_Candidate> selected,
+    MediaTreeIndex index,
+  ) {
+    final groups =
+        <(int?, int), List<({String letter, String title, _Candidate item})>>{};
+    for (final item in selected) {
+      final name = _widthFold(item.node.title);
+      final numbered = _chapter.firstMatch(name);
+      final letter = numbered?.group(2);
+      if (letter == null) continue;
+      final chapter = int.tryParse(numbered!.group(1)!);
+      if (chapter == null) continue;
+      final title = _titleKey(
+        name.substring(numbered.end).replaceFirst(_audio, ''),
+        item.bitDepth,
+      );
+      final key = (index.rows[item.order].parentIndex, chapter);
+      (groups[key] ??= []).add((letter: letter, title: title, item: item));
+    }
+    final removed = <int>{};
+    for (final group in groups.values) {
+      if (group.length < 2) continue;
+      final letters = <String>{};
+      if (group.any(
+        (entry) =>
+            !letters.add(entry.letter) ||
+            entry.item.node.duration <= 0 ||
+            entry.title.runes.length < 8 ||
+            !_perspective.hasMatch(entry.title),
+      )) {
+        continue;
+      }
+      var equivalent = true;
+      for (var i = 0; i < group.length && equivalent; i++) {
+        for (var j = i + 1; j < group.length; j++) {
+          if ((group[i].item.node.duration - group[j].item.node.duration)
+                      .abs() >
+                  1 ||
+              _titleSimilarity(group[i].title, group[j].title) < 0.7) {
+            equivalent = false;
+            break;
+          }
+        }
+      }
+      if (!equivalent) continue;
+      group.sort((a, b) => a.letter.compareTo(b.letter));
+      var winner = group.first.item;
+      for (final entry in group.skip(1)) {
+        if (entry.item.preferredTo(winner)) winner = entry.item;
+      }
+      for (final entry in group) {
+        if (entry.item != winner) removed.add(entry.item.order);
+      }
+    }
+    selected.removeWhere((item) => removed.contains(item.order));
+  }
+
+  /// Multiset bigram Dice score, as in aceakash/string-similarity's
+  /// compareTwoStrings, using Unicode code points for title characters.
+  static double _titleSimilarity(String first, String second) {
+    if (first == second) return 1;
+    final left = first.runes.toList();
+    final right = second.runes.toList();
+    if (left.length < 2 || right.length < 2) return 0;
+    final pairs = <(int, int), int>{};
+    for (var i = 1; i < left.length; i++) {
+      final pair = (left[i - 1], left[i]);
+      pairs[pair] = (pairs[pair] ?? 0) + 1;
+    }
+    var shared = 0;
+    for (var i = 1; i < right.length; i++) {
+      final pair = (right[i - 1], right[i]);
+      final count = pairs[pair] ?? 0;
+      if (count > 0) {
+        shared++;
+        pairs[pair] = count - 1;
+      }
+    }
+    return 2 * shared / (left.length + right.length - 2);
+  }
 
   /// Translated filenames cannot share a title key. Only explicit sibling
   /// language editions may instead share a numbered chapter + duration key.
@@ -300,14 +389,16 @@ class DictationMediaMatcher {
       final edition = editions[item.order];
       if (edition == null || item.node.duration <= 0) continue;
       final title = _widthFold(item.node.title);
-      final chapter =
-          (_chapter.firstMatch(title) ?? _prefixedChapter.firstMatch(title))
-              ?.group(1);
+      final numbered = _chapter.firstMatch(title);
+      final chapter = (numbered ?? _prefixedChapter.firstMatch(title))?.group(
+        1,
+      );
       if (chapter == null) continue;
       final number = int.tryParse(chapter);
       if (number == null) continue;
       final relativeScope = item.scope.substring(edition.prefix.length);
-      final key = (edition.group, relativeScope, number.toString());
+      final branch = numbered?.group(2) ?? '';
+      final key = (edition.group, relativeScope, '$number$branch');
       (groups[key] ??= []).add(item);
     }
     final removed = <int>{};

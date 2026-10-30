@@ -23,27 +23,112 @@ Work work(String id) => Work(
   grad: 0,
 );
 
-DictationQueueEntry enqueue(DictationQueue queue, String id) => queue.enqueue(
-  work: work(id),
-  tracks: [
-    MediaNode(
-      title: '$id.mp3',
-      type: 'file',
-      path: '$id.mp3',
-      url: 'https://example.com/$id.mp3',
-    ),
-  ],
-);
+DictationQueueEntry enqueue(DictationQueue queue, String id, {String? path}) =>
+    queue.enqueue(
+      work: work(id),
+      tracks: [
+        MediaNode(
+          title: '$id.mp3',
+          type: 'file',
+          path: path ?? '$id.mp3',
+          url: 'https://example.com/$id.mp3',
+        ),
+      ],
+    )!;
 
 void main() {
   setUpAll(() => RustLib.initMock(api: _SettingsApi()));
+  MediaNode track(String path, {String token = 'first'}) => MediaNode(
+    title: path.split('/').last,
+    type: 'file',
+    path: path,
+    url: 'https://example.com/$path?token=$token',
+  );
+
+  test('pending paths are deduplicated across imports and within a batch', () {
+    final queue = DictationQueue();
+    addTearDown(queue.dispose);
+    final first = queue.enqueue(
+      work: work('RJ1'),
+      tracks: [track('main/one.mp3'), track('main/one.mp3')],
+    )!;
+    var changes = 0;
+    queue.addListener(() => changes++);
+    final revision = queue.pendingRevision;
+    expect(
+      queue.enqueue(
+        work: work('rj1'),
+        tracks: [track('main/one.mp3', token: 'changed')],
+      ),
+      isNull,
+    );
+    expect(queue.enqueue(work: work('RJ1'), tracks: []), isNull);
+    expect(queue.entries, [first]);
+    expect(first.tracks.length, 1);
+    expect(changes, 0);
+    expect(queue.pendingRevision, revision);
+
+    final partial = queue.enqueue(
+      work: work('RJ1'),
+      tracks: [
+        track('main/one.mp3'),
+        track('bonus/one.mp3'),
+        track('bonus/one.mp3'),
+      ],
+      sourceHeaders: {'Authorization': 'Bearer new'},
+    )!;
+    expect(partial.label, 'RJ1-1');
+    expect(partial.tracks.map((n) => n.path), ['bonus/one.mp3']);
+    expect(partial.sourceHeaders['Authorization'], 'Bearer new');
+    expect(
+      queue.enqueue(work: work('RJ2'), tracks: [track('main/one.mp3')]),
+      isNotNull,
+    );
+    queue.remove(first);
+    expect(
+      queue.enqueue(work: work('RJ1'), tracks: [track('main/one.mp3')]),
+      isNotNull,
+    );
+  });
+
+  test('running tracks stay reserved until their batch finishes', () async {
+    final queue = DictationQueue();
+    addTearDown(queue.dispose);
+    final first = enqueue(queue, 'RJ1');
+    final release = Completer<DictationQueueStatus>();
+    final run = queue.run((_) => release.future);
+    expect(first.status, DictationQueueStatus.running);
+    expect(queue.enqueue(work: work('RJ1'), tracks: first.tracks), isNull);
+    release.complete(DictationQueueStatus.completed);
+    await run;
+    expect(
+      queue.enqueue(work: work('RJ1'), tracks: first.tracks)!.label,
+      'RJ1-1',
+    );
+  });
+
+  for (final status in [
+    DictationQueueStatus.completed,
+    DictationQueueStatus.failed,
+    DictationQueueStatus.cancelled,
+  ]) {
+    test('$status history does not prevent translating again', () async {
+      final queue = DictationQueue();
+      addTearDown(queue.dispose);
+      final first = enqueue(queue, 'RJ1');
+      await queue.run((_) async => status);
+      expect(queue.enqueue(work: work('RJ1'), tracks: first.tracks), isNotNull);
+      expect(queue.entries.length, 2);
+    });
+  }
+
   test(
     'newest imports display first, repeated works have stable batch labels',
     () {
       final queue = DictationQueue();
       addTearDown(queue.dispose);
       final first = enqueue(queue, 'RJ111111');
-      final second = enqueue(queue, 'RJ111111');
+      final second = enqueue(queue, 'RJ111111', path: 'another-branch.mp3');
       enqueue(queue, 'RJ123456');
       enqueue(queue, 'RJ123123');
       expect(queue.entries.map((e) => e.label), [
@@ -67,7 +152,7 @@ void main() {
       work: work('RJ1'),
       tracks: tracks,
       sourceHeaders: headers,
-    );
+    )!;
     tracks.clear();
     headers['Authorization'] = 'Bearer second';
     expect(entry.tracks.single.path, 'one');
@@ -557,7 +642,7 @@ void main() {
           home: const Scaffold(),
         ),
       );
-      Future<void> open(String? id) async {
+      Future<void> open(String? id, {String? path}) async {
         unawaited(
           navigator.currentState!.push(
             MaterialPageRoute<void>(
@@ -570,7 +655,7 @@ void main() {
                         MediaNode(
                           title: '$id.mp3',
                           type: 'file',
-                          path: '$id.mp3',
+                          path: path ?? '$id.mp3',
                           url: 'https://example.com/$id.mp3',
                         ),
                       ],
@@ -601,6 +686,10 @@ void main() {
       expect(find.byType(ExpansionTile), findsNWidgets(2));
       await back();
       await open('RJ111111');
+      expect(find.text('RJ111111-1'), findsNothing);
+      expect(find.byType(ExpansionTile), findsNWidgets(2));
+      await back();
+      await open('RJ111111', path: 'another-branch.mp3');
       expect(find.text('RJ111111-1'), findsOneWidget);
       expect(find.text('RJ111111'), findsOneWidget);
       expect(find.byType(ExpansionTile), findsNWidgets(3));
@@ -638,7 +727,7 @@ void main() {
             path: 'audio $index',
           ),
         ),
-      );
+      )!;
       enqueue(queue, 'RJ100002');
       enqueue(queue, 'RJ100003');
       await tester.pumpWidget(
