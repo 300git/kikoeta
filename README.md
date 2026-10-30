@@ -7,6 +7,8 @@
 > [!WARNING]
 > 本项目为非官方个人项目，仅供学习与本地收听使用。服务端接口及其可用性可能随时变动，请遵守相关服务的使用规则。
 
+[下载使用](#下载使用) · [功能](#功能) · [听写翻译](#使用听写翻译) · [远程歌词库](#使用远程歌词库) · [开发说明](#开发说明)
+
 ## 界面预览
 
 ### 桌面端
@@ -30,11 +32,12 @@
   </tr>
 </table>
 
-横屏播放器(仅手机)
+#### 横屏播放器（仅手机）
 
 <img src="docs/image/播放器-宽屏横屏.png" alt="手机横屏播放器，同时展示播放控制与同步歌词" width="100%">
 
-### 设置与播放工具
+<details>
+<summary>更多截图：设置与播放工具</summary>
 
 <table>
   <tr>
@@ -59,6 +62,8 @@
   <img src="docs/image/歌词快捷设置.png" alt="歌词快捷设置" width="600"><br>
   歌词快捷设置
 </p>
+
+</details>
 
 ## 功能
 
@@ -98,7 +103,7 @@
 
 从 [GitHub Releases](https://github.com/chenflxs/kikoeta/releases) 下载对应平台的最新版本。
 
-- Windows：解压便携版后运行 `kikoeta_app.exe`，或运行安装程序完成安装。
+- Windows：运行安装程序完成安装。
 - Android：下载并安装 `arm64-v8a` APK。
 
 ### 使用听写翻译
@@ -110,6 +115,18 @@
 3. 打开作品详情页，勾选要处理的音频，在右上角“更多”中选择“听写翻译”，测试连接后开始任务。
 
 服务连接信息会保存在本机。任务完成后，回到作品的歌词选择器即可使用自动导入的歌词。
+
+### 使用远程歌词库
+
+想把歌词放在电脑或服务器上统一管理，可以用 [kikoeta-LLS](https://github.com/chenflxs/kikoeta-LLS)。它是独立的远程歌词库，支持网页管理、歌词文件 / ZIP 导入，也能接收 kikoeta-transl 生成的歌词。
+
+1. 下载并启动 `kikoeta-LLS`，在浏览器打开 `http://服务器地址:2376` 管理歌词；安装和部署方法见它的 [README](https://github.com/chenflxs/kikoeta-LLS#readme)。
+2. 在 Kikoeta 的「歌词库 → 导入 → 远程库」中填写 `http://服务器地址:2377`。同一台电脑可用 `127.0.0.1`，手机连接时填电脑的局域网 IP。
+3. 导入后先同步作品索引，播放匹配时再下载歌词。想让 Transl 自动上传，在 Transl 的「输出」页配置 LLS 的 `2378` 端口和上传凭据。
+
+三个端口别填混了：**2376 管理、2377 读取、2378 上传**。也可以直接开启 Kikoeta 自带的歌词库广播，给其他设备使用。接口细节见 [网络接口](docs/网络接口.md)。
+
+## 开发说明
 
 ### 从源码运行
 
@@ -140,7 +157,7 @@ flutter build apk --release --split-per-abi \
   --obfuscate --split-debug-info=build/symbols
 ```
 
-## 技术栈
+### 技术栈
 
 | 模块 | 方案 |
 | --- | --- |
@@ -150,7 +167,7 @@ flutter build apk --release --split-per-abi \
 | 本地存储 | SQLite（rusqlite） |
 | Android 媒体控制 | Jetpack Media3 前台服务 |
 
-## 项目结构
+### 项目结构
 
 ```text
 kikoeta/
@@ -171,6 +188,7 @@ kikoeta/
 - [x] 基于 [kikoeta-transl](https://github.com/chenflxs/kikoeta-transl) 的听写翻译与歌词库导入
 - [x] 音声下载功能 ~~( *短期内无计划* )~~
 - [ ] ...
+
 ## 致谢
 
 - 项目参考了 [Kikoeru](https://github.com/loli-ball/KikoeruRelease) 的设计与实现。
