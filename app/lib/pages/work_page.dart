@@ -2594,6 +2594,18 @@ class _WorkPageState extends State<WorkPage> {
     VoidCallback onTap, {
     required double maxWidth,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isVa = icon == Icons.person_outline;
+    final chipColor = isVa
+        ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7)) // asmr.one 天青色 CV
+        : (isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE)); // asmr.one 紫罗兰 社团
+    final chipBg = isVa
+        ? (isDark ? const Color(0x2238BDF8) : const Color(0x180284C7))
+        : (isDark ? const Color(0x22C084FC) : const Color(0x187E22CE));
+    final chipBorder = isVa
+        ? (isDark ? const Color(0x4038BDF8) : const Color(0x330284C7))
+        : (isDark ? const Color(0x40C084FC) : const Color(0x337E22CE));
+
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth),
       child: GestureDetector(
@@ -2601,14 +2613,14 @@ class _WorkPageState extends State<WorkPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: p.surface2,
+            color: chipBg,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: p.line),
+            border: Border.all(color: chipBorder),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 12, color: p.accent),
+              Icon(icon, size: 12, color: chipColor),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
@@ -2617,7 +2629,7 @@ class _WorkPageState extends State<WorkPage> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 11.5,
-                    color: p.accent,
+                    color: chipColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -2689,22 +2701,30 @@ class _WorkPageState extends State<WorkPage> {
     required VoidCallback onTap,
     VoidCallback? onLongPress,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: gray ? p.surface2 : p.surface,
+          color: gray
+              ? (isDark ? const Color(0x15FFFFFF) : const Color(0x0A000000))
+              : (isDark ? const Color(0x20FFFFFF) : const Color(0x10000000)),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: gray ? p.dim : p.line),
+          border: Border.all(
+            color: isDark ? const Color(0x1AFFFFFF) : const Color(0x12000000),
+          ),
         ),
         child: Text(
           t,
           style: TextStyle(
             fontSize: 12,
-            color: gray ? p.dim : p.text,
+            color: gray
+                ? (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8))
+                : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155)),
             fontStyle: gray ? FontStyle.italic : FontStyle.normal,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),

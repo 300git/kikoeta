@@ -259,6 +259,7 @@ class AppState extends ChangeNotifier {
   // 兼容现有调用点：true 表示当前处于任意字幕筛选状态。
   bool get subOnly => subtitleFilter != SubtitleFilter.none;
   bool sfwMode = false; // SFW 模式：启动后只显示全年龄（非 R18）内容
+  bool worksListLayout = false; // 首页作品列表布局：false = 2列网格，true = 1列列表
   String? _pendingSearch;
   bool pendingClear = false;
   // 当前首页搜索词；搜索栏因切换底部页面而重建时仍能恢复显示。
@@ -769,6 +770,13 @@ class AppState extends ChangeNotifier {
     duration: (m['duration'] as num?)?.toInt() ?? 0,
   );
 
+  void setWorksListLayout(bool val) {
+    if (worksListLayout == val) return;
+    worksListLayout = val;
+    SettingsStore.set('works_list_layout', val ? '1' : '0');
+    notifyListeners();
+  }
+
   void addToPlaylist(String name, List<String> titles) {
     // 兼容旧调用：无作品上下文时仅存标题
     addWorkToPlaylist(
@@ -1017,6 +1025,8 @@ class AppState extends ChangeNotifier {
       customServer = false;
       customServerIdx = 0;
     }
+    final listLayout = SettingsStore.get('works_list_layout');
+    if (listLayout != null) worksListLayout = listLayout == '1';
     final recommenderUuid = SettingsStore.get('recommender_uuid');
     if (recommenderUuid != null && recommenderUuid.isNotEmpty) {
       this.recommenderUuid = recommenderUuid;

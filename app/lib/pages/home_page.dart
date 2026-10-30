@@ -415,9 +415,29 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         _sortDropdown(),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         _orderButton(),
+        const SizedBox(width: 6),
+        _layoutToggleButton(),
       ],
+    );
+  }
+
+  Widget _layoutToggleButton() {
+    final p = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
+    return IconButton(
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      icon: Icon(
+        app.worksListLayout ? Icons.grid_view_outlined : Icons.view_agenda_outlined,
+        size: 19,
+        color: p.muted,
+      ),
+      tooltip: app.worksListLayout ? '切换为两列展示' : '切换为单列展示',
+      onPressed: () => app.setWorksListLayout(!app.worksListLayout),
     );
   }
 
@@ -524,23 +544,45 @@ class _HomePageState extends State<HomePage> {
                   },
                   child: RefreshIndicator(
                     onRefresh: _loadRemote,
-                    child: ResponsiveGrid(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.only(top: 10, bottom: 30),
-                      itemCount: order.length,
-                      itemBuilder: (ctx, i) {
-                        final idx = order[i];
-                        final w = list[idx];
-                        return WorkCard(
-                          work: w,
-                          index: idx,
-                          cardBackground: true,
-                          onTap: () => Navigator.of(
-                            context,
-                          ).push(buildWorkRoute(app, w)),
-                        );
-                      },
-                    ),
+                    child: app.worksListLayout
+                        ? SmoothListView.builder(
+                            physics: const BouncingScrollPhysics(
+                              parent: AlwaysScrollableScrollPhysics(),
+                            ),
+                            cacheExtent: 400.0,
+                            padding: const EdgeInsets.only(top: 6, bottom: 30),
+                            itemCount: order.length,
+                            itemBuilder: (ctx, i) {
+                              final idx = order[i];
+                              final w = list[idx];
+                              return WorkListCard(
+                                work: w,
+                                index: idx,
+                                onTap: () => Navigator.of(
+                                  context,
+                                ).push(buildWorkRoute(app, w)),
+                              );
+                            },
+                          )
+                        : ResponsiveGrid(
+                            physics: const BouncingScrollPhysics(
+                              parent: AlwaysScrollableScrollPhysics(),
+                            ),
+                            padding: const EdgeInsets.only(top: 6, bottom: 30),
+                            itemCount: order.length,
+                            itemBuilder: (ctx, i) {
+                              final idx = order[i];
+                              final w = list[idx];
+                              return WorkCard(
+                                work: w,
+                                index: idx,
+                                cardBackground: true,
+                                onTap: () => Navigator.of(
+                                  context,
+                                ).push(buildWorkRoute(app, w)),
+                              );
+                            },
+                          ),
                   ),
                 ),
               ),
@@ -757,20 +799,41 @@ class _HomePageState extends State<HomePage> {
               }
               return false;
             },
-            child: ResponsiveGrid(
-              padding: const EdgeInsets.only(top: 10, bottom: 30),
-              itemCount: res.length,
-              itemBuilder: (ctx, i) {
-                final w = res[i];
-                return WorkCard(
-                  work: w,
-                  index: i,
-                  cardBackground: true,
-                  onTap: () =>
-                      Navigator.of(context).push(buildWorkRoute(app, w)),
-                );
-              },
-            ),
+            child: app.worksListLayout
+                ? SmoothListView.builder(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    cacheExtent: 400.0,
+                    padding: const EdgeInsets.only(top: 6, bottom: 30),
+                    itemCount: res.length,
+                    itemBuilder: (ctx, i) {
+                      final w = res[i];
+                      return WorkListCard(
+                        work: w,
+                        index: i,
+                        onTap: () =>
+                            Navigator.of(context).push(buildWorkRoute(app, w)),
+                      );
+                    },
+                  )
+                : ResponsiveGrid(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.only(top: 6, bottom: 30),
+                    itemCount: res.length,
+                    itemBuilder: (ctx, i) {
+                      final w = res[i];
+                      return WorkCard(
+                        work: w,
+                        index: i,
+                        cardBackground: true,
+                        onTap: () =>
+                            Navigator.of(context).push(buildWorkRoute(app, w)),
+                      );
+                    },
+                  ),
           ),
         ),
         if (_searchLoading)
