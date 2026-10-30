@@ -353,7 +353,7 @@ Future<void> showSiteSheet(
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final alias = aliasCtrl.text.trim();
               final url = urlCtrl.text.trim().replaceFirst(RegExp(r'/+$'), '');
               final user = userCtrl.text.trim();
@@ -374,9 +374,10 @@ Future<void> showSiteSheet(
                   editIndex == app.customServerIdx;
               if (isCurrentActiveSite && user.isNotEmpty && pass.isNotEmpty) {
                 try {
-                  ApiService.login(app, url, user, pass).catchError((_) => '');
+                  await ApiService.login(app, url, user, pass);
                 } catch (_) {}
               }
+              if (!ctx.mounted) return;
               if (isEdit) {
                 app.saveSite(
                   CustomSite(

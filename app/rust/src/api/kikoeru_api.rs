@@ -527,6 +527,7 @@ pub async fn api_create_playlist(
             let rest_body = serde_json::json!({
                 "name": name,
                 "description": description,
+                "privacy": privacy,
             });
             http_post_json(&client, &rest_url, auth.as_deref(), rest_body).await
         }
@@ -612,6 +613,7 @@ pub async fn api_edit_playlist_metadata(
             let rest_body = serde_json::json!({
                 "name": name,
                 "description": description,
+                "privacy": privacy,
             });
             http_put_json(&client, &rest_url, auth.as_deref(), rest_body).await
         }
@@ -675,7 +677,31 @@ pub async fn api_get_playlist_works(
         Err(e) if e.contains("404") => {
             // Number178 / 自建库 RESTful 路由回退: GET /api/playlists/:id (包含完整 works)
             let rest_url = format!("{}/api/playlists/{}", base_of(&base), urlencoding(&id));
-            http_get(&client, &rest_url, auth.as_deref()).await
+            let text = http_get(&client, &rest_url, auth.as_deref()).await?;
+            // Number178 详情接口一次性返回全部 works，按请求的 (page, per_page) 做切片并构造 pagination，
+            // 避免滚动加载时无限重复追加全部作品
+            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
+                if let Some(works_arr) = val.get("works").and_then(|w| w.as_array()) {
+                    let total = works_arr.len();
+                    let start = ((page.saturating_sub(1)) as usize).saturating_mul(per_page as usize);
+                    let end = (start + per_page as usize).min(total);
+                    let sliced = if start < total {
+                        works_arr[start..end].to_vec()
+                    } else {
+                        Vec::new()
+                    };
+                    let paginated_resp = serde_json::json!({
+                        "works": sliced,
+                        "pagination": {
+                            "currentPage": page,
+                            "pageSize": per_page,
+                            "totalCount": total
+                        }
+                    });
+                    return Ok(paginated_resp.to_string());
+                }
+            }
+            Ok(text)
         }
         Err(e) => Err(e),
     }
@@ -741,7 +767,7 @@ pub async fn api_playlist_remove_works(
                     urlencoding(&playlist_id),
                     urlencoding(digits)
                 );
-                let _ = http_delete(&client, &rest_url, auth.as_deref()).await;
+                http_delete(&client, &rest_url, auth.as_deref()).await?;
             }
             Ok(r#"{"removed":true}"#.to_string())
         }
