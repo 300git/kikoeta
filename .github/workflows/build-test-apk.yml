@@ -45,6 +45,8 @@ jobs:
           echo "Renaming applicationId to kikoeta.chenflxs.kikoeta300 and label to Kikoeta300..."
           sed -i 's/applicationId = "kikoeta.chenflxs"/applicationId = "kikoeta.chenflxs.kikoeta300"/' app/android/app/build.gradle.kts
           sed -i 's/android:label="Kikoeta"/android:label="Kikoeta300"/' app/android/app/src/main/AndroidManifest.xml
+          # Remove Aliyun mirrors in CI to prevent 502 Bad Gateway on overseas runners
+          sed -i '/maven.aliyun.com/d' app/android/build.gradle.kts app/android/settings.gradle.kts
 
       - name: Configure Fixed Test Keystore
         run: |
