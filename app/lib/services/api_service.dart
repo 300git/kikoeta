@@ -509,7 +509,10 @@ class ApiService {
         appL10n.apiServiceFetchPlaylistMetadataFormatException,
       );
     }
-    return _mapPlaylist(Map<String, dynamic>.from(decoded), app, base);
+    final rawMap = decoded['playlist'] is Map
+        ? Map<String, dynamic>.from(decoded['playlist'] as Map)
+        : Map<String, dynamic>.from(decoded);
+    return _mapPlaylist(rawMap, app, base);
   }
 
   static PlaylistInfo _mapPlaylist(
@@ -526,13 +529,21 @@ class ApiService {
     final isSystem = systemName != null;
     final isOwned =
         isSystem || (userName.isNotEmpty && userName == _reviewUserName(app));
+    final coverWorkId = m['coverWorkId'] ?? m['cover_work_id'];
+    final coverUrl = _playlistCoverUrl(m['mainCoverUrl'] as String?, base) ??
+        (coverWorkId != null
+            ? '${base.replaceFirst(RegExp(r'/+$'), '')}/api/cover/$coverWorkId'
+            : null);
     return PlaylistInfo(
       id: id,
       name:
           systemName ??
           (rawName.isEmpty ? appL10n.apiServiceMapPlaylistName : rawName),
-      worksCount: (m['works_count'] as num?)?.toInt() ?? 0,
-      coverUrl: _playlistCoverUrl(m['mainCoverUrl'] as String?, base),
+      worksCount: (m['works_count'] as num?)?.toInt() ??
+          (m['workCount'] as num?)?.toInt() ??
+          (m['worksCount'] as num?)?.toInt() ??
+          0,
+      coverUrl: coverUrl,
       isSystemLiked:
           m['is_sys'] == true ||
           m['isSystem'] == true ||
@@ -544,8 +555,8 @@ class ApiService {
       privacy: (m['privacy'] as num?)?.toInt() ?? 0,
       playbackCount: (m['playback_count'] as num?)?.toInt() ?? 0,
       locale: m['locale'] as String? ?? '',
-      createdAt: m['created_at']?.toString() ?? '',
-      updatedAt: m['updated_at']?.toString() ?? '',
+      createdAt: (m['created_at'] ?? m['createdAt'])?.toString() ?? '',
+      updatedAt: (m['updated_at'] ?? m['updatedAt'])?.toString() ?? '',
       isSystem: isSystem,
       isOwned: isOwned,
     );
@@ -1555,12 +1566,12 @@ class ApiService {
     // one 站与 kikoeru-express 均返回 {works, pagination:{currentPage,pageSize,totalCount}}
     var page = 1;
     var pageSize = perPage;
-    var total = -1;
+    var total = (data['totalCount'] as num?)?.toInt() ?? -1;
     final pag = data['pagination'];
     if (pag is Map<String, dynamic>) {
       page = (pag['currentPage'] as num?)?.toInt() ?? page;
       pageSize = (pag['pageSize'] as num?)?.toInt() ?? pageSize;
-      total = (pag['totalCount'] as num?)?.toInt() ?? -1;
+      total = (pag['totalCount'] as num?)?.toInt() ?? total;
     }
     final hasMore = total >= 0
         ? page * pageSize < total

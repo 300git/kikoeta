@@ -490,13 +490,21 @@ pub async fn api_check_lrc(base: String, rj: String) -> Result<String, String> {
 /// 歌单列表：GET /api/playlist/get-playlists（需登录）
 #[flutter_rust_bridge::frb]
 pub async fn api_get_playlists(base: String) -> Result<String, String> {
-    let url = format!(
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let rpc_url = format!(
         "{}/api/playlist/get-playlists?page=1&pageSize=100&filterBy=all",
         base_of(&base)
     );
-    let client = http_client()?;
-    let auth = auth_header(&base);
-    http_get(&client, &url, auth.as_deref()).await
+    match http_get(&client, &rpc_url, auth.as_deref()).await {
+        Ok(text) => Ok(text),
+        Err(e) if e.contains("404") => {
+            // Number178 / 自建库 RESTful 路由回退: GET /api/playlists
+            let rest_url = format!("{}/api/playlists", base_of(&base));
+            http_get(&client, &rest_url, auth.as_deref()).await
+        }
+        Err(e) => Err(e),
+    }
 }
 
 /// 新建歌单：POST /api/playlist/create-playlist（需登录）
@@ -507,10 +515,23 @@ pub async fn api_create_playlist(
     description: String,
     privacy: u32,
 ) -> Result<String, String> {
-    let url = format!("{}/api/playlist/create-playlist", base_of(&base));
     let client = http_client()?;
     let auth = auth_header(&base);
-    http_post_json(&client, &url, auth.as_deref(), create_playlist_body(&name, &description, privacy)).await
+    let rpc_url = format!("{}/api/playlist/create-playlist", base_of(&base));
+    let body = create_playlist_body(&name, &description, privacy);
+    match http_post_json(&client, &rpc_url, auth.as_deref(), body).await {
+        Ok(text) => Ok(text),
+        Err(e) if e.contains("404") => {
+            // Number178 / 自建库 RESTful 路由回退: POST /api/playlists
+            let rest_url = format!("{}/api/playlists", base_of(&base));
+            let rest_body = serde_json::json!({
+                "name": name,
+                "description": description,
+            });
+            http_post_json(&client, &rest_url, auth.as_deref(), rest_body).await
+        }
+        Err(e) => Err(e),
+    }
 }
 
 fn create_playlist_body(name: &str, description: &str, privacy: u32) -> serde_json::Value {
@@ -546,14 +567,28 @@ pub async fn api_remove_like_playlist(base: String, id: String) -> Result<String
 /// 歌单详情：GET /api/playlist/get-playlist-metadata?id=...（需登录）
 #[flutter_rust_bridge::frb]
 pub async fn api_get_playlist_metadata(base: String, id: String) -> Result<String, String> {
-    let url = format!(
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let rpc_url = format!(
         "{}/api/playlist/get-playlist-metadata?id={}",
         base_of(&base),
         urlencoding(&id)
     );
-    let client = http_client()?;
-    let auth = auth_header(&base);
-    http_get(&client, &url, auth.as_deref()).await
+    match http_get(&client, &rpc_url, auth.as_deref()).await {
+        Ok(text) => Ok(text),
+        Err(e) if e.contains("404") => {
+            // Number178 / 自建库 RESTful 路由回退: GET /api/playlists/:id
+            let rest_url = format!("{}/api/playlists/{}", base_of(&base), urlencoding(&id));
+            let res = http_get(&client, &rest_url, auth.as_deref()).await?;
+            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&res) {
+                if let Some(pl) = val.get("playlist") {
+                    return Ok(pl.to_string());
+                }
+            }
+            Ok(res)
+        }
+        Err(e) => Err(e),
+    }
 }
 
 /// 修改歌单信息：POST /api/playlist/edit-playlist-metadata（需登录）
@@ -565,11 +600,23 @@ pub async fn api_edit_playlist_metadata(
     privacy: u32,
     description: String,
 ) -> Result<String, String> {
-    let url = format!("{}/api/playlist/edit-playlist-metadata", base_of(&base));
     let client = http_client()?;
     let auth = auth_header(&base);
+    let rpc_url = format!("{}/api/playlist/edit-playlist-metadata", base_of(&base));
     let body = edit_playlist_body(&id, &name, privacy, &description);
-    http_post_json(&client, &url, auth.as_deref(), body).await
+    match http_post_json(&client, &rpc_url, auth.as_deref(), body).await {
+        Ok(text) => Ok(text),
+        Err(e) if e.contains("404") => {
+            // Number178 / 自建库 RESTful 路由回退: PUT /api/playlists/:id
+            let rest_url = format!("{}/api/playlists/{}", base_of(&base), urlencoding(&id));
+            let rest_body = serde_json::json!({
+                "name": name,
+                "description": description,
+            });
+            http_put_json(&client, &rest_url, auth.as_deref(), rest_body).await
+        }
+        Err(e) => Err(e),
+    }
 }
 
 fn edit_playlist_body(
@@ -591,11 +638,19 @@ fn edit_playlist_body(
 /// 删除自己的歌单：POST /api/playlist/delete-playlist（需登录）
 #[flutter_rust_bridge::frb]
 pub async fn api_delete_playlist(base: String, id: String) -> Result<String, String> {
-    let url = format!("{}/api/playlist/delete-playlist", base_of(&base));
     let client = http_client()?;
     let auth = auth_header(&base);
+    let rpc_url = format!("{}/api/playlist/delete-playlist", base_of(&base));
     let body = serde_json::json!({ "id": id });
-    http_post_json(&client, &url, auth.as_deref(), body).await
+    match http_post_json(&client, &rpc_url, auth.as_deref(), body).await {
+        Ok(text) => Ok(text),
+        Err(e) if e.contains("404") => {
+            // Number178 / 自建库 RESTful 路由回退: DELETE /api/playlists/:id
+            let rest_url = format!("{}/api/playlists/{}", base_of(&base), urlencoding(&id));
+            http_delete(&client, &rest_url, auth.as_deref()).await
+        }
+        Err(e) => Err(e),
+    }
 }
 
 /// 歌单作品：GET /api/playlist/get-playlist-works?id=...（需登录）
@@ -606,16 +661,24 @@ pub async fn api_get_playlist_works(
     page: u32,
     per_page: u32,
 ) -> Result<String, String> {
-    let url = format!(
+    let client = http_client()?;
+    let auth = auth_header(&base);
+    let rpc_url = format!(
         "{}/api/playlist/get-playlist-works?id={}&page={}&pageSize={}",
         base_of(&base),
         urlencoding(&id),
         page,
         per_page
     );
-    let client = http_client()?;
-    let auth = auth_header(&base);
-    http_get(&client, &url, auth.as_deref()).await
+    match http_get(&client, &rpc_url, auth.as_deref()).await {
+        Ok(text) => Ok(text),
+        Err(e) if e.contains("404") => {
+            // Number178 / 自建库 RESTful 路由回退: GET /api/playlists/:id (包含完整 works)
+            let rest_url = format!("{}/api/playlists/{}", base_of(&base), urlencoding(&id));
+            http_get(&client, &rest_url, auth.as_deref()).await
+        }
+        Err(e) => Err(e),
+    }
 }
 
 /// 添加作品到歌单：POST /api/playlist/add-works-to-playlist
@@ -625,11 +688,31 @@ pub async fn api_playlist_add_works(
     playlist_id: String,
     work_ids: Vec<String>,
 ) -> Result<String, String> {
-    let url = format!("{}/api/playlist/add-works-to-playlist", base_of(&base));
     let client = http_client()?;
     let auth = auth_header(&base);
+    let rpc_url = format!("{}/api/playlist/add-works-to-playlist", base_of(&base));
     let body = serde_json::json!({ "id": playlist_id, "works": work_ids });
-    http_post_json(&client, &url, auth.as_deref(), body).await
+    match http_post_json(&client, &rpc_url, auth.as_deref(), body).await {
+        Ok(text) => Ok(text),
+        Err(e) if e.contains("404") => {
+            // Number178 / 自建库 RESTful 路由回退: POST /api/playlists/:id/works
+            let rest_url = format!("{}/api/playlists/{}/works", base_of(&base), urlencoding(&playlist_id));
+            let num_ids: Vec<serde_json::Value> = work_ids
+                .iter()
+                .map(|id_str| {
+                    let digits = id_str.trim().trim_start_matches(|c| c == 'R' || c == 'r' || c == 'J' || c == 'j');
+                    if let Ok(n) = digits.parse::<u64>() {
+                        serde_json::json!(n)
+                    } else {
+                        serde_json::json!(id_str)
+                    }
+                })
+                .collect();
+            let rest_body = serde_json::json!({ "workIds": num_ids });
+            http_post_json(&client, &rest_url, auth.as_deref(), rest_body).await
+        }
+        Err(e) => Err(e),
+    }
 }
 
 /// 从歌单移除作品：POST /api/playlist/remove-works-from-playlist
@@ -642,11 +725,28 @@ pub async fn api_playlist_remove_works(
     playlist_id: String,
     work_ids: Vec<String>,
 ) -> Result<String, String> {
-    let url = format!("{}/api/playlist/remove-works-from-playlist", base_of(&base));
     let client = http_client()?;
     let auth = auth_header(&base);
+    let rpc_url = format!("{}/api/playlist/remove-works-from-playlist", base_of(&base));
     let body = remove_works_body(&playlist_id, &work_ids);
-    http_post_json(&client, &url, auth.as_deref(), body).await
+    match http_post_json(&client, &rpc_url, auth.as_deref(), body).await {
+        Ok(text) => Ok(text),
+        Err(e) if e.contains("404") => {
+            // Number178 / 自建库 RESTful 路由回退: DELETE /api/playlists/:id/works/:workId
+            for work_id in work_ids {
+                let digits = work_id.trim().trim_start_matches(|c| c == 'R' || c == 'r' || c == 'J' || c == 'j');
+                let rest_url = format!(
+                    "{}/api/playlists/{}/works/{}",
+                    base_of(&base),
+                    urlencoding(&playlist_id),
+                    urlencoding(digits)
+                );
+                let _ = http_delete(&client, &rest_url, auth.as_deref()).await;
+            }
+            Ok(r#"{"removed":true}"#.to_string())
+        }
+        Err(e) => Err(e),
+    }
 }
 
 fn remove_works_body(playlist_id: &str, work_ids: &[String]) -> serde_json::Value {
@@ -693,7 +793,14 @@ pub async fn api_submit_review(
     review_text: Option<String>,
     progress: Option<String>,
 ) -> Result<String, String> {
-    let url = format!("{}/api/review", base_of(&base));
+    let mut url = format!("{}/api/review", base_of(&base));
+    if rating.is_none() && review_text.is_none() && progress.is_some() {
+        url.push_str("?starOnly=false&progressOnly=true");
+    } else if rating.is_some() && review_text.is_none() && progress.is_none() {
+        url.push_str("?starOnly=true&progressOnly=false");
+    } else if rating.is_some() || review_text.is_some() || progress.is_some() {
+        url.push_str("?starOnly=false&progressOnly=false");
+    }
     let client = http_client()?;
     let auth = auth_header(&base);
     let body = review_body(
@@ -727,7 +834,7 @@ fn review_body(
 /// 取消打分：PUT /api/review，把 rating 显式置为 null，其余字段保持不变。
 #[flutter_rust_bridge::frb]
 pub async fn api_clear_review_rating(base: String, work_id: u64) -> Result<String, String> {
-    let url = format!("{}/api/review", base_of(&base));
+    let url = format!("{}/api/review?starOnly=true&progressOnly=false", base_of(&base));
     let client = http_client()?;
     let auth = auth_header(&base);
     http_put_json(&client, &url, auth.as_deref(), clear_rating_body(work_id)).await
@@ -740,7 +847,7 @@ fn clear_rating_body(work_id: u64) -> serde_json::Value {
 /// 取消播放标记：PUT /api/review，把 progress 显式置为 null，评分与评论保持不变。
 #[flutter_rust_bridge::frb]
 pub async fn api_clear_review_progress(base: String, work_id: u64) -> Result<String, String> {
-    let url = format!("{}/api/review", base_of(&base));
+    let url = format!("{}/api/review?starOnly=false&progressOnly=true", base_of(&base));
     let client = http_client()?;
     let auth = auth_header(&base);
     http_put_json(&client, &url, auth.as_deref(), clear_progress_body(work_id)).await
