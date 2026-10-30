@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
   /// 首页网格渲染依赖的列表数据/加载状态签名
   String get _dataSig =>
       '${app.remoteWorks.length}|${app.loadingRemote}|${app.worksLoadingMore}|'
-      '${app.remoteError}|${app.worksHasMore}';
+      '${app.remoteError}|${app.worksHasMore}|${app.worksListLayout}';
 
   void _onAppChanged() {
     // 清空/新搜索必须优先于首页刷新事件处理，避免刷新分支提前 return
@@ -438,7 +438,11 @@ class _HomePageState extends State<HomePage> {
         color: p.muted,
       ),
       tooltip: app.worksListLayout ? '切换为两列展示' : '切换为单列展示',
-      onPressed: () => app.setWorksListLayout(!app.worksListLayout),
+      onPressed: () {
+        setState(() {
+          app.setWorksListLayout(!app.worksListLayout);
+        });
+      },
     );
   }
 
@@ -551,7 +555,7 @@ class _HomePageState extends State<HomePage> {
                               parent: AlwaysScrollableScrollPhysics(),
                             ),
                             cacheExtent: 400.0,
-                            padding: const EdgeInsets.only(top: 6, bottom: 30),
+                            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
                             itemCount: order.length,
                             itemBuilder: (ctx, i) {
                               final idx = order[i];
@@ -569,7 +573,7 @@ class _HomePageState extends State<HomePage> {
                             physics: const BouncingScrollPhysics(
                               parent: AlwaysScrollableScrollPhysics(),
                             ),
-                            padding: const EdgeInsets.only(top: 6, bottom: 30),
+                            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
                             itemCount: order.length,
                             itemBuilder: (ctx, i) {
                               final idx = order[i];
@@ -806,7 +810,7 @@ class _HomePageState extends State<HomePage> {
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     cacheExtent: 400.0,
-                    padding: const EdgeInsets.only(top: 6, bottom: 30),
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
                     itemCount: res.length,
                     itemBuilder: (ctx, i) {
                       final w = res[i];
@@ -822,7 +826,7 @@ class _HomePageState extends State<HomePage> {
                     physics: const BouncingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
-                    padding: const EdgeInsets.only(top: 6, bottom: 30),
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
                     itemCount: res.length,
                     itemBuilder: (ctx, i) {
                       final w = res[i];

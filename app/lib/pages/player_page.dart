@@ -47,6 +47,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
   final Map<int, GlobalKey> _lyricKeys = {};
   Timer? _lyricFollowTimer;
   bool _lyricAutoFollow = true;
+  bool _userLyricAutoScroll = true;
   int _lyricScrollToken = 0;
   int _lastAutoIdx = -1;
   int _lrcOffsetMs = 0; // 字幕偏移（毫秒，正数表示歌词提前显示）
@@ -789,12 +790,12 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
 
   void _onPlayerPageChanged(int page) {
     if (page != 1) return;
-    // PageView 保留歌词页的 ScrollPosition。重新进入时必须以当前播放行
-    // 为准，不能把上次离开时的 offset 当成已经完成的自动定位。
-    _lyricAutoFollow = true;
+    _lyricAutoFollow = _userLyricAutoScroll;
     _lyricFollowTimer?.cancel();
     _lastAutoIdx = -1;
-    _requestLyricAlignment(animated: false, force: true);
+    if (_userLyricAutoScroll) {
+      _requestLyricAlignment(animated: false, force: true);
+    }
   }
 
   // ---------- 横屏：左封面上 + 下控件，右歌词 ----------
@@ -1181,32 +1182,39 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
     final edgeSpace = math.max(viewportHeight * .5, 40.0);
     return NotificationListener<ScrollNotification>(
       onNotification: _handleLyricScrollNotification,
-      child: SmoothSingleChildScrollView(
+      child: RawScrollbar(
         controller: _lyricScroll,
-        child: Column(
-          children: [
-            SizedBox(height: edgeSpace),
-            for (var i = 0; i < _lyrics.length; i++)
-              SizedBox(
-                width: double.infinity,
-                child: InkWell(
-                  key: _lyricKeys.putIfAbsent(i, GlobalKey.new),
-                  onTap: () => _seekTo(_lyrics[i].t),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 7,
-                      horizontal: isWide ? 0 : 20,
-                    ),
-                    child: _buildLyricLineText(
-                      _displayLyric(_lyrics[i]),
-                      current: i == currentIdx,
-                      isWide: isWide,
+        thumbVisibility: true,
+        thickness: 4.0,
+        radius: const Radius.circular(4),
+        thumbColor: p.accent.withValues(alpha: .55),
+        child: SmoothSingleChildScrollView(
+          controller: _lyricScroll,
+          child: Column(
+            children: [
+              SizedBox(height: edgeSpace),
+              for (var i = 0; i < _lyrics.length; i++)
+                SizedBox(
+                  width: double.infinity,
+                  child: InkWell(
+                    key: _lyricKeys.putIfAbsent(i, GlobalKey.new),
+                    onTap: () => _seekTo(_lyrics[i].t),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 7,
+                        horizontal: isWide ? 0 : 12,
+                      ),
+                      child: _buildLyricLineText(
+                        _displayLyric(_lyrics[i]),
+                        current: i == currentIdx,
+                        isWide: isWide,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            SizedBox(height: edgeSpace),
-          ],
+              SizedBox(height: edgeSpace),
+            ],
+          ),
         ),
       ),
     );
@@ -1362,68 +1370,52 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
 
   Widget _coverBody({required bool alignLeft}) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: alignLeft ? 24 : 20),
+      padding: EdgeInsets.symmetric(horizontal: alignLeft ? 12 : 8),
       child: Column(
         children: [
+          // 顶部栏：左上角播放模式，右上角播放列表
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: _cyclePlayMode,
+                  icon: Icon(
+                    app.playMode == 1
+                        ? Icons.repeat
+                        : app.playMode == 2
+                        ? Icons.repeat_one
+                        : Icons.playlist_play,
+                    size: 24,
+                  ),
+                  color: app.playMode == 0 ? p.dim : p.accent,
+                  tooltip: _playModeLabel,
+                ),
+                IconButton(
+                  onPressed: _showQueue,
+                  icon: const Icon(Icons.queue_music, size: 24),
+                  color: p.dim,
+                  tooltip: context.l10n.playlist,
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: LayoutBuilder(
               builder: (ctx, c) {
-                final size = math.min(c.maxWidth * 0.8, c.maxHeight * 0.9);
-                const btn = 44.0;
-                const edgePad = 10.0;
-                // 按钮中心贴近窗口左右边缘时的偏移
-                final edgeOffset = c.maxWidth / 2 - edgePad - btn / 2;
-                // 封面上的最小落点（靠近封面左右边）
-                final minOffset = size * 0.34;
-                // 按钮刚好在封面外侧时需要的偏移
-                final clearOffset = size / 2 + 16;
-                final t = ((edgeOffset - minOffset) / (clearOffset - minOffset))
-                    .clamp(0.0, 1.0);
-                final offset = minOffset + (edgeOffset - minOffset) * t;
-                final half = math.max(c.maxWidth / 2, 1.0);
-                final ax = (offset / half).clamp(0.0, 1.0);
-                final cover = SizedBox(
-                  width: size,
-                  height: size,
-                  child: CoverArt(work: work, radius: 14),
-                );
-                final left = _seekCircle(
-                  Icons.replay,
-                  app.playbackSeekBackwardSeconds,
-                  context.l10n.seekBackward,
-                  () => _seekRelative(-app.playbackSeekBackwardSeconds),
-                );
-                final right = _seekCircle(
-                  Icons.rotate_right,
-                  app.playbackSeekForwardSeconds,
-                  context.l10n.seekForward,
-                  () => _seekRelative(app.playbackSeekForwardSeconds),
-                );
-                return SizedBox(
-                  width: c.maxWidth,
-                  height: size,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      cover,
-                      AnimatedAlign(
-                        alignment: Alignment(-ax, 0),
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        child: left,
-                      ),
-                      AnimatedAlign(
-                        alignment: Alignment(ax, 0),
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        child: right,
-                      ),
-                    ],
+                final size = math.min(c.maxWidth, c.maxHeight);
+                return Center(
+                  child: SizedBox(
+                    width: size,
+                    height: size,
+                    child: CoverArt(work: work, radius: 14),
                   ),
                 );
               },
             ),
           ),
+          const SizedBox(height: 8),
           Text(
             track.title.replaceAll(
               RegExp(r'\.(mp3|wav|flac|m4a|aac|ogg|opus)$'),
@@ -1438,7 +1430,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: p.muted),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           SliderTheme(
             data: SliderThemeData(
               trackHeight: 3,
@@ -1470,7 +1462,7 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
           _controls(),
           const SizedBox(height: 2),
           _volumeControl(),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _utils(),
           const SizedBox(height: 4),
         ],
@@ -1480,31 +1472,22 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
 
   Widget _controls() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        // 播放模式：列表播放 -> 循环播放 -> 单曲循环 -> 列表播放
-        IconButton(
-          onPressed: _cyclePlayMode,
-          icon: Icon(
-            app.playMode == 1
-                ? Icons.repeat
-                : app.playMode == 2
-                ? Icons.repeat_one
-                : Icons.playlist_play,
-            size: 20,
-          ),
-          color: app.playMode == 0 ? p.dim : p.accent,
-          tooltip: _playModeLabel,
-        ),
         IconButton(
           onPressed: _prev,
-          icon: const Icon(Icons.skip_previous, size: 26),
+          icon: const Icon(Icons.skip_previous, size: 32),
           color: p.text,
         ),
-        const SizedBox(width: 6),
+        IconButton(
+          onPressed: () => _seekRelative(-10),
+          icon: const Icon(Icons.replay_10, size: 30),
+          color: p.text,
+          tooltip: '快退 10 秒',
+        ),
         Container(
-          width: 54,
-          height: 54,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
@@ -1513,30 +1496,28 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
               end: Alignment.bottomRight,
             ),
             boxShadow: [
-              BoxShadow(color: p.accent.withValues(alpha: .3), blurRadius: 30),
+              BoxShadow(color: p.accent.withValues(alpha: .35), blurRadius: 24),
             ],
           ),
           child: IconButton(
             onPressed: _togglePlayback,
             icon: Icon(
               app.playing ? Icons.pause : Icons.play_arrow,
-              size: 30,
+              size: 36,
               color: Colors.white,
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        IconButton(
+          onPressed: () => _seekRelative(30),
+          icon: const Icon(Icons.forward_30, size: 30),
+          color: p.text,
+          tooltip: '快进 30 秒',
+        ),
         IconButton(
           onPressed: _next,
-          icon: const Icon(Icons.skip_next, size: 26),
+          icon: const Icon(Icons.skip_next, size: 32),
           color: p.text,
-        ),
-        // 播放列表
-        IconButton(
-          onPressed: _showQueue,
-          icon: const Icon(Icons.queue_music, size: 20),
-          color: p.dim,
-          tooltip: context.l10n.playlist,
         ),
       ],
     );
@@ -1854,9 +1835,94 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
 
   // ---------- 歌词页（仅歌词与歌词控件，无翻译） ----------
   Widget _lyricsPanel({required bool showTopBar}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
-        if (showTopBar) _topBar(showControls: true, showFileName: true),
+        if (showTopBar)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            height: kMinInteractiveDimension,
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.keyboard_arrow_down, size: 26),
+                ),
+                // 左上角自动跟踪切换开关
+                Material(
+                  color: _userLyricAutoScroll
+                      ? p.accent.withValues(alpha: .15)
+                      : (isDark
+                          ? const Color(0x22FFFFFF)
+                          : const Color(0x15000000)),
+                  borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      setState(() {
+                        _userLyricAutoScroll = !_userLyricAutoScroll;
+                        _lyricAutoFollow = _userLyricAutoScroll;
+                        _lyricFollowTimer?.cancel();
+                      });
+                      if (_userLyricAutoScroll) {
+                        _requestLyricAlignment(animated: true, force: true);
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _userLyricAutoScroll ? Icons.gps_fixed : Icons.gps_not_fixed,
+                            size: 13,
+                            color: _userLyricAutoScroll ? p.accent : p.dim,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _userLyricAutoScroll ? '自动跟踪' : '自由滚动',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _userLyricAutoScroll ? p.accent : p.dim,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: _MarqueeText(
+                      text: track.title.replaceAll(
+                        RegExp(r'\.(mp3|wav|flac|m4a|aac|ogg|opus)$'),
+                        '',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: _toggleDesktopLyrics,
+                  tooltip: context.l10n.desktopLyrics,
+                  icon: Icon(
+                    app.desktopLyricsOn ? Icons.lyrics : Icons.lyrics_outlined,
+                    size: 22,
+                    color: app.desktopLyricsOn ? p.accent : null,
+                  ),
+                ),
+                IconButton(
+                  onPressed: _showLyricSettings,
+                  icon: const Icon(Icons.more_horiz, size: 22),
+                ),
+              ],
+            ),
+          ),
         Expanded(
           child: _lyrics.isEmpty
               ? Center(
@@ -1871,37 +1937,26 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
                   builder: (ctx, c) {
                     final h = c.maxHeight;
                     _trackLyricViewport(
-                      Size(c.maxWidth, h * 0.6),
+                      Size(c.maxWidth, h),
                       isWide: false,
                     );
-                    return Stack(
-                      children: [
-                        // 歌词仅在垂直居中的 60% 面积内展示（上下各 20% 留白）
-                        Positioned(
-                          top: h * 0.2,
-                          left: 0,
-                          right: 0,
-                          height: h * 0.6,
-                          child: ShaderMask(
-                            blendMode: BlendMode.dstIn,
-                            shaderCallback: (bounds) => LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: const [
-                                Colors.transparent,
-                                Colors.white,
-                                Colors.white,
-                                Colors.transparent,
-                              ],
-                              stops: const [0.0, 0.14, 0.86, 1.0],
-                            ).createShader(bounds),
-                            child: _buildLyricScrollView(
-                              viewportHeight: h * 0.6,
-                              isWide: false,
-                            ),
-                          ),
-                        ),
-                      ],
+                    return ShaderMask(
+                      blendMode: BlendMode.dstIn,
+                      shaderCallback: (bounds) => LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: const [
+                          Colors.transparent,
+                          Colors.white,
+                          Colors.white,
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.04, 0.96, 1.0],
+                      ).createShader(bounds),
+                      child: _buildLyricScrollView(
+                        viewportHeight: h,
+                        isWide: false,
+                      ),
                     );
                   },
                 ),
@@ -2610,17 +2665,19 @@ class _PlayerPageState extends State<PlayerPage> with WidgetsBindingObserver {
 
   /// 用户手动滑动歌词列表：暂停自动跟随，3 秒无操作后回到当前行
   void _onLyricUserScroll() {
-    // dragDetails 只会来自真实触摸/鼠标拖动；递增 token 立即废弃
-    // 正在执行或等待布局的自动定位请求。
     ++_lyricScrollToken;
     _lyricAutoFollow = false;
     _lyricFollowTimer?.cancel();
-    _lyricFollowTimer = Timer(const Duration(seconds: 3), () {
-      if (!mounted) return;
-      _lyricAutoFollow = true;
-      _lastAutoIdx = -1;
-      _requestLyricAlignment(force: true);
-    });
+    if (_userLyricAutoScroll) {
+      _lyricFollowTimer = Timer(const Duration(seconds: 4), () {
+        if (!mounted || !_userLyricAutoScroll) return;
+        setState(() {
+          _lyricAutoFollow = true;
+          _lastAutoIdx = -1;
+        });
+        _requestLyricAlignment(force: true);
+      });
+    }
   }
 
   void _toast(String msg) {

@@ -1635,9 +1635,7 @@ class ApiService {
         : null;
     final languageEditions = _mapLanguageEditions(m, apiId);
     return Work(
-      rj:
-          m['source_id'] as String? ??
-          (apiId != null ? 'RJ$apiId' : 'RJ00000000'),
+      rj: formatWorkCode(rawId, m['source_id'] as String?),
       title: m['title'] as String? ?? appL10n.historyPageEntryWorkTitle,
       circle: circle,
       va: vas.isEmpty ? appL10n.apiServiceMapWorkVa : 'CV. $vas',
@@ -1670,6 +1668,31 @@ class ApiService {
           : m['progress'] as String?,
       reviewText: m['review_text'] as String?,
     );
+  }
+
+  /// 智能格式化作品编号，兼容 DLsite 同人 (RJ)、商业书籍 (BJ) 与游戏 (VJ)
+  static String formatWorkCode(dynamic rawId, [String? sourceId]) {
+    if (sourceId != null && sourceId.trim().isNotEmpty) {
+      return sourceId.trim().toUpperCase();
+    }
+    if (rawId == null) return "RJ00000000";
+    final id = rawId is num
+        ? rawId.toInt()
+        : int.tryParse(rawId.toString().trim());
+    if (id == null) {
+      final s = rawId.toString().trim().toUpperCase();
+      return s.startsWith(RegExp(r"^(RJ|VJ|BJ)")) ? s : "RJ$s";
+    }
+    if (id >= 2000000000000 && id < 3000000000000) {
+      final sub = id - 2000000000000;
+      return "VJ${sub.toString().padLeft(8, '0')}";
+    } else if (id >= 1000000000000 && id < 2000000000000) {
+      final sub = id - 1000000000000;
+      return "BJ${sub.toString().padLeft(8, '0')}";
+    } else {
+      final s = id.toString();
+      return s.length < 8 ? "RJ${s.padLeft(8, '0')}" : "RJ$s";
+    }
   }
 
   static String _formatReleaseDate(Object? raw) {

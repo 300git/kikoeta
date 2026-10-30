@@ -967,14 +967,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
                     child: Slider(
-                      value: (app.uiScalePercent / 25 - 1).toDouble(),
-                      min: 0,
-                      max: 7,
-                      divisions: 7,
+                      value: app.uiScalePercent.clamp(90, 120).toDouble(),
+                      min: 90,
+                      max: 120,
+                      divisions: 6,
                       label: '${app.uiScalePercent}%',
                       activeColor: p.accent,
                       onChanged: (value) =>
-                          app.setUiScalePercent((value.round() + 1) * 25),
+                          app.setUiScalePercent(value.round()),
                     ),
                   ),
                   Padding(

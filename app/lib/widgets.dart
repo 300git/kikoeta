@@ -423,7 +423,7 @@ class _LyricsStatusBadgeState extends State<LyricsStatusBadge> {
           child: const Text(
             'CC',
             style: TextStyle(
-              color: Color(0xFF22C55E), // 醒目翠绿
+              color: Colors.white, // 与标题/白色一致
               fontSize: 9.5,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.5,
@@ -588,9 +588,10 @@ class WorkCard extends StatelessWidget {
       child: cardBackground
           ? Container(
               clipBehavior: Clip.antiAlias,
+              margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 3.0),
               decoration: BoxDecoration(
                 color: p.surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: p.line),
               ),
               child: content,
@@ -617,7 +618,7 @@ class WorkListCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final p = isDark ? AppColors.dark : AppColors.light;
     final tags = work.tags
-        .take(6)
+        .take(8)
         .map(
           (t) => _TagMini(
             work.tagLabel(t, Localizations.localeOf(context)),
@@ -631,148 +632,210 @@ class WorkListCard extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-        padding: const EdgeInsets.all(7),
+        margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 3.5),
+        padding: const EdgeInsets.all(6.0),
         decoration: BoxDecoration(
           color: p.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: p.line),
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 左侧封面：4:3 大图
-            SizedBox(
-              width: 116,
-              child: AspectRatio(
-                aspectRatio: 4 / 3,
-                child: CoverArt(
-                  work: work,
-                  radius: 8,
-                  showBadges: false,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Positioned(
-                        left: 5,
-                        bottom: 5,
-                        child: LyricsStatusBadge(work: work),
-                      ),
-                      Positioned(
-                        top: 5,
-                        left: 5,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 2,
+            // 上半部：左侧约 74% 宽度的 4:3 巨幅封面，右侧 26% 纵向排列社团、声优与时长
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 74,
+                  child: AspectRatio(
+                    aspectRatio: 4 / 3,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CoverArt(
+                            work: work,
+                            radius: 8,
+                            showBadges: false,
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xD9000000),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            work.rj,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
+                          // 左上角编号胶囊 (RJ/VJ/BJ)
+                          Positioned(
+                            top: 5,
+                            left: 5,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xD9000000),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                work.rj,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          // 左下角 CC 字幕胶囊
+                          Positioned(
+                            left: 5,
+                            bottom: 5,
+                            child: LyricsStatusBadge(work: work),
+                          ),
+                          // 右下角发售日期
+                          if (work.releaseDate.isNotEmpty)
+                            Positioned(
+                              right: 5,
+                              bottom: 5,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xD9000000),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  work.releaseDate,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 9),
-            // 右侧信息：标题、社团、CV、标签、时长
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    work.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: p.text,
-                      height: 1.25,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
+                ),
+                const SizedBox(width: 8),
+                // 右侧：社团、声优、时长
+                Expanded(
+                  flex: 26,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.storefront_outlined,
-                        size: 11.5,
-                        color: isDark
-                            ? const Color(0xFFC084FC)
-                            : const Color(0xFF7E22CE),
-                      ),
-                      const SizedBox(width: 3),
-                      Expanded(
-                        child: Text(
-                          work.circle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 10.5,
+                      // 社团
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.storefront_outlined,
+                            size: 13,
                             color: isDark
                                 ? const Color(0xFFC084FC)
                                 : const Color(0xFF7E22CE),
-                            fontWeight: FontWeight.w500,
                           ),
-                        ),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              work.circle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark
+                                    ? const Color(0xFFC084FC)
+                                    : const Color(0xFF7E22CE),
+                                fontWeight: FontWeight.w600,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 6),
+                      // 声优
+                      if (work.va.trim().isNotEmpty) ...[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.person_outline,
+                              size: 13,
+                              color: isDark
+                                  ? const Color(0xFF38BDF8)
+                                  : const Color(0xFF0284C7),
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                work.va,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: isDark
+                                      ? const Color(0xFF38BDF8)
+                                      : const Color(0xFF0284C7),
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                      // 时长
                       if (work.dur.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-                        Text(
-                          work.dur,
-                          style: TextStyle(fontSize: 10, color: p.dim),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule_outlined,
+                              size: 12,
+                              color: p.dim,
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                work.dur,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: p.dim,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ],
                   ),
-                  if (work.va.trim().isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          size: 11.5,
-                          color: isDark
-                              ? const Color(0xFF38BDF8)
-                              : const Color(0xFF0284C7),
-                        ),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            work.va,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: isDark
-                                  ? const Color(0xFF38BDF8)
-                                  : const Color(0xFF0284C7),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  if (tags.isNotEmpty) ...[
-                    const SizedBox(height: 5),
-                    Wrap(spacing: 3, runSpacing: 3, children: tags),
-                  ],
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // 下方：标题（最多 3 行）
+            Text(
+              work.title,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: p.text,
+                height: 1.25,
               ),
             ),
+            // 标题下方：标签流
+            if (tags.isNotEmpty) ...[
+              const SizedBox(height: 5),
+              Wrap(spacing: 3.5, runSpacing: 3.5, children: tags),
+            ],
           ],
         ),
       ),
@@ -886,7 +949,7 @@ class ResponsiveGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (ctx, c) {
         final cols = (c.maxWidth / maxTileWidth).floor().clamp(2, 8);
-        final gap = cols == 2 ? 7.0 : 12.0;
+        final gap = cols == 2 ? 4.0 : 10.0;
         final tile = (c.maxWidth - gap * (cols - 1)) / cols;
         final rows = (itemCount + cols - 1) ~/ cols;
         return SmoothListView.builder(

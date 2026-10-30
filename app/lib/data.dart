@@ -1340,8 +1340,8 @@ class AppState extends ChangeNotifier {
   }
 
   static int _normalizeUiScalePercent(int value) {
-    final clamped = value.clamp(25, 200).toInt();
-    return (clamped / 25).round() * 25;
+    final clamped = value.clamp(90, 120).toInt();
+    return (clamped / 5).round() * 5;
   }
 
   int _readShortcutKey(String setting, int fallback) {
