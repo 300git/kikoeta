@@ -187,8 +187,7 @@ class _CoverArtState extends State<CoverArt> {
                 ),
               ),
             ),
-          if (showBadges)
-            Positioned(top: 8, right: 8, child: AgeBadge(age: work.age)),
+
           ?child,
         ],
       ),
@@ -406,45 +405,27 @@ class _LyricsStatusBadgeState extends State<LyricsStatusBadge> {
 
   @override
   Widget build(BuildContext context) {
-    final p = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.dark
-        : AppColors.light;
     return FutureBuilder<LyricsLibraryStatus>(
       future: _status,
       builder: (context, snapshot) {
         final localStatus = snapshot.data ?? LyricsLibraryStatus.none;
-        final (label, color) = switch (localStatus) {
-          LyricsLibraryStatus.ai => (
-            context.l10n.widgetsBuildBuilder,
-            p.accent,
-          ),
-          LyricsLibraryStatus.online => (
-            context.l10n.widgetsBuildBuilder2,
-            p.orange,
-          ),
-          LyricsLibraryStatus.local => (
-            context.l10n.widgetsBuildBuilder3,
-            p.orange,
-          ),
-          LyricsLibraryStatus.none when widget.work.hasSubtitle => (
-            context.l10n.widgetsBuildBuilder4,
-            p.green,
-          ),
-          LyricsLibraryStatus.none => ('', Colors.transparent),
-        };
-        if (label.isEmpty) return const SizedBox.shrink();
+        final hasSubtitle =
+            widget.work.hasSubtitle || localStatus != LyricsLibraryStatus.none;
+        if (!hasSubtitle) return const SizedBox.shrink();
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: .30),
-            borderRadius: BorderRadius.circular(7),
+            color: const Color(0xD9000000), // 85% 纯黑底，防止封面五颜六色时看不清
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: const Color(0x4022C55E)),
           ),
-          child: Text(
-            label,
+          child: const Text(
+            'CC',
             style: TextStyle(
-              color: color,
+              color: Color(0xFF22C55E), // 醒目翠绿
               fontSize: 9.5,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
             ),
           ),
         );
@@ -470,10 +451,10 @@ class WorkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.dark
-        : AppColors.light;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = isDark ? AppColors.dark : AppColors.light;
     final tags = work.tags
+        .take(5)
         .map(
           (t) => _TagMini(
             work.tagLabel(t, Localizations.localeOf(context)),
@@ -484,39 +465,42 @@ class WorkCard extends StatelessWidget {
         .toList();
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
+        // 封面图：无边距贴合卡片顶部，最大化视觉面积
         AspectRatio(
           aspectRatio: 4 / 3,
           child: CoverArt(
             work: work,
+            radius: cardBackground ? 12 : 14,
             showBadges: showBadges,
             child: Stack(
               fit: StackFit.expand,
               children: [
                 if (showBadges)
                   Positioned(
-                    left: 8,
-                    bottom: 8,
+                    left: 6,
+                    bottom: 6,
                     child: LyricsStatusBadge(work: work),
                   ),
                 if (work.releaseDate.isNotEmpty)
                   Positioned(
-                    right: 8,
-                    bottom: 8,
+                    right: 6,
+                    bottom: 6,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
+                        horizontal: 5,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(7),
+                        color: const Color(0xD9000000),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         work.releaseDate,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 9.5,
+                          fontSize: 9,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -526,40 +510,75 @@ class WorkCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 7),
-        Text(
-          work.title,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            color: p.text,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                work.circle,
-                maxLines: 1,
+        Padding(
+          padding: cardBackground
+              ? const EdgeInsets.fromLTRB(6, 6, 6, 8)
+              : const EdgeInsets.only(top: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                work.title,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 10.5, color: p.muted),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: p.text,
+                  height: 1.2,
+                ),
               ),
-            ),
-            Text(work.dur, style: TextStyle(fontSize: 10.5, color: p.dim)),
-          ],
-        ),
-        if (work.va.trim().isNotEmpty) ...[
-          const SizedBox(height: 2),
-          Text(
-            work.va,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10.5, color: p.muted),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      work.circle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (work.dur.isNotEmpty)
+                    Text(work.dur, style: TextStyle(fontSize: 10, color: p.dim)),
+                ],
+              ),
+              if (work.va.trim().isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: 11,
+                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                    ),
+                    const SizedBox(width: 2),
+                    Expanded(
+                      child: Text(
+                        work.va,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (tags.isNotEmpty) ...[
+                const SizedBox(height: 5),
+                Wrap(spacing: 3, runSpacing: 3, children: tags),
+              ],
+            ],
           ),
-        ],
-        const SizedBox(height: 6),
-        Wrap(spacing: 4, runSpacing: 4, children: tags),
+        ),
       ],
     );
     return GestureDetector(
@@ -567,7 +586,7 @@ class WorkCard extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: cardBackground
           ? Container(
-              padding: const EdgeInsets.all(9),
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: p.surface,
                 borderRadius: BorderRadius.circular(12),
@@ -580,6 +599,186 @@ class WorkCard extends StatelessWidget {
   }
 }
 
+/// 首页一页一列横向展示卡片（参考 asmr.one 移动端）
+class WorkListCard extends StatelessWidget {
+  final Work work;
+  final int index;
+  final VoidCallback onTap;
+  const WorkListCard({
+    super.key,
+    required this.work,
+    required this.index,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = isDark ? AppColors.dark : AppColors.light;
+    final tags = work.tags
+        .take(6)
+        .map(
+          (t) => _TagMini(
+            work.tagLabel(t, Localizations.localeOf(context)),
+            p,
+            gray: work.grayTags.contains(t),
+          ),
+        )
+        .toList();
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(
+          color: p.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: p.line),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 左侧封面：4:3 大图
+            SizedBox(
+              width: 116,
+              child: AspectRatio(
+                aspectRatio: 4 / 3,
+                child: CoverArt(
+                  work: work,
+                  radius: 8,
+                  showBadges: false,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Positioned(
+                        left: 5,
+                        bottom: 5,
+                        child: LyricsStatusBadge(work: work),
+                      ),
+                      Positioned(
+                        top: 5,
+                        left: 5,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xD9000000),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            work.rj,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 9),
+            // 右侧信息：标题、社团、CV、标签、时长
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    work.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: p.text,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.storefront_outlined,
+                        size: 11.5,
+                        color: isDark
+                            ? const Color(0xFFC084FC)
+                            : const Color(0xFF7E22CE),
+                      ),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          work.circle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: isDark
+                                ? const Color(0xFFC084FC)
+                                : const Color(0xFF7E22CE),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (work.dur.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          work.dur,
+                          style: TextStyle(fontSize: 10, color: p.dim),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (work.va.trim().isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person_outline,
+                          size: 11.5,
+                          color: isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
+                        ),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            work.va,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: isDark
+                                  ? const Color(0xFF38BDF8)
+                                  : const Color(0xFF0284C7),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (tags.isNotEmpty) ...[
+                    const SizedBox(height: 5),
+                    Wrap(spacing: 3, runSpacing: 3, children: tags),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _TagMini extends StatelessWidget {
   final String label;
   final Palette p;
@@ -588,18 +787,25 @@ class _TagMini extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-        color: p.surface2,
-        border: Border.all(color: p.line),
-        borderRadius: BorderRadius.circular(6),
+        color: gray
+            ? (isDark ? const Color(0x18FFFFFF) : const Color(0x0A000000))
+            : (isDark ? const Color(0x22FFFFFF) : const Color(0x12000000)),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: isDark ? const Color(0x15FFFFFF) : const Color(0x10000000),
+        ),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontSize: 9.5,
-          color: gray ? p.dim : p.muted,
+          color: gray
+              ? (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8))
+              : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
           fontStyle: gray ? FontStyle.italic : FontStyle.normal,
         ),
       ),
@@ -679,12 +885,13 @@ class ResponsiveGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (ctx, c) {
         final cols = (c.maxWidth / maxTileWidth).floor().clamp(2, 8);
-        const gap = 13.0;
+        final gap = cols == 2 ? 7.0 : 12.0;
         final tile = (c.maxWidth - gap * (cols - 1)) / cols;
         final rows = (itemCount + cols - 1) ~/ cols;
         return SmoothListView.builder(
           padding: padding,
-          physics: physics,
+          physics: physics ?? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          cacheExtent: 400.0,
           itemCount: rows,
           itemBuilder: (ctx, r) {
             final start = r * cols;

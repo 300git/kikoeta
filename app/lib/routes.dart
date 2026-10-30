@@ -11,19 +11,19 @@ Route<void> buildWorkRoute(
   VoiceDownload? downloadItem,
 }) {
   return PageRouteBuilder<void>(
-    transitionDuration: const Duration(milliseconds: 320),
-    reverseTransitionDuration: const Duration(milliseconds: 220),
+    transitionDuration: const Duration(milliseconds: 180),
+    reverseTransitionDuration: const Duration(milliseconds: 140),
     pageBuilder: (context, animation, secondaryAnimation) =>
         WorkPage(app: app, work: w, downloadItem: downloadItem),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       final curved = CurvedAnimation(
         parent: animation,
-        curve: Curves.easeOutCubic,
+        curve: Curves.easeOutQuad,
       );
       return FadeTransition(
         opacity: curved,
         child: ScaleTransition(
-          scale: Tween(begin: 0.92, end: 1.0).animate(curved),
+          scale: Tween(begin: 0.96, end: 1.0).animate(curved),
           alignment: Alignment.center,
           child: child,
         ),
