@@ -1,0 +1,121 @@
+name: Build Test APK (Kikoeta300)
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'main'
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fix script permissions
+        run: chmod -R +x app/rust_builder/cargokit/
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Accept Android Licenses
+        run: yes | flutter doctor --android-licenses || true
+
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      - name: Customize App ID & Name for Testing (Prevent Conflict)
+        run: |
+          echo "Renaming applicationId to kikoeta.chenflxs.kikoeta300 and label to Kikoeta300..."
+          sed -i 's/applicationId = "kikoeta.chenflxs"/applicationId = "kikoeta.chenflxs.kikoeta300"/' app/android/app/build.gradle.kts
+          sed -i 's/android:label="Kikoeta"/android:label="Kikoeta300"/' app/android/app/src/main/AndroidManifest.xml
+
+      - name: Configure Fixed Test Keystore
+        run: |
+          echo "Setting up fixed signing key for Kikoeta300..."
+          echo "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" | base64 -d > app/android/kikoeta300-release.jks
+          cat << 'EOF' > app/android/key.properties
+          storePassword=kikoeta300password
+          keyPassword=kikoeta300password
+          keyAlias=kikoeta300
+          storeFile=kikoeta300-release.jks
+          EOF
+          keytool -list -v -keystore app/android/kikoeta300-release.jks -storepass kikoeta300password
+
+      - name: Install dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build APK (arm64-v8a)
+        working-directory: app
+        run: |
+          flutter build apk --release --split-per-abi --target-platform android-arm64 --verbose
+          mkdir -p ../dist
+          find build/app/outputs -name "*.apk" -exec cp {} ../dist/kikoeta300-arm64-v8a-release.apk \;
+
+      - name: Upload Test APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kikoeta300-arm64-v8a-release
+          path: dist/kikoeta300-arm64-v8a-release.apk
+          if-no-files-found: error
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable-x86_64-pc-windows-msvc
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Enable Windows Desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      - name: Install dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Windows
+        working-directory: app
+        run: flutter build windows --release --verbose
+
+      - name: Archive Windows build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          Compress-Archive -Path app/build/windows/x64/runner/Release/* -DestinationPath dist/kikoeta300-windows-x64.zip
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kikoeta300-windows-x64
+          path: dist/kikoeta300-windows-x64.zip
+          if-no-files-found: error
