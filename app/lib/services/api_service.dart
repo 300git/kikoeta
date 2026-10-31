@@ -214,12 +214,6 @@ class ApiService {
   }) async {
     final base = resolveBase(app);
     if (app.customServer) {
-      final currentSite = app.customSites.isNotEmpty &&
-              app.customServerIdx < app.customSites.length
-          ? app.customSites[app.customServerIdx]
-          : null;
-      final isNumber178 = currentSite?.isNumber178 ?? false;
-
       final cleanQuery = query.replaceAll('，', ' ').replaceAll(',', ' ').trim();
       final terms = cleanQuery
           .split(RegExp(r'\s+'))
@@ -227,10 +221,10 @@ class ApiService {
           .toList();
 
       final String searchKeyword;
-      // Number178 分支且输入了多个关键词时，构造 JSON 条件由 apiSearchCustom 自动启用聚合搜索
-      if (isNumber178 && terms.length > 1) {
+      // 自建站多关键词使用 kikoeru-express 高级搜索条件。
+      if (terms.length > 1) {
         searchKeyword = jsonEncode([
-          for (final term in terms) {'t': 1, 'd': term}
+          for (final term in terms) {'t': 1, 'd': term},
         ]);
       } else {
         searchKeyword = query.trim();
@@ -530,7 +524,8 @@ class ApiService {
     final isOwned =
         isSystem || (userName.isNotEmpty && userName == _reviewUserName(app));
     final coverWorkId = m['coverWorkId'] ?? m['cover_work_id'];
-    final coverUrl = _playlistCoverUrl(m['mainCoverUrl'] as String?, base) ??
+    final coverUrl =
+        _playlistCoverUrl(m['mainCoverUrl'] as String?, base) ??
         (coverWorkId != null
             ? '${base.replaceFirst(RegExp(r'/+$'), '')}/api/cover/$coverWorkId'
             : null);
@@ -539,7 +534,8 @@ class ApiService {
       name:
           systemName ??
           (rawName.isEmpty ? appL10n.apiServiceMapPlaylistName : rawName),
-      worksCount: (m['works_count'] as num?)?.toInt() ??
+      worksCount:
+          (m['works_count'] as num?)?.toInt() ??
           (m['workCount'] as num?)?.toInt() ??
           (m['worksCount'] as num?)?.toInt() ??
           0,

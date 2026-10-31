@@ -4239,10 +4239,6 @@ abstract class AppLocalizations {
   /// **'地址'**
   String get sheetsShowSiteSheetField2;
 
-  String get sheetsShowSiteSheetNumber178Title;
-
-  String get sheetsShowSiteSheetNumber178Sub;
-
   /// sheets.dart: showSiteSheet
   ///
   /// In zh, this message translates to:

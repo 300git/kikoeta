@@ -32,7 +32,6 @@ class _LoginPageState extends State<LoginPage> {
   final _siteUserCtrl = TextEditingController();
   final _sitePassCtrl = TextEditingController();
   bool _sitePassObscure = true;
-  bool _siteIsNumber178 = false;
 
   AppState get app => widget.app;
   Palette get p => Theme.of(context).brightness == Brightness.dark
@@ -271,15 +270,7 @@ class _LoginPageState extends State<LoginPage> {
       try {
         await ApiService.login(app, url, user, pass);
       } catch (_) {}
-      app.saveSite(
-        CustomSite(
-          alias: alias,
-          url: url,
-          user: user,
-          pass: pass,
-          isNumber178: _siteIsNumber178,
-        ),
-      );
+      app.saveSite(CustomSite(alias: alias, url: url, user: user, pass: pass));
       // 自动启用刚添加的站点并进入主界面
       app.applyServer(true, app.customSites.length - 1);
     } finally {
@@ -669,38 +660,6 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: () => setState(
                             () => _sitePassObscure = !_sitePassObscure,
                           ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    context.l10n.sheetsShowSiteSheetNumber178Title,
-                                    style: TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: p.text,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    context.l10n.sheetsShowSiteSheetNumber178Sub,
-                                    style: TextStyle(fontSize: 12, color: p.dim),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Switch(
-                              value: _siteIsNumber178,
-                              onChanged: (val) =>
-                                  setState(() => _siteIsNumber178 = val),
-                            ),
-                          ],
                         ),
                       ),
                       const SizedBox(height: 4),

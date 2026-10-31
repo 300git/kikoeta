@@ -72,6 +72,7 @@ class _ServerSheet extends StatefulWidget {
 class _ServerSheetState extends State<_ServerSheet> {
   late bool _custom;
   late int _idx;
+  bool _applying = false;
 
   AppState get app => widget.app;
   Palette get p => Theme.of(context).brightness == Brightness.dark
@@ -85,8 +86,42 @@ class _ServerSheetState extends State<_ServerSheet> {
     _idx = app.customServerIdx;
   }
 
+  Future<void> _applyServer() async {
+    if (_applying) return;
+    final custom = _custom;
+    final idx = _idx;
+    if (custom && app.customSites.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.sheetsBuildText5)));
+      return;
+    }
+    final route = ModalRoute.of(context);
+    setState(() => _applying = true);
+    try {
+      if (custom && idx >= 0 && idx < app.customSites.length) {
+        final site = app.customSites[idx];
+        if (site.user.isNotEmpty && site.pass.isNotEmpty) {
+          try {
+            await ApiService.login(app, site.url, site.user, site.pass);
+          } catch (_) {}
+        }
+      }
+      if (!mounted || route?.isCurrent != true) return;
+      app.applyServer(custom, idx);
+      Navigator.pop(context);
+    } finally {
+      if (mounted && route?.isCurrent == true) {
+        setState(() => _applying = false);
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      AbsorbPointer(absorbing: _applying, child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     return _sheetScaffold(
       context: context,
       title: context.l10n.sheetsBuildTitle,
@@ -225,24 +260,7 @@ class _ServerSheetState extends State<_ServerSheet> {
           const SizedBox(height: 6),
         ],
         ElevatedButton(
-          onPressed: () async {
-            if (_custom && app.customSites.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(context.l10n.sheetsBuildText5)),
-              );
-              return;
-            }
-            if (_custom && _idx < app.customSites.length) {
-              final s = app.customSites[_idx];
-              if (s.user.isNotEmpty && s.pass.isNotEmpty) {
-                try {
-                  await ApiService.login(app, s.url, s.user, s.pass);
-                } catch (_) {}
-              }
-            }
-            app.applyServer(_custom, _idx);
-            Navigator.pop(context);
-          },
+          onPressed: _applying ? null : _applyServer,
           style: ElevatedButton.styleFrom(
             backgroundColor: p.accent,
             foregroundColor: Colors.white,
@@ -281,7 +299,6 @@ Future<void> showSiteSheet(
   final passCtrl = TextEditingController(
     text: isEdit ? app.customSites[editIndex].pass : '',
   );
-  var isNumber178 = isEdit ? app.customSites[editIndex].isNumber178 : false;
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -319,39 +336,6 @@ Future<void> showSiteSheet(
             hint: context.l10n.loginPageBuildSiteConfigHint,
             obscure: true,
           ),
-          StatefulBuilder(
-            builder: (ctx, setSwitch) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.sheetsShowSiteSheetNumber178Title,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: p.text,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          context.l10n.sheetsShowSiteSheetNumber178Sub,
-                          style: TextStyle(fontSize: 12, color: p.dim),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Switch(
-                    value: isNumber178,
-                    onChanged: (val) => setSwitch(() => isNumber178 = val),
-                  ),
-                ],
-              ),
-            ),
-          ),
           ElevatedButton(
             onPressed: () async {
               final alias = aliasCtrl.text.trim();
@@ -369,7 +353,8 @@ Future<void> showSiteSheet(
                 );
                 return;
               }
-              final isCurrentActiveSite = isEdit &&
+              final isCurrentActiveSite =
+                  isEdit &&
                   app.customServer &&
                   editIndex == app.customServerIdx;
               if (isCurrentActiveSite && user.isNotEmpty && pass.isNotEmpty) {
@@ -385,7 +370,6 @@ Future<void> showSiteSheet(
                     url: url,
                     user: userCtrl.text.trim(),
                     pass: passCtrl.text,
-                    isNumber178: isNumber178,
                   ),
                   index: editIndex,
                 );
@@ -396,7 +380,6 @@ Future<void> showSiteSheet(
                     url: url,
                     user: userCtrl.text.trim(),
                     pass: passCtrl.text,
-                    isNumber178: isNumber178,
                   ),
                 );
               }

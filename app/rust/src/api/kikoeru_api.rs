@@ -678,33 +678,30 @@ pub async fn api_get_playlist_works(
             // Number178 / 自建库 RESTful 路由回退: GET /api/playlists/:id (包含完整 works)
             let rest_url = format!("{}/api/playlists/{}", base_of(&base), urlencoding(&id));
             let text = http_get(&client, &rest_url, auth.as_deref()).await?;
-            // Number178 详情接口一次性返回全部 works，按请求的 (page, per_page) 做切片并构造 pagination，
-            // 避免滚动加载时无限重复追加全部作品
-            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
-                if let Some(works_arr) = val.get("works").and_then(|w| w.as_array()) {
-                    let total = works_arr.len();
-                    let start = ((page.saturating_sub(1)) as usize).saturating_mul(per_page as usize);
-                    let end = (start + per_page as usize).min(total);
-                    let sliced = if start < total {
-                        works_arr[start..end].to_vec()
-                    } else {
-                        Vec::new()
-                    };
-                    let paginated_resp = serde_json::json!({
-                        "works": sliced,
-                        "pagination": {
-                            "currentPage": page,
-                            "pageSize": per_page,
-                            "totalCount": total
-                        }
-                    });
-                    return Ok(paginated_resp.to_string());
-                }
-            }
-            Ok(text)
+            complete_playlist_works(&text, page)
         }
         Err(e) => Err(e),
     }
+}
+
+// REST 返回完整歌单；一次交付全部作品，并通知调用者停止分页。
+fn complete_playlist_works(text: &str, page: u32) -> Result<String, String> {
+    let mut value: serde_json::Value =
+        serde_json::from_str(text).map_err(|e| format!("歌单响应解析失败: {e}"))?;
+    let works = value
+        .get_mut("works")
+        .and_then(|w| w.as_array_mut())
+        .ok_or_else(|| "歌单响应缺少 works 数组".to_string())?;
+    let total = works.len();
+    if page > 1 {
+        works.clear();
+    }
+    value["pagination"] = serde_json::json!({
+        "currentPage": page.max(1),
+        "pageSize": total.max(1),
+        "totalCount": total,
+    });
+    Ok(value.to_string())
 }
 
 /// 添加作品到歌单：POST /api/playlist/add-works-to-playlist
@@ -1084,6 +1081,73 @@ mod tests {
         let filtered = neighbors_body("1722779", "$age:adult$", 3);
         assert_eq!(filtered["keyword"], "$age:adult$");
         assert_eq!(filtered["page"], 3);
+    }
+
+    #[test]
+    fn rest_playlist_delivers_all_works_and_ends_pagination() {
+        for total in [0, 20, 1000] {
+            let works: Vec<_> = (0..total)
+                .map(|id| serde_json::json!({"id": id}))
+                .collect();
+            let text = serde_json::json!({"works": works}).to_string();
+            let first: serde_json::Value =
+                serde_json::from_str(&complete_playlist_works(&text, 1).unwrap()).unwrap();
+            assert_eq!(first["works"].as_array().unwrap().len(), total);
+            assert_eq!(first["pagination"]["totalCount"], total);
+            assert_eq!(first["pagination"]["pageSize"], total.max(1));
+            let later: serde_json::Value =
+                serde_json::from_str(&complete_playlist_works(&text, 2).unwrap()).unwrap();
+            assert!(later["works"].as_array().unwrap().is_empty());
+        }
+        assert!(complete_playlist_works("not json", 1).is_err());
+        assert!(complete_playlist_works(r#"{"playlist":{}}"#, 1).is_err());
+    }
+
+    #[test]
+    fn playlist_works_fallback_fetches_a_large_playlist_once() {
+        use crate::api::http_client::test_support::TestServer;
+
+        let server = TestServer::with_response(|target| {
+            if target.starts_with("/api/playlist/get-playlist-works?") {
+                tiny_http::Response::from_string("missing route").with_status_code(404)
+            } else {
+                assert_eq!(target, "/api/playlists/list-1");
+                let works: Vec<_> = (0..1000)
+                    .map(|id| serde_json::json!({"id": id}))
+                    .collect();
+                tiny_http::Response::from_string(serde_json::json!({"works": works}).to_string())
+            }
+        });
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let text = runtime.block_on(api_get_playlist_works(
+            server.base.clone(), "list-1".to_string(), 1, 20,
+        )).unwrap();
+        let page: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(page["works"].as_array().unwrap().len(), 1000);
+        assert_eq!(page["pagination"]["pageSize"], 1000);
+        assert_eq!(page["pagination"]["totalCount"], 1000);
+        assert_eq!(server.records().len(), 2);
+    }
+
+    #[test]
+    fn playlist_works_rpc_preserves_server_pagination() {
+        use crate::api::http_client::test_support::TestServer;
+
+        let response = serde_json::json!({
+            "works": [{"id": 1}],
+            "pagination": {"currentPage": 2, "pageSize": 20, "totalCount": 1000},
+        }).to_string();
+        let expected = response.clone();
+        let server = TestServer::new(move |_| response.clone());
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let actual = runtime.block_on(api_get_playlist_works(
+            server.base.clone(), "list-1".to_string(), 2, 20,
+        )).unwrap();
+        assert_eq!(actual, expected);
+        let records = server.records();
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].target,
+            "/api/playlist/get-playlist-works?id=list-1&page=2&pageSize=20");
     }
 
     #[test]

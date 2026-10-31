@@ -2328,12 +2328,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sheetsShowSiteSheetField2 => '地址';
 
   @override
-  String get sheetsShowSiteSheetNumber178Title => 'Number178 分支增强';
-
-  @override
-  String get sheetsShowSiteSheetNumber178Sub => '支持多关键词聚合搜索 (空格分隔)';
-
-  @override
   String get account => '账号';
 
   @override
