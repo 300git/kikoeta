@@ -62,6 +62,16 @@ class Work {
   /// 当前账号的评论正文。
   final String? reviewText;
 
+  List<String> get vaList {
+    if (va.trim().isEmpty) return const [];
+    final cleaned = va.startsWith("CV. ") ? va.substring(4) : va;
+    return cleaned
+        .split(" / ")
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+
   const Work({
     required this.rj,
     required this.title,
@@ -260,6 +270,13 @@ class AppState extends ChangeNotifier {
   bool get subOnly => subtitleFilter != SubtitleFilter.none;
   bool sfwMode = false; // SFW 模式：启动后只显示全年龄（非 R18）内容
   bool worksListLayout = false; // 首页作品列表布局：false = 2列网格，true = 1列列表
+  bool headerVisible = true; // 首页/移动端滑动时折叠顶部栏
+
+  void setHeaderVisible(bool val) {
+    if (headerVisible == val) return;
+    headerVisible = val;
+    notifyListeners();
+  }
   String? _pendingSearch;
   bool pendingClear = false;
   // 当前首页搜索词；搜索栏因切换底部页面而重建时仍能恢复显示。

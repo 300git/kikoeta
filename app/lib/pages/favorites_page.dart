@@ -84,6 +84,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
   late bool _seenSfwMode;
   bool _selecting = false;
   final Set<String> _selected = {};
+  bool _headerVisible = true;
 
   AppState get app => widget.app;
   Palette get p => Theme.of(context).brightness == Brightness.dark
@@ -609,38 +610,63 @@ class _FavoritesPageState extends State<FavoritesPage> {
       children: [
         if (_selecting)
           _selectionBar()
-        else ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
+        else
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            child: _headerVisible
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (!_reviewsMode && _playlist != null)
+                              ..._playlistHeaderActions(),
+                            IconButton(
+                              onPressed: _openPlaylistPicker,
+                              tooltip: context.l10n.favoritesPageBuildTooltip,
+                              icon: Icon(Icons.queue_music, size: 22, color: p.accent),
+                            ),
+                          ],
                         ),
                       ),
+                      if (_reviewsMode) _reviewToolbar(),
                     ],
-                  ),
-                ),
-                if (!_reviewsMode && _playlist != null)
-                  ..._playlistHeaderActions(),
-                IconButton(
-                  onPressed: _openPlaylistPicker,
-                  tooltip: context.l10n.favoritesPageBuildTooltip,
-                  icon: Icon(Icons.queue_music, size: 22, color: p.accent),
-                ),
-              ],
-            ),
+                  )
+                : const SizedBox.shrink(),
           ),
-          if (_reviewsMode) _reviewToolbar(),
-        ],
-        Expanded(child: _body()),
+        Expanded(
+          child: NotificationListener<UserScrollNotification>(
+            onNotification: (n) {
+              if (n.direction == ScrollDirection.reverse &&
+                  _headerVisible &&
+                  !_selecting) {
+                setState(() => _headerVisible = false);
+              } else if (n.direction == ScrollDirection.forward &&
+                  !_headerVisible) {
+                setState(() => _headerVisible = true);
+              }
+              return false;
+            },
+            child: _body(),
+          ),
+        ),
       ],
     );
   }
@@ -926,7 +952,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
               onRefresh: () => _loadData(reset: true),
               child: ResponsiveGrid(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(top: 12, bottom: 30),
+                padding: const EdgeInsets.fromLTRB(0.5, 4.0, 0.5, 30.0),
                 itemCount: _works.length,
                 itemBuilder: (ctx, i) {
                   final w = _works[i];

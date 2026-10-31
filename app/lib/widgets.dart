@@ -418,7 +418,7 @@ class _LyricsStatusBadgeState extends State<LyricsStatusBadge> {
           decoration: BoxDecoration(
             color: const Color(0xD9000000), // 85% 纯黑底，防止封面五颜六色时看不清
             borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: const Color(0x4022C55E)),
+            border: Border.all(color: const Color(0x33FFFFFF)),
           ),
           child: const Text(
             'CC',
@@ -588,7 +588,7 @@ class WorkCard extends StatelessWidget {
       child: cardBackground
           ? Container(
               clipBehavior: Clip.antiAlias,
-              margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 3.0),
+              margin: const EdgeInsets.symmetric(horizontal: 0.5, vertical: 1.0),
               decoration: BoxDecoration(
                 color: p.surface,
                 borderRadius: BorderRadius.circular(10),
@@ -597,6 +597,31 @@ class WorkCard extends StatelessWidget {
               child: content,
             )
           : content,
+    );
+  }
+}
+
+class _VaChip extends StatelessWidget {
+  final String name;
+  final bool isDark;
+  const _VaChip({required this.name, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.5),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0369A1) : const Color(0xFF0284C7),
+        borderRadius: BorderRadius.circular(3.5),
+      ),
+      child: Text(
+        name,
+        style: const TextStyle(
+          fontSize: 9.5,
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -632,8 +657,8 @@ class WorkListCard extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 3.5),
-        padding: const EdgeInsets.all(6.0),
+        margin: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 2.5),
+        padding: const EdgeInsets.all(5.0),
         decoration: BoxDecoration(
           color: p.surface,
           borderRadius: BorderRadius.circular(10),
@@ -642,7 +667,7 @@ class WorkListCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 上半部：左侧约 74% 宽度的 4:3 巨幅封面，右侧 26% 纵向排列社团、声优与时长
+            // 上半部：左侧约 74% 宽度的 4:3 巨幅封面，右侧 26% 纵向排列发售日期、时长、社团、声优
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -660,10 +685,16 @@ class WorkListCard extends StatelessWidget {
                             radius: 8,
                             showBadges: false,
                           ),
-                          // 左上角编号胶囊 (RJ/VJ/BJ)
+                          // 左下角 CC 字幕胶囊
                           Positioned(
-                            top: 5,
                             left: 5,
+                            bottom: 5,
+                            child: LyricsStatusBadge(work: work),
+                          ),
+                          // 右下角编号胶囊 (RJ/VJ/BJ)
+                          Positioned(
+                            right: 5,
+                            bottom: 5,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 5,
@@ -684,55 +715,79 @@ class WorkListCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // 左下角 CC 字幕胶囊
-                          Positioned(
-                            left: 5,
-                            bottom: 5,
-                            child: LyricsStatusBadge(work: work),
-                          ),
-                          // 右下角发售日期
-                          if (work.releaseDate.isNotEmpty)
-                            Positioned(
-                              right: 5,
-                              bottom: 5,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 5,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xD9000000),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  work.releaseDate,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
                         ],
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                // 右侧：社团、声优、时长
+                // 右侧：先发售日期，再放时长，再放社团，再放声优
                 Expanded(
                   flex: 26,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 社团
+                      // 1. 发售日期
+                      if (work.releaseDate.isNotEmpty) ...[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 11,
+                              color: p.dim,
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                work.releaseDate,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: p.dim,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                      ],
+                      // 2. 时长
+                      if (work.dur.isNotEmpty) ...[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.schedule_outlined,
+                              size: 11,
+                              color: p.dim,
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                work.dur,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: p.dim,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                      ],
+                      // 3. 社团 (自动换行，不限制 maxLines)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
                             Icons.storefront_outlined,
-                            size: 13,
+                            size: 12,
                             color: isDark
                                 ? const Color(0xFFC084FC)
                                 : const Color(0xFF7E22CE),
@@ -741,10 +796,8 @@ class WorkListCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               work.circle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 color: isDark
                                     ? const Color(0xFFC084FC)
                                     : const Color(0xFF7E22CE),
@@ -755,61 +808,15 @@ class WorkListCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      // 声优
-                      if (work.va.trim().isNotEmpty) ...[
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 5),
+                      // 4. 声优 (每个声优独立 chip，支持 Wrap 自动换行)
+                      if (work.vaList.isNotEmpty) ...[
+                        Wrap(
+                          spacing: 3.0,
+                          runSpacing: 3.0,
                           children: [
-                            Icon(
-                              Icons.person_outline,
-                              size: 13,
-                              color: isDark
-                                  ? const Color(0xFF38BDF8)
-                                  : const Color(0xFF0284C7),
-                            ),
-                            const SizedBox(width: 3),
-                            Expanded(
-                              child: Text(
-                                work.va,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  color: isDark
-                                      ? const Color(0xFF38BDF8)
-                                      : const Color(0xFF0284C7),
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                      ],
-                      // 时长
-                      if (work.dur.isNotEmpty) ...[
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.schedule_outlined,
-                              size: 12,
-                              color: p.dim,
-                            ),
-                            const SizedBox(width: 3),
-                            Expanded(
-                              child: Text(
-                                work.dur,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  color: p.dim,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
+                            for (final va in work.vaList)
+                              _VaChip(name: va, isDark: isDark),
                           ],
                         ),
                       ],
@@ -949,8 +956,9 @@ class ResponsiveGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (ctx, c) {
         final cols = (c.maxWidth / maxTileWidth).floor().clamp(2, 8);
-        final gap = cols == 2 ? 4.0 : 10.0;
-        final tile = (c.maxWidth - gap * (cols - 1)) / cols;
+        final hGap = cols == 2 ? 1.5 : 10.0;
+        final vGap = cols == 2 ? 6.0 : 10.0;
+        final tile = (c.maxWidth - hGap * (cols - 1)) / cols;
         final rows = (itemCount + cols - 1) ~/ cols;
         return SmoothListView.builder(
           padding: padding,
@@ -961,12 +969,12 @@ class ResponsiveGrid extends StatelessWidget {
             final start = r * cols;
             final end = start + cols > itemCount ? itemCount : start + cols;
             return Padding(
-              padding: EdgeInsets.only(top: r == 0 ? 0 : gap),
+              padding: EdgeInsets.only(top: r == 0 ? 0 : vGap),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (var i = start; i < end; i++) ...[
-                    if (i > start) SizedBox(width: gap),
+                    if (i > start) SizedBox(width: hGap),
                     SizedBox(
                       width: tile,
                       child: RepaintBoundary(child: itemBuilder(ctx, i)),

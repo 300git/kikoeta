@@ -1045,7 +1045,7 @@ class _ShellState extends State<Shell> {
                 top: true,
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                  padding: EdgeInsets.fromLTRB(wide ? 16 : 1, 6, wide ? 16 : 1, 0),
                   child: NavigationPageStack(
                     index: app.tab,
                     children: [
@@ -1175,17 +1175,28 @@ class _ShellState extends State<Shell> {
             if (app.tab == 0)
               Positioned(
                 top: 0,
-                left: wide ? 80 + 1 + 16 : 16,
-                right: 16,
+                left: wide ? 80 + 1 + 16 : 2,
+                right: wide ? 16 : 2,
                 child: SafeArea(
-                  // 避让状态栏后，66 = 6 顶部内边距 + 48 标题栏 + 12 间距
                   top: true,
                   bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 66),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: HomeSearchBar(app: app),
+                  child: AnimatedSlide(
+                    offset: Offset(0, app.headerVisible ? 0 : -2.0),
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: AnimatedOpacity(
+                      opacity: app.headerVisible ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 180),
+                      child: IgnorePointer(
+                        ignoring: !app.headerVisible,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 66),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: HomeSearchBar(app: app),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),

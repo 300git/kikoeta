@@ -244,14 +244,26 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _header(),
-        const SizedBox(height: 12),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child: app.headerVisible
+              ? Column(
+                  children: [
+                    _header(),
+                    const SizedBox(height: 12),
+                  ],
+                )
+              : const SizedBox.shrink(),
+        ),
         Expanded(
           child: Stack(
             children: [
               // 排序行 + 作品网格（顶部留出搜索栏空间）
-              Positioned(
-                top: 58,
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                top: app.headerVisible ? 58 : 0,
                 left: 0,
                 right: 0,
                 bottom: 0,
@@ -260,19 +272,29 @@ class _HomePageState extends State<HomePage> {
                     _sortRow(),
                     const SizedBox(height: 4),
                     Expanded(
-                      child: SubpageSwipe(
-                        index: _categories.indexOf(app.category),
-                        count: _categories.length,
-                        onChanged: (index) =>
-                            _changeCategory(_categories[index]),
-                        child: Stack(
-                          children: [
-                            // 有搜索时直接展示搜索结果，否则展示作品列表
-                            if (_searchQuery.isNotEmpty)
-                              _searchResultsView()
-                            else
-                              _grid(),
-                          ],
+                      child: NotificationListener<UserScrollNotification>(
+                        onNotification: (n) {
+                          if (n.direction == ScrollDirection.reverse && app.headerVisible) {
+                            app.setHeaderVisible(false);
+                          } else if (n.direction == ScrollDirection.forward && !app.headerVisible) {
+                            app.setHeaderVisible(true);
+                          }
+                          return false;
+                        },
+                        child: SubpageSwipe(
+                          index: _categories.indexOf(app.category),
+                          count: _categories.length,
+                          onChanged: (index) =>
+                              _changeCategory(_categories[index]),
+                          child: Stack(
+                            children: [
+                              // 有搜索时直接展示搜索结果，否则展示作品列表
+                              if (_searchQuery.isNotEmpty)
+                                _searchResultsView()
+                              else
+                                _grid(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -555,7 +577,7 @@ class _HomePageState extends State<HomePage> {
                               parent: AlwaysScrollableScrollPhysics(),
                             ),
                             cacheExtent: 400.0,
-                            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 0.5, vertical: 4.0),
                             itemCount: order.length,
                             itemBuilder: (ctx, i) {
                               final idx = order[i];
@@ -573,7 +595,7 @@ class _HomePageState extends State<HomePage> {
                             physics: const BouncingScrollPhysics(
                               parent: AlwaysScrollableScrollPhysics(),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 0.5, vertical: 4.0),
                             itemCount: order.length,
                             itemBuilder: (ctx, i) {
                               final idx = order[i];
@@ -810,7 +832,7 @@ class _HomePageState extends State<HomePage> {
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     cacheExtent: 400.0,
-                    padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 0.5, vertical: 4.0),
                     itemCount: res.length,
                     itemBuilder: (ctx, i) {
                       final w = res[i];
@@ -826,7 +848,7 @@ class _HomePageState extends State<HomePage> {
                     physics: const BouncingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 0.5, vertical: 4.0),
                     itemCount: res.length,
                     itemBuilder: (ctx, i) {
                       final w = res[i];
