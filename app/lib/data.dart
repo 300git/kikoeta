@@ -273,6 +273,7 @@ class AppState extends ChangeNotifier {
   bool headerVisible = true; // 首页/移动端滑动时折叠顶部栏
 
   void setHeaderVisible(bool val) {
+    if (searchExpanded && !val) return;
     if (headerVisible == val) return;
     headerVisible = val;
     notifyListeners();
@@ -445,6 +446,7 @@ class AppState extends ChangeNotifier {
   void setSearchExpanded(bool v) {
     if (searchExpanded == v) return;
     searchExpanded = v;
+    if (v) headerVisible = true;
     notifyListeners();
   }
 
@@ -489,6 +491,7 @@ class AppState extends ChangeNotifier {
   void selectTab(int value) {
     final reselected = tab == value;
     tab = value;
+    if (value == 0) headerVisible = true;
     // 返回/重新点击首页时退出搜索结果，避免搜索框已消失但首页仍停留在搜索态。
     if (value == 0 && searchQuery.isNotEmpty) {
       searchQuery = '';

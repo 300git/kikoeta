@@ -655,7 +655,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
         Expanded(
           child: NotificationListener<UserScrollNotification>(
             onNotification: (n) {
-              if (n.direction == ScrollDirection.reverse &&
+              if (n.metrics.pixels <= 10) {
+                if (!_headerVisible) {
+                  setState(() => _headerVisible = true);
+                }
+              } else if (n.direction == ScrollDirection.reverse &&
                   _headerVisible &&
                   !_selecting) {
                 setState(() => _headerVisible = false);

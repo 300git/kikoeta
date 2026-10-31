@@ -65,7 +65,7 @@ class _HomePageState extends State<HomePage> {
   /// 首页网格渲染依赖的列表数据/加载状态签名
   String get _dataSig =>
       '${app.remoteWorks.length}|${app.loadingRemote}|${app.worksLoadingMore}|'
-      '${app.remoteError}|${app.worksHasMore}|${app.worksListLayout}';
+      '${app.remoteError}|${app.worksHasMore}|${app.worksListLayout}|${app.headerVisible}';
 
   void _onAppChanged() {
     // 清空/新搜索必须优先于首页刷新事件处理，避免刷新分支提前 return
@@ -275,10 +275,17 @@ class _HomePageState extends State<HomePage> {
                     Expanded(
                       child: NotificationListener<UserScrollNotification>(
                         onNotification: (n) {
-                          if (n.direction == ScrollDirection.reverse && app.headerVisible) {
+                          if (n.metrics.pixels <= 10) {
+                            if (!app.headerVisible) {
+                              app.setHeaderVisible(true);
+                              setState(() {});
+                            }
+                          } else if (n.direction == ScrollDirection.reverse && app.headerVisible) {
                             app.setHeaderVisible(false);
+                            setState(() {});
                           } else if (n.direction == ScrollDirection.forward && !app.headerVisible) {
                             app.setHeaderVisible(true);
+                            setState(() {});
                           }
                           return false;
                         },

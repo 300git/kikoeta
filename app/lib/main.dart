@@ -1019,7 +1019,7 @@ class _ShellState extends State<Shell> {
 
   String _computeSig() =>
       '${app.tab}|${app.searchExpanded}|${app.playing}|${app.hasQueue}|'
-      '${app.trackIdx}|${app.queue.length}|${app.playWork?.rj ?? ''}';
+      '${app.trackIdx}|${app.queue.length}|${app.playWork?.rj ?? ''}|${app.headerVisible}';
 
   void _onChanged() {
     final s = _computeSig();
